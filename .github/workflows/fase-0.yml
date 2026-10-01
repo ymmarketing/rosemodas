@@ -1,0 +1,49 @@
+name: Fase 0 - construção e banco limpo
+on:
+  push:
+    branches: [feat/fase-0-fundacao]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build:homologation
+      - run: npm run test:db
+      - name: Supabase local isolado
+        run: npx supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,supavisor
+      - name: Primeira aplicação em banco limpo
+        run: |
+          npx supabase db reset --local --no-seed
+          npm run test:db:supabase
+        env:
+          SUPABASE_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+          TEST_DATABASE_RUN_NAME: supabase-limpo-1
+      - name: Segunda aplicação em banco limpo
+        run: |
+          npx supabase db reset --local --no-seed
+          npm run test:db:supabase
+        env:
+          SUPABASE_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+          TEST_DATABASE_RUN_NAME: supabase-limpo-2
+      - name: Comparar schemas dos resets
+        run: node scripts/compare-database-runs.mjs
+      - name: Advisor de segurança desta configuração
+        run: npx supabase db advisors --local --type security --level warn --fail-on error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resultados-tarefa-1
+          path: test-results/
+      - name: Encerrar ambiente local
+        if: always()
+        run: npx supabase stop --no-backup
