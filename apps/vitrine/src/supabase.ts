@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import { validarAmbiente } from './ambiente';
 
-// Preparação do cliente de leitura. Não executa requisições nem autenticação.
+// Somente leitura pública; o projeto é conferido antes de qualquer requisição.
 export function criarClientePublico() {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-  if (!url || !key) throw new Error('Ambiente Supabase ainda não configurado.');
-  return createClient(url, key, {
+  const ambiente = validarAmbiente(import.meta.env, true);
+  if (!ambiente) throw new Error('Ambiente Supabase ainda não configurado.');
+  return createClient(ambiente.url, ambiente.chave, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }

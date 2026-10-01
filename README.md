@@ -5,6 +5,7 @@
 Referência técnica: Arquitetura V2. Referência visual: `prototipo/index.html`.
 O `index.html` da raiz continua sendo o kit de marca; a aplicação fica em `apps/vitrine`.
 Esta entrega prepara a aplicação e o catálogo no banco. Não contém telas da loja.
+A Tarefa 1 foi validada tecnicamente; a Fase 0 continua sem homologação final.
 
 ## Desenvolvimento
 
@@ -15,6 +16,27 @@ Copie `.env.development.example` para `.env.development` e preencha somente a ch
 pública local. A configuração hospedada usa `.env.homologation.example`; URL/chave
 do projeto dedicado e vínculo Vercel ainda precisam ser configurados. Não há projeto
 Rose conectado nem promoção automática para produção nesta entrega.
+
+## Preparação da homologação — Tarefa 2, ainda bloqueada
+
+A tela técnica faz apenas uma consulta pública de leitura (`produtos.id`) e informa
+o estado da conexão, sem exibir catálogo nem iniciar a loja. Configure, somente em
+Preview na Vercel, `VITE_APP_ENV=homologation`, `VITE_SUPABASE_URL`,
+`VITE_SUPABASE_PUBLISHABLE_KEY` e `VITE_SUPABASE_PROJECT_REF`. A referência deve
+corresponder ao projeto exclusivo de homologação. Use chave publishable, nunca uma
+credencial de servidor. O build recusa produção, chaves privadas, variáveis públicas
+não previstas e preview sem configuração completa.
+
+Bloqueios encontrados em 01/10/2026: a organização gratuita conectada já possui
+dois projetos ativos; o Supabase recusou a criação do projeto exclusivo. Não foram
+pausados nem alterados os projetos existentes. A operação `deploy_to_vercel` do
+plugin retornou `Tool deploy_to_vercel not found`; o CLI não está autenticado.
+Nenhum projeto hospedado da Rose foi criado, nenhuma migration foi aplicada no
+hospedado e não existe URL de homologação validada nesta etapa.
+
+`npm run test:environment` valida as travas de configuração. Os testes de banco
+continuam isolados. Os testes hospedados permanecem pendentes até liberar o projeto
+Supabase e configurar o projeto Vercel.
 
 ## Banco e testes
 
