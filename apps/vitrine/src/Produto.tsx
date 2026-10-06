@@ -7,7 +7,10 @@ export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, aviseMe, 
   aviseMe: (p: Produto, tamanho?: string) => void; relacionados: React.ReactNode;
 }) {
   const saldos = catalogo.saldos.filter(v => v.produto_id === p.id);
-  const cores = [...new Set(saldos.map(v => v.cor))];
+  const cores = [...new Set([
+    ...(p.variacoes ?? []).slice().sort((a,b) => a.sku.localeCompare(b.sku)).map(v => v.cor),
+    ...saldos.map(v => v.cor),
+  ])].filter(c => saldos.some(v => v.cor === c));
   const [cor, setCor] = useState(cores[0] ?? ''), [tamanho, setTamanho] = useState(''), [imagem, setImagem] = useState(0);
   const [videoAberto, setVideoAberto] = useState(false), [fotoFalhou, setFotoFalhou] = useState<string|null>(null);
   const [cep, setCep] = useState(''), [frete, setFrete] = useState(false);
