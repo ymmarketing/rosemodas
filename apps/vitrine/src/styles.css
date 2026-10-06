@@ -204,4 +204,4 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .bloqueio{max-width:580px;margin:30px auto;padding:24px;background:var(--branco);border:1px solid var(--linha);border-radius:18px}.bloqueio p{margin:14px 0;color:var(--taupe)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 
-#homolog button{padding:5px 11px;border-radius:999px;color:#e9dcd6;font-size:inherit}html{scroll-padding-top:105px}.qs-hero .s-logo{display:block}.qs-hero .s-logo .n{display:none}
+#homolog button{padding:5px 11px;border-radius:999px;color:#e9dcd6;font-size:inherit}html{scroll-padding-top:105px}.qs-hero .s-logo,.qs-hero .s-logo img{display:block}.qs-hero .s-logo .n{display:none}
