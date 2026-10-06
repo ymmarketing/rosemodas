@@ -1,15 +1,15 @@
 # Rose Modas
 
-**Construção — Tarefa 2 da Fase 0 entregue para validação da Yasmin.**
+**Construção — Tarefa 3 da Fase 0: Home e coleção, aguardando homologação da Yasmin.**
 
 Referência técnica: Arquitetura V2. Referência visual: `prototipo/index.html`.
 O `index.html` da raiz continua sendo o kit de marca; a aplicação fica em `apps/vitrine`.
-Esta entrega prepara a aplicação e o catálogo no banco. Não contém telas da loja.
+Esta entrega implementa a Home e a coleção sobre o catálogo público da Fase 0.
 A Tarefa 1 foi validada tecnicamente; a Fase 0 continua sem homologação final.
 
 ## Desenvolvimento
 
-Node 24 e `npm ci`. `npm run dev` inicia somente a tela de preparação em localhost:5173.
+Node 24 e `npm ci`. `npm run dev` inicia a Home e a coleção em localhost:5173.
 `npm run build:homologation` verifica TypeScript e gera `dist/vitrine`.
 
 Copie `.env.development.example` para `.env.development` e preencha somente a chave
@@ -30,8 +30,8 @@ Ambiente dedicado configurado e verificado em 06/10/2026:
   O Preview mantém a proteção de acesso da Vercel. O subdomínio
   `homolog.rosemenezes.com.br` não foi configurado nesta tarefa.
 
-A tela técnica faz apenas uma consulta pública de leitura (`produtos.id`) e informa
-o estado da conexão, sem exibir catálogo nem iniciar a loja. Configure, somente em
+Na Tarefa 2, a tela técnica validou a consulta pública (`produtos.id`). A Tarefa 3
+substitui essa tela pela Home e coleção. Configure, somente em
 Preview na Vercel, `VITE_APP_ENV=homologation`, `VITE_SUPABASE_URL`,
 `VITE_SUPABASE_PUBLISHABLE_KEY` e `VITE_SUPABASE_PROJECT_REF`. A referência deve
 corresponder ao projeto exclusivo de homologação. Use chave publishable, nunca uma
@@ -66,8 +66,8 @@ Verificações no ambiente hospedado:
 
 O bucket `produtos-publico` existe e permite somente leitura ao público; continua
 vazio. Não foi realizado teste de download de uma foto, pois nenhuma mídia foi
-inserida nesta etapa. O projeto permanece sem produtos, usuários Auth ou arquivos
-persistentes de teste. Não foram copiadas informações reais nem conectadas
+inserida nessa etapa. Na entrega da Tarefa 2, o projeto permaneceu sem produtos,
+usuários Auth ou arquivos persistentes de teste. Não foram copiadas informações reais nem conectadas
 integrações financeiras.
 
 O advisor de segurança não identificou warning/error. Os avisos informativos de
@@ -84,6 +84,48 @@ de produção; não existem variáveis da Rose no ambiente Production da Vercel.
 `npm run test:environment` valida as travas de configuração. Os runners de banco
 continuam aceitando somente bases locais; a execução SQL hospedada desta entrega
 foi direcionada explicitamente ao projeto exclusivo de homologação.
+
+## Home e coleção — Tarefa 3, em construção
+
+A organização, cores, fontes, logo, hero, categorias, barra de filtros e cards
+seguem `prototipo/index.html`. Nenhuma migration nova foi necessária.
+
+- Leitura pública de categorias, coleções, produtos/mídias, configurações e view de
+  disponibilidade, com colunas explícitas e paginação da API.
+- Coleção atual como padrão; seleção de coleção, categoria, tamanho com saldo,
+  ordenação por novidade/preço efetivo e somente disponíveis.
+- Disponibilidade por tamanho soma todas as cores. Promoção de valor zero usa zero.
+- Filtros na URL, recarregamento e histórico do navegador; limpar filtros restaura
+  a coleção atual. O link do rodapé permite consultar todas as coleções.
+- Estados de carregamento, indisponibilidade com nova tentativa, catálogo vazio,
+  combinação sem resultado e ausência/falha de foto.
+- Layout em quatro, três ou duas colunas, menu móvel, navegação por teclado,
+  labels acessíveis e movimento reduzido.
+- Sem promessas comerciais não configuradas: frete, parcelamento, agenda de live
+  e prazo de troca do protótipo não são tratados como regras aprovadas de venda.
+
+`supabase/seeds/homologacao-catalogo.sql` contém apenas oito modelos fictícios
+(`HOM-RM01` a `HOM-RM08`), cinco categorias, uma coleção demonstrativa e 48
+variações. Foi aplicado exclusivamente em `kernpudxhwkpoadahgqj`. Exige marcador
+privado `ambiente_homologacao` em configurações; não é migration nem seed automático.
+A reaplicação preservou 100 unidades fictícias, 37 movimentos e 137 registros de
+auditoria, sem duplicar ajustes. Os saldos foram criados por `ajustar_estoque`.
+O marcador não é visível ao navegador. Não há usuários Auth ou dados de clientes.
+
+As imagens das peças demonstrativas são ilustrações do protótipo, identificadas
+na tela; não são fotografias reais nem evidência de estoque da Rose. Para produtos
+com mídia cadastrada, a vitrine resolve a foto principal no bucket público; sem
+foto, exibe o estado correspondente. O bucket continua vazio nesta entrega.
+
+`npm run test:catalogo` cobre coleção, combinação de filtros, estoque entre cores,
+preço promocional, filtros na URL, seleção de foto principal e catálogo vazio.
+Os sete testes de catálogo e sete de ambiente passaram localmente, assim como
+build, inspeção de credenciais e os dois bancos limpos. CI e smoke no Preview
+fazem parte da entrega; a aprovação de UX e operação continua com a Yasmin.
+
+O escopo termina na Home e listagem da coleção. Página do produto e WhatsApp
+ficam para a próxima tarefa autorizada. Não há carrinho, checkout, cadastro,
+favoritos, avise-me ou módulos internos nesta aplicação.
 
 ## Banco e testes
 
