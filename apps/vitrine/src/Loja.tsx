@@ -1,161 +1,96 @@
-import { useEffect, useRef, useState } from 'react';
-import { buscaDosFiltros, carregarCatalogo, colecaoSelecionada, filtrosIniciais, fotoPrincipal,
-  lerFiltros, precoAtual, selecionarProdutos, tamanhosDoProduto, urlDaMidia } from './catalogo';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
+import { buscaDosFiltros, carregarCatalogo, filtrosIniciais, lerFiltros, linkWhatsApp, precoAtual, selecionarProdutos, tamanhosDoProduto } from './catalogo';
 import type { Catalogo, Filtros, Produto } from './catalogo';
+import { Arte, classeSelo, Icone, Marca, moeda, selos } from './Visual';
+import { PaginaProduto } from './Produto';
+import { QuemSomos, Trocas } from './Institucional';
 
-const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const selos = { aprovado_rose: 'Aprovado pela Rose', novidade: 'Novidade', ultimas_pecas: 'Últimas peças' };
-const formas: Record<string, string> = {
-  vestidos: 'M84 52 Q100 64 116 52 L134 64 L127 92 Q122 112 124 128 L154 232 Q100 246 46 232 L76 128 Q78 112 73 92 L66 64 Z',
-  blusas: 'M78 66 Q100 80 122 66 L156 84 L148 116 L134 110 L134 196 Q100 204 66 196 L66 110 L52 116 L44 84 Z',
-  conjuntos: 'M80 42 Q100 54 120 42 L148 56 L141 82 L130 78 L130 128 Q100 134 70 128 L70 78 L59 82 L52 56 Z M72 138 L128 138 L142 244 L110 244 L100 168 L90 244 L58 244 Z',
-  'calcas-e-saias': 'M70 58 L130 58 L146 240 L112 240 L100 110 L88 240 L54 240 Z',
-  kimonos: 'M80 50 Q100 62 120 50 L176 86 L164 136 L136 114 L138 232 L62 232 L64 114 L36 136 L24 86 Z',
-};
-function Ilustracao({ categoria = 'vestidos', tom = 0 }: { categoria?: string; tom?: number }) {
-  const cores = ['#D9A3A9', '#D8BBA3', '#9DB2CF', '#A7B59C'];
-  return <svg viewBox="0 0 200 260" aria-hidden="true" className="ilustracao">
-    <rect width="200" height="260" fill={tom % 2 ? '#F3EBE2' : '#FAEDED'} />
-    <circle cx="100" cy="138" r="84" fill="#fff" opacity=".55" />
-    <path d="M100 30v12 M80 44Q100 30 120 44" stroke="#B98B4E" strokeWidth="1.6" fill="none" opacity=".7" />
-    <path d={formas[categoria] ?? formas.vestidos} fill={cores[tom % cores.length]} stroke="rgba(0,0,0,.08)" />
-  </svg>;
+type Janela = 'menu' | 'busca' | 'guia' | 'privacidade' | 'whatsapp' | 'fase1' | 'fase2' | {produto:Produto;tamanho?:string} | null;
+const lerRota = () => window.location.hash.replace(/^#\/?/,'').split('?')[0] || 'loja';
+const lerBusca = () => window.location.hash.includes('?') ? window.location.hash.split('?')[1] : window.location.search;
+function carregarFavoritos() {try {const p:unknown=JSON.parse(localStorage.getItem('rose-favoritos') ?? '["HOM-RM08","HOM-RM06"]');return new Set(Array.isArray(p)?p.filter((s):s is string=>typeof s==='string'):[]);}catch{return new Set<string>();}}
+function Dialogo({titulo,fechar,children,drawer=false}:{titulo:string;fechar:()=>void;children:ReactNode;drawer?:boolean}) {
+ const caixa=useRef<HTMLDivElement>(null);
+ useEffect(() => {const anterior=document.activeElement as HTMLElement|null;caixa.current?.querySelector<HTMLElement>('button,input,select,a')?.focus();
+ const tecla=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();fechar();}if(e.key==='Tab'){
+ const itens=Array.from(caixa.current?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input,select,textarea,[tabindex="0"]')??[]);const a=itens[0],b=itens.at(-1);if(e.shiftKey&&document.activeElement===a){e.preventDefault();b?.focus();}else if(!e.shiftKey&&document.activeElement===b){e.preventDefault();a?.focus();}}};
+ const overflow=document.body.style.overflow;document.body.style.overflow='hidden';document.addEventListener('keydown',tecla);return()=>{document.removeEventListener('keydown',tecla);document.body.style.overflow=overflow;anterior?.focus();};},[fechar]);
+ return <div className={drawer?'drawer-bg':'mbg'} style={drawer?{justifyContent:'flex-start'}:undefined} onClick={e=>{if(e.target===e.currentTarget)fechar();}}>
+ <div ref={caixa} className={drawer?'drawer':'modal'} role="dialog" aria-modal="true" aria-label={titulo}><div className="mh"><h3>{titulo}</h3><button type="button" onClick={fechar} aria-label="Fechar" style={{fontSize:22,color:'var(--taupe)'}}>×</button></div><div className="mb">{children}</div></div></div>;
 }
-function ImagemPeca({ produto, categoria, tom = 0, destaque = false }: { produto: Produto; categoria?: string; tom?: number; destaque?: boolean }) {
-  const foto = fotoPrincipal(produto), url = foto ? urlDaMidia(foto.caminho_storage) : null;
-  const [urlComFalha, setUrlComFalha] = useState<string | null>(null);
-  if (url && url !== urlComFalha) return <img src={url} alt={foto!.alt_texto} loading={destaque ? 'eager' : 'lazy'}
-    decoding="async" width="400" height="500" onError={() => setUrlComFalha(url)} />;
-  if (produto.codigo.startsWith('HOM-')) return <><Ilustracao categoria={categoria} tom={tom} /><span className="legenda-imagem">Ilustração demonstrativa</span></>;
-  return <div className="sem-foto"><span>Rose Menezes</span><small>Foto em breve</small></div>;
-}
-function Marca({ catalogo }: { catalogo: Catalogo | null }) {
-  const logo = catalogo?.logoUrl ?? '/marca/rose-menezes.jpg';
-  const [urlComFalha, setUrlComFalha] = useState<string | null>(null);
-  return <span className="marca"><img src={urlComFalha === logo ? '/marca/rose-menezes.jpg' : logo} alt="" width="48" height="48" onError={() => setUrlComFalha(logo)} />
-    <span>{catalogo?.nomeLoja ?? 'Rose Menezes'}<small>MODA FEMININA</small></span></span>;
-}
-function Cartao({ produto, catalogo }: { produto: Produto; catalogo: Catalogo }) {
-  const tamanhos = tamanhosDoProduto(catalogo.saldos, produto.id), esgotado = !tamanhos.some(t => t.disponivel > 0);
-  const categoria = catalogo.categorias.find(c => c.id === produto.categoria_id);
-  return <article className="cartao" aria-labelledby={`peca-${produto.id}`} data-produto={produto.codigo}>
-    <div className="cartao-imagem"><ImagemPeca produto={produto} categoria={categoria?.slug} tom={Number(produto.codigo.match(/\d+$/)?.[0] ?? 0)} />
-      {esgotado ? <span className="selo selo-esgotado">Esgotado</span> : produto.selo && <span className={`selo selo-${produto.selo}`}>{selos[produto.selo]}</span>}
-    </div>
-    <h3 id={`peca-${produto.id}`}>{produto.nome}</h3>
-    <p className="preco">{produto.preco_promocional !== null && <><span className="sr-only">De </span><s>{moeda.format(produto.preco)}</s><span className="sr-only"> por </span></>}{moeda.format(precoAtual(produto))}</p>
-    <p className="disponibilidade">{esgotado ? 'Indisponível no momento' : 'Disponível na coleção'}</p>
-    {tamanhos.length > 0 && <ul className="tamanhos" aria-label="Disponibilidade por tamanho">{tamanhos.map(t =>
-      <li key={t.tamanho} className={t.disponivel ? '' : 'indisponivel'} aria-label={`Tamanho ${t.tamanho}: ${t.disponivel ? 'disponível' : 'esgotado'}`}>{t.tamanho}</li>)}</ul>}
-  </article>;
+function Guia({catalogo}:{catalogo:Catalogo}) {
+ const [produto,setProduto]=useState(catalogo.produtos[0]?.id??''),[tamanho,setTamanho]=useState('48');
+ const tams=tamanhosDoProduto(catalogo.saldos,produto).map(t=>t.tamanho);
+ const medidas=(catalogo.medidas??[]).filter(m=>m.produto_id===produto&&m.tamanho===tamanho).sort((a,b)=>a.ordem-b.ordem);
+ return <><div className="field"><label htmlFor="guia-produto">Peça</label><select id="guia-produto" className="input" value={produto} onChange={e=>setProduto(e.target.value)}>{catalogo.produtos.map(p=><option key={p.id} value={p.id}>{p.nome}</option>)}</select></div>
+ <div className="field"><label htmlFor="guia-tamanho">Tamanho</label><select id="guia-tamanho" className="input" value={tamanho} onChange={e=>setTamanho(e.target.value)}>{tams.map(t=><option key={t}>{t}</option>)}</select></div>
+ {medidas.length?<table className="meas"><tbody>{medidas.map(m=><tr key={m.medida}><td>{m.rotulo}</td><td>{m.valor_cm} cm</td></tr>)}</tbody></table>:<p className="small muted">Medidas ainda não cadastradas para este tamanho.</p>}<p className="xs muted" style={{marginTop:12}}>Medidas da peça deitada, de costura a costura.</p></>;
 }
 export function Loja() {
-  const [catalogo, setCatalogo] = useState<Catalogo | null>(null);
-  const [estado, setEstado] = useState<'carregando' | 'pronto' | 'erro'>('carregando');
-  const [tentativa, setTentativa] = useState(0);
-  const [filtros, setFiltros] = useState(() => lerFiltros(window.location.search));
-  const [menuAberto, setMenuAberto] = useState(false);
-  const botaoMenu = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    const controle = new AbortController(); let ativo = true;
-    const limite = setTimeout(() => controle.abort(), 15000);
-    setEstado('carregando');
-    carregarCatalogo(controle.signal).then(dados => {
-      if (ativo) { setCatalogo(dados); setEstado('pronto'); }
-    }).catch(() => { if (ativo) setEstado('erro'); }).finally(() => clearTimeout(limite));
-    return () => { ativo = false; clearTimeout(limite); controle.abort(); };
-  }, [tentativa]);
-  useEffect(() => {
-    const voltar = () => setFiltros(lerFiltros(window.location.search));
-    window.addEventListener('popstate', voltar);
-    return () => window.removeEventListener('popstate', voltar);
-  }, []);
-  useEffect(() => {
-    const fechar = (e: KeyboardEvent) => { if (e.key === 'Escape' && menuAberto) { setMenuAberto(false); botaoMenu.current?.focus(); } };
-    window.addEventListener('keydown', fechar);
-    return () => window.removeEventListener('keydown', fechar);
-  }, [menuAberto]);
-  useEffect(() => { document.title = `${catalogo?.nomeLoja ?? 'Rose Menezes'} · Moda feminina`; }, [catalogo?.nomeLoja]);
-  function atualizar(alteracao: Partial<Filtros>) {
-    const novos = { ...filtros, ...alteracao }; setFiltros(novos);
-    const busca = buscaDosFiltros(novos);
-    window.history.pushState(null, '', `${window.location.pathname}${busca ? `?${busca}` : ''}#colecao`);
-  }
-  const limpar = () => atualizar(filtrosIniciais);
-  const lista = catalogo ? selecionarProdutos(catalogo, filtros) : [];
-  const colecaoSlug = catalogo ? colecaoSelecionada(catalogo, filtros) : '';
-  const colecao = catalogo?.colecoes.find(c => c.slug === colecaoSlug);
-  const temFiltros = !!(filtros.categoria || filtros.tamanho || filtros.disponiveis || filtros.colecao !== null || filtros.ordem !== 'novidades');
-  const destaque = catalogo?.produtos.find(p => p.selo === 'aprovado_rose') ?? catalogo?.produtos[0];
-  const tamanhos = [...new Set(catalogo?.saldos.map(v => v.tamanho) ?? [])].sort(new Intl.Collator('pt-BR', { numeric: true }).compare);
-  const faixa = tamanhos.length > 1 ? `Peças do ${tamanhos[0]} ao ${tamanhos.at(-1)} que vestem bem o corpo de verdade.` : 'Peças que vestem bem o corpo de verdade.';
-  return <>
-    <a className="pular" href="#colecao">Pular para a coleção</a>
-    <div className="aviso-ambiente">{import.meta.env.VITE_APP_ENV === 'homologation' ? 'Homologação' : 'Desenvolvimento'} · catálogo demonstrativo · não realiza vendas</div>
-    <header className="cabecalho"><div className="container cabecalho-interno">
-      <a href="#inicio" className="link-marca" aria-label={`${catalogo?.nomeLoja ?? 'Rose Menezes'} — início`} onClick={() => setMenuAberto(false)}><Marca catalogo={catalogo} /></a>
-      <button ref={botaoMenu} className="botao-menu" type="button" aria-controls="navegacao" aria-expanded={menuAberto}
-        aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenuAberto(!menuAberto)}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d={menuAberto ? 'M6 6l12 12M6 18L18 6' : 'M4 7h16M4 12h16M4 17h16'} /></svg>
-      </button>
-      <nav id="navegacao" className={menuAberto ? 'navegacao aberta' : 'navegacao'} aria-label="Principal">
-        <a href="#inicio" onClick={() => setMenuAberto(false)}>Início</a><a href="#colecao" onClick={() => setMenuAberto(false)}>Coleção</a>
-      </nav>
-    </div></header>
-    <main className="container" id="inicio">
-      <section className="hero" aria-labelledby="titulo-home">
-        <div className="hero-texto"><span className="sobretitulo">{colecao?.nome ?? 'Elegância que abraça'}</span>
-          <h1 id="titulo-home">Bonita do seu jeito,<br />confortável o dia todo</h1>
-          <p>{faixa} {catalogo?.descricaoLoja ?? 'Moda feminina escolhida com carinho para vestir o seu dia.'}</p>
-          <a className="botao botao-principal" href="#colecao">Ver coleção <span aria-hidden="true">→</span></a>
-        </div>
-        <div className="hero-arte">{destaque && catalogo ? <ImagemPeca produto={destaque}
-          categoria={catalogo.categorias.find(c => c.id === destaque.categoria_id)?.slug} destaque /> : <Ilustracao />}</div>
-      </section>
-      <section id="colecao" className="colecao" aria-labelledby="titulo-colecao" aria-busy={estado === 'carregando'}>
-        <div className="titulo-colecao"><div><span className="sobretitulo">Escolha suas favoritas</span><h2 id="titulo-colecao">Nossa coleção</h2></div>
-          {catalogo && catalogo.colecoes.length > 0 && <label className="campo-colecao">Coleção
-            <select value={colecaoSlug} onChange={e => atualizar({ colecao: e.target.value })}>
-              <option value="">Todas as coleções</option>
-              {filtros.colecao && !colecao && <option value={filtros.colecao}>Coleção não encontrada</option>}
-              {catalogo.colecoes.map(c => <option key={c.id} value={c.slug}>{c.nome}</option>)}
-            </select></label>}
-        </div>
-        {estado === 'carregando' ? <div role="status" className="estado-catalogo"><span className="carregador" aria-hidden="true" />Carregando a coleção…</div>
-          : estado === 'erro' ? <div role="alert" className="estado-catalogo"><h3>Não conseguimos carregar a coleção</h3><p>Confira sua conexão e tente novamente.</p><button className="botao botao-principal" onClick={() => setTentativa(t => t + 1)}>Tentar novamente</button></div>
-          : catalogo && <>
-            <div className="categorias" role="group" aria-label="Categorias">
-              <button className={`categoria ${!filtros.categoria ? 'selecionada' : ''}`} aria-pressed={!filtros.categoria} onClick={() => atualizar({ categoria: '' })}>Todas</button>
-              {catalogo.categorias.map(c => <button key={c.id} className={`categoria ${filtros.categoria === c.slug ? 'selecionada' : ''}`}
-                aria-pressed={filtros.categoria === c.slug} onClick={() => atualizar({ categoria: c.slug })}>{c.nome}</button>)}
-            </div>
-            {catalogo.produtos.length > 0 && <div className="barra-filtros">
-              <p className="contagem" role="status" aria-live="polite">{lista.length} {lista.length === 1 ? 'peça' : 'peças'}</p>
-              <label className="sr-only" htmlFor="tamanho">Tamanho</label>
-              <select id="tamanho" value={filtros.tamanho} onChange={e => atualizar({ tamanho: e.target.value })}>
-                <option value="">Todos os tamanhos</option>
-                {filtros.tamanho && !tamanhos.includes(filtros.tamanho) && <option value={filtros.tamanho}>Tamanho {filtros.tamanho}</option>}
-                {tamanhos.map(t => <option key={t} value={t}>Tamanho {t}</option>)}
-              </select>
-              <label className="sr-only" htmlFor="ordem">Ordenar peças</label>
-              <select id="ordem" value={filtros.ordem} onChange={e => atualizar({ ordem: e.target.value as Filtros['ordem'] })}>
-                <option value="novidades">Novidades</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option>
-              </select>
-              <label className="campo-checkbox"><input type="checkbox" checked={filtros.disponiveis} onChange={e => atualizar({ disponiveis: e.target.checked })} />Só disponíveis</label>
-              {temFiltros && <button className="limpar-filtros" onClick={limpar}>Limpar filtros</button>}
-            </div>}
-            {lista.length ? <div className="grade-produtos">{lista.map(p => <Cartao key={p.id} produto={p} catalogo={catalogo} />)}</div>
-              : <div className="estado-catalogo"><span className="assinatura">{catalogo.produtos.length ? 'Vamos tentar de novo?' : 'Novidades a caminho'}</span>
-                <p>{catalogo.produtos.length ? 'Nenhuma peça encontrada com essa combinação de filtros.' : 'Nossa coleção está sendo preparada. Volte em breve para conhecer as peças.'}</p>
-                {temFiltros && <button className="botao botao-secundario" onClick={limpar}>Limpar filtros</button>}</div>}
-          </>}
-      </section>
-    </main>
-    <footer className="rodape"><div className="container rodape-interno">
-      <div><Marca catalogo={catalogo} /><p>{catalogo?.descricaoLoja ?? 'Moda feminina escolhida com carinho para vestir o seu dia.'}</p><span className="assinatura">Elegância que abraça</span></div>
-      <nav aria-label="Navegação do rodapé"><h2>A coleção</h2><a href="#colecao" onClick={() => atualizar({ ...filtrosIniciais, colecao: '' })}>Ver todas as peças</a>
-        {catalogo?.categorias.map(c => <a key={c.id} href="#colecao" onClick={() => atualizar({ categoria: c.slug })}>{c.nome}</a>)}</nav>
-      <div className="rodape-frase"><p>Seu estilo.<br /><span>Seu jeito de ser.</span></p><a href="#inicio">Voltar ao início ↑</a></div>
-    </div><div className="container rodape-base"><span>© {new Date().getFullYear()} {catalogo?.nomeLoja ?? 'Rose Menezes'} · Moda feminina</span><span>Ambiente de homologação</span></div></footer>
-  </>;
+ const [catalogo,setCatalogo]=useState<Catalogo|null>(null),[estado,setEstado]=useState<'carregando'|'pronto'|'erro'>('carregando'),[tentativa,setTentativa]=useState(0);
+ const [rota,setRota]=useState(lerRota),[filtros,setFiltros]=useState(()=>lerFiltros(lerBusca()));
+ const [janela,setJanela]=useState<Janela>(null),[favoritos,setFavoritos]=useState(carregarFavoritos),[textoBusca,setTextoBusca]=useState('');
+ const [toast,setToast]=useState(''),toastTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ useEffect(()=>{const controle=new AbortController();let ativo=true;const timer=setTimeout(()=>controle.abort(),15000);setEstado('carregando');
+ carregarCatalogo(controle.signal).then(c=>{if(ativo){setCatalogo(c);setEstado('pronto');}}).catch(()=>{if(ativo)setEstado('erro');}).finally(()=>clearTimeout(timer));return()=>{ativo=false;clearTimeout(timer);controle.abort();};},[tentativa]);
+ useEffect(()=>{const navegar=()=>{setRota(lerRota());setFiltros(lerFiltros(lerBusca()));setJanela(null);window.scrollTo(0,0);};window.addEventListener('hashchange',navegar);window.addEventListener('popstate',navegar);return()=>{window.removeEventListener('hashchange',navegar);window.removeEventListener('popstate',navegar);};},[]);
+ useEffect(()=>()=>{if(toastTimer.current)clearTimeout(toastTimer.current);},[]);
+ useEffect(()=>{try{localStorage.setItem('rose-favoritos',JSON.stringify([...favoritos]));}catch{}},[favoritos]);
+ const fechar=useCallback(()=>setJanela(null),[]);
+ function aviso(s:string){setToast(s);if(toastTimer.current)clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(''),4000);}
+ function whatsapp(mensagem='Oi Rose! Quero conhecer a coleção.') {const url=linkWhatsApp(catalogo?.whatsappNumero,mensagem);if(!url){setJanela('whatsapp');return false;}window.open(url,'_blank','noopener,noreferrer');return true;}
+ function instagram(){if(catalogo?.instagramUrl)window.open(catalogo.instagramUrl,'_blank','noopener,noreferrer');else aviso('Instagram da loja: endereço ainda não configurado para contato real.');}
+ function atualizar(p:Partial<Filtros>){const f={...filtros,...p};setFiltros(f);setRota('loja');const b=buscaDosFiltros(f);window.history.pushState(null,'',`${window.location.pathname}${b?'?'+b:''}#/loja`);}
+ function limpar(){setFiltros(filtrosIniciais);setTextoBusca('');window.history.pushState(null,'',`${window.location.pathname}#/loja`);}
+ function favoritar(p:Produto){const novo=new Set(favoritos);if(novo.has(p.codigo)){novo.delete(p.codigo);aviso('Removida dos favoritos');}else{novo.add(p.codigo);aviso('Salva nos favoritos');}setFavoritos(novo);}
+ function aviseMe(p:Produto,t?:string){setJanela({produto:p,tamanho:t});}
+ const lista=catalogo?selecionarProdutos(catalogo,filtros):[],tams=[...new Set(catalogo?.saldos.map(v=>v.tamanho)??[])].sort(new Intl.Collator('pt-BR',{numeric:true}).compare);
+ const temFiltros=!!(filtros.categoria||filtros.tamanho||filtros.disponiveis||filtros.busca||filtros.ordem!=='novidades'||filtros.colecao!==null);
+ const pRota=rota.startsWith('loja/produto/')?catalogo?.produtos.find(p=>p.slug===rota.split('/')[2]||p.codigo===rota.split('/')[2]):undefined;
+ function cartao(p:Produto){if(!catalogo)return null;const tamanhos=tamanhosDoProduto(catalogo.saldos,p.id),esg=!tamanhos.some(t=>t.disponivel>0);return <div className="card" key={p.id} data-produto={p.codigo}>
+ <a href={`#/loja/produto/${p.slug}`} className="im" aria-label={`Ver ${p.nome}`}><Arte produto={p}/>{p.selo&&!esg&&<span className={`pill ${classeSelo(p)} sel`}>{selos[p.selo]}</span>}
+ {esg&&<div className="esg"><span className="pill t-neu">Esgotado</span><button className="btn btn-s btn-sm" onClick={e=>{e.preventDefault();aviseMe(p);}}>Avise-me quando chegar</button></div>}</a>
+ <button className={`fav ${favoritos.has(p.codigo)?'on':''}`} onClick={()=>favoritar(p)} title="Favoritar" aria-label={`Favoritar ${p.nome}`} aria-pressed={favoritos.has(p.codigo)}><Icone nome="heart"/></button>
+ <a href={`#/loja/produto/${p.slug}`}><div className="nm">{p.nome}</div><div className="pr">{p.preco_promocional!==null&&<s>{moeda(p.preco)}</s>}{moeda(precoAtual(p))}</div>
+ <div className="pc">{esg?'Volta em breve':`ou 3x de ${moeda(precoAtual(p)/3)}`}</div><div className="sz" aria-label="Disponibilidade por tamanho">{tamanhos.map(t=><span key={t.tamanho} className={t.disponivel?'':'x'} aria-label={`Tamanho ${t.tamanho}: ${t.disponivel?'disponível':'esgotado'}`}>{t.tamanho}</span>)}</div></a></div>;}
+ const carregando=<div className="estado" role={estado==='erro'?'alert':'status'}>{estado==='erro'?<><h2>Não conseguimos carregar a coleção</h2><p className="muted">Confira sua conexão e tente novamente.</p><button className="btn btn-p" onClick={()=>setTentativa(t=>t+1)}>Tentar novamente</button></>:<p className="muted">Carregando a coleção…</p>}</div>;
+ function home(){return <div className="s-wrap"><section className="s-hero"><div><span className="eyebrow">Coleção de lançamento · primavera</span><h1>Bonita do seu jeito, confortável o dia todo</h1><p>Peças do 44 ao 54 que vestem bem o corpo de verdade. Cada uma aprovada pela Rose antes de entrar na loja.</p>
+ <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><a className="btn btn-p" href="#colecao" onClick={e=>{e.preventDefault();document.getElementById('colecao')?.scrollIntoView({behavior:'smooth'});}}>Ver coleção</a><button className="btn btn-s" onClick={instagram}>Live quinta, 20h</button></div></div>
+ <div className="art">{catalogo?.produtos[0]&&<Arte produto={catalogo.produtos[0]} variante={2} hero/>}</div></section>
+ {estado!=='pronto'?carregando:<><div id="colecao" className="s-cats" role="group" aria-label="Categorias"><button className={`chip ${!filtros.categoria?'on':''}`} aria-pressed={!filtros.categoria} onClick={()=>atualizar({categoria:''})}>Todas</button>{catalogo?.categorias.map(c=><button key={c.id} className={`chip ${filtros.categoria===c.slug?'on':''}`} aria-pressed={filtros.categoria===c.slug} onClick={()=>atualizar({categoria:c.slug})}>{c.nome}</button>)}</div>
+ <div className="s-bar"><span className="cnt" role="status" aria-live="polite">{lista.length} {lista.length===1?'peça':'peças'}</span><label className="sr-only" htmlFor="tamanho">Tamanho</label><select id="tamanho" value={filtros.tamanho} onChange={e=>atualizar({tamanho:e.target.value})}><option value="">Todos os tamanhos</option>{tams.map(t=><option key={t}>{t}</option>)}</select>
+ <label className="sr-only" htmlFor="ordem">Ordenar peças</label><select id="ordem" value={filtros.ordem} onChange={e=>atualizar({ordem:e.target.value as Filtros['ordem']})}><option value="novidades">Novidades</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option></select>
+ <label className="small" style={{display:'flex',gap:6,alignItems:'center'}}><input type="checkbox" checked={filtros.disponiveis} onChange={e=>atualizar({disponiveis:e.target.checked})}/> Só disponíveis</label>{temFiltros&&<button className="limpar" onClick={limpar}>Limpar filtros</button>}</div>
+ {filtros.busca&&<p className="resultado-busca">Resultado da busca por “{filtros.busca}”</p>}{lista.length?<div className="s-grid">{lista.map(cartao)}</div>:<div className="empty"><span className="script">Ops</span>{catalogo?.produtos.length?'Nenhuma peça com esse filtro.':'Nossa coleção está sendo preparada.'} {temFiltros&&<button className="lnk" style={{color:'var(--vinho)',fontWeight:600}} onClick={limpar}>Limpar filtros</button>}</div>}</>}
+ </div>;}
+ let conteudo:ReactNode;
+ if(rota==='loja'||rota==='loja/inicio')conteudo=home();
+ else if(rota==='loja/quem-somos')conteudo=<QuemSomos catalogo={catalogo} whatsapp={()=>whatsapp()}/>;
+ else if(rota==='loja/trocas')conteudo=<Trocas aviso={()=>setJanela('fase1')}/>;
+ else if(rota.startsWith('loja/produto/'))conteudo=estado!=='pronto'?carregando:pRota&&catalogo?<PaginaProduto key={pRota.id} produto={pRota} catalogo={catalogo} aviso={aviso} whatsapp={whatsapp} aviseMe={aviseMe} relacionados={catalogo.produtos.filter(p=>p.id!==pRota.id&&tamanhosDoProduto(catalogo.saldos,p.id).some(t=>t.disponivel)).slice(0,4).map(cartao)}/>:<div className="estado"><h1>Peça não encontrada</h1><a className="btn btn-p" href="#/loja">Voltar à coleção</a></div>;
+ else conteudo=<div className="bloqueio"><h1>Próxima fase</h1><p>Esta entrega é a vitrine da Fase 0. Área da cliente, sacola, checkout e painel operacional entram nas fases seguintes da Arquitetura V2.</p><a className="btn btn-p" href="#/loja">Voltar à coleção</a></div>;
+ function enviarAviso(e:FormEvent<HTMLFormElement>,j:{produto:Produto;tamanho?:string}){e.preventDefault();const f=new FormData(e.currentTarget);const t=String(f.get('tamanho')),c=String(f.get('contato')).trim();if(!c){aviso('Informe seu WhatsApp ou e-mail.');return;}whatsapp(`Oi Rose! Quero ser avisada quando ${j.produto.nome} (${j.produto.codigo}), tamanho ${t}, chegar. Meu contato: ${c}. Autorizo receber esse aviso de reposição.`);}
+ return <><div id="homolog"><b>HOMOLOGAÇÃO</b><a href="#/loja" className="on">Loja</a><button onClick={()=>setJanela('fase1')}>Área da cliente</button><button onClick={()=>setJanela('fase2')}>Painel interno</button><span className="sp"/><span style={{opacity:.6}}>dados fictícios · não realiza vendas</span></div>
+ <div className="s-top">Lançamento 10/10 · Frete grátis acima de R$ 299 · Troca fácil na primeira compra</div>
+ <header className="s-head"><div className="in"><button className="s-menu-btn" style={{margin:0}} onClick={()=>setJanela('menu')} aria-label="Abrir menu"><span style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center'}}><Icone nome="menu"/></span></button>
+ <a className="s-logo" href="#/loja"><Marca catalogo={catalogo}/></a><nav className="s-nav" aria-label="Principal"><a href="#/loja" className={rota==='loja'?'on':''}>Coleção</a><a href="#/loja/quem-somos" className={rota==='loja/quem-somos'?'on':''}>Quem somos</a><a href="#/loja/trocas" className={rota==='loja/trocas'?'on':''}>Trocas e cancelamentos</a></nav>
+ <div className="s-ic"><button title="Buscar" aria-label="Buscar" onClick={()=>{setTextoBusca(filtros.busca??'');setJanela('busca');}}><Icone nome="search"/></button><button title="Área da cliente" aria-label="Área da cliente" onClick={()=>setJanela('fase1')}><Icone nome="user"/></button><button title="Sacola" aria-label="Sacola" onClick={()=>setJanela('fase1')}><Icone nome="bag"/></button></div></div></header>
+ <main>{conteudo}</main><footer className="s-foot"><div className="in"><div><div className="s-logo"><Marca catalogo={catalogo}/></div><p className="small" style={{marginTop:12,color:'var(--tinta)',maxWidth:320}}>Moda para a mulher real 35+, do 38 ao 54. Peças escolhidas e vestidas pela própria Rose.</p><p className="script" style={{fontSize:28,marginTop:6}}>Elegância que abraça</p></div>
+ <div><h4>Ajuda</h4><a href="#/loja/trocas">Trocas e cancelamentos</a><a href="#guia" onClick={e=>{e.preventDefault();setJanela('guia');}}>Guia de medidas</a><a href="#acompanhar" onClick={e=>{e.preventDefault();setJanela('fase1');}}>Acompanhar pedido</a><a href="#whatsapp" onClick={e=>{e.preventDefault();whatsapp();}}>Falar no WhatsApp</a></div>
+ <div><h4>A loja</h4><a href="#/loja/quem-somos">Quem somos</a><a href="#instagram" onClick={e=>{e.preventDefault();instagram();}}>Instagram</a><a href="#privacidade" onClick={e=>{e.preventDefault();setJanela('privacidade');}}>Privacidade</a><a href="#painel" style={{color:'var(--taupe)',fontSize:12,marginTop:8}} onClick={e=>{e.preventDefault();setJanela('fase2');}}>Acesso interno</a></div></div>
+ <div className="bot"><span>Rose Menezes Moda Feminina · CNPJ 00.000.000/0001-00 · Belo Horizonte, MG</span><span>Pix · Cartão até 3x sem juros · Boleto</span></div></footer>
+ <button className="wa-float" title="WhatsApp" aria-label="WhatsApp" onClick={()=>whatsapp()}><Icone nome="wa"/></button>
+ {janela&&<Dialogo titulo={janela==='menu'?'Menu':janela==='busca'?'Buscar uma peça':janela==='guia'?'Guia de medidas':janela==='privacidade'?'Privacidade':janela==='whatsapp'?'WhatsApp da Rose':typeof janela==='object'?'Avise-me quando chegar':'Próxima fase'} fechar={fechar} drawer={janela==='menu'}>
+ {janela==='menu'&&<>{[['Coleção','#/loja'],['Quem somos','#/loja/quem-somos'],['Trocas e cancelamentos','#/loja/trocas']].map(([n,h])=><a key={h} href={h} onClick={fechar} style={{display:'block',padding:'12px 0',borderBottom:'1px solid var(--linha)',fontSize:16}}>{n}</a>)}<button className="btn btn-block" onClick={()=>setJanela('fase1')}>Área da cliente</button><button className="btn btn-block" onClick={()=>setJanela('fase1')}>Sacola</button><p className="small muted" style={{marginTop:18}}>Categorias</p>{catalogo?.categorias.map(c=><button key={c.id} style={{display:'block',padding:'8px 0'}} onClick={()=>{atualizar({categoria:c.slug});fechar();}}>{c.nome}</button>)}</>}
+ {janela==='busca'&&<form onSubmit={e=>{e.preventDefault();atualizar({...filtrosIniciais,busca:textoBusca.trim()});fechar();document.getElementById('colecao')?.scrollIntoView();}}><div className="field"><label htmlFor="buscar">Nome ou código da peça</label><input id="buscar" className="input" value={textoBusca} onChange={e=>setTextoBusca(e.target.value)} placeholder="Ex.: Aurora ou RM01"/></div><button className="btn btn-p btn-block">Buscar</button></form>}
+ {janela==='guia'&&(catalogo?<Guia catalogo={catalogo}/>:<p>Aguarde o carregamento da coleção.</p>)}
+ {janela==='privacidade'&&<><p className="small">Ambiente de homologação com catálogo e avaliações fictícios. Favoritos ficam somente neste navegador. Nenhum cadastro de cliente é criado nesta etapa.</p><p className="small" style={{marginTop:12}}>O contato por WhatsApp é iniciado por você e exige confirmação de envio no aplicativo. A política definitiva será homologada antes da publicação em produção.</p></>}
+ {janela==='whatsapp'&&<><p className="small">Os botões e mensagens estão preparados. O número comercial da Rose ainda precisa ser configurado para abrir a conversa correta.</p><p className="xs muted" style={{marginTop:12}}>Nenhuma mensagem foi enviada.</p></>}
+ {(janela==='fase1'||janela==='fase2')&&<><p className="small">{janela==='fase1'?'Área da cliente, pedidos, sacola e checkout pertencem à Fase 1.':'O painel operacional será construído nas fases seguintes da Arquitetura V2.'}</p><p className="small muted" style={{marginTop:12}}>Nesta homologação estamos validando a vitrine da Fase 0. Nenhuma venda ou cadastro é realizado.</p></>}
+ {typeof janela==='object'&&janela!==null&&<form onSubmit={e=>enviarAviso(e,janela)}><p className="small muted" style={{marginBottom:14}}>{janela.produto.nome} está esgotado. Assim que chegar no seu tamanho, a gente te avisa primeiro.</p><div className="field"><label htmlFor="aviso-tam">Tamanho</label><select id="aviso-tam" className="input" name="tamanho" defaultValue={janela.tamanho??tams[0]}>{tamanhosDoProduto(catalogo?.saldos??[],janela.produto.id).map(t=><option key={t.tamanho}>{t.tamanho}</option>)}</select></div>
+ <div className="field"><label htmlFor="aviso-contato">WhatsApp ou e-mail</label><input id="aviso-contato" className="input" name="contato" placeholder="(31) 9 0000-0000" required maxLength={120}/></div><label className="small" style={{display:'flex',gap:8,alignItems:'flex-start'}}><input type="checkbox" required defaultChecked/> Aceito receber o aviso de reposição por WhatsApp e e-mail.</label>
+ <p className="xs muted" style={{marginTop:10}}>A solicitação será aberta no WhatsApp; o envio depende da sua confirmação.</p><div className="mf" style={{marginTop:12}}><button type="button" className="btn btn-s btn-sm" onClick={fechar}>Cancelar</button><button className="btn btn-p btn-sm">Quero ser avisada</button></div></form>}
+ </Dialogo>}
+ <div id="toast" className={toast?'on':''} role="status" aria-live="polite">{toast}</div></>;
 }

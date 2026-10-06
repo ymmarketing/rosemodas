@@ -7,13 +7,17 @@ export type Produto = {
   id: string; codigo: string; nome: string; slug: string; categoria_id: string;
   colecao_id: string | null; preco: number; preco_promocional: number | null;
   selo: 'aprovado_rose' | 'novidade' | 'ultimas_pecas' | null; midias: Midia[];
+  descricao?: string; modelo_veste?: string | null;
+  variacoes?: { id: string; sku: string; tamanho: string; cor: string }[];
 };
+export type Medida = { produto_id: string; tamanho: string; medida: string; rotulo: string; valor_cm: number; ordem: number };
 export type Saldo = { variacao_id: string; produto_id: string; tamanho: string; cor: string; disponivel: number };
 export type Catalogo = {
   categorias: Categoria[]; colecoes: Colecao[]; produtos: Produto[]; saldos: Saldo[];
   nomeLoja: string; descricaoLoja: string; logoUrl: string | null;
+  medidas?: Medida[]; whatsappNumero?: string | null; instagramUrl?: string | null;
 };
-export type Filtros = { categoria: string; colecao: string | null; tamanho: string; ordem: 'novidades' | 'menor' | 'maior'; disponiveis: boolean };
+export type Filtros = { categoria: string; colecao: string | null; tamanho: string; ordem: 'novidades' | 'menor' | 'maior'; disponiveis: boolean; busca?: string };
 export const filtrosIniciais: Filtros = { categoria: '', colecao: null, tamanho: '', ordem: 'novidades', disponiveis: false };
 const comparador = new Intl.Collator('pt-BR', { numeric: true });
 export const precoAtual = (p: Produto) => p.preco_promocional ?? p.preco;
@@ -34,6 +38,7 @@ export function selecionarProdutos(catalogo: Catalogo, filtros: Filtros) {
     grupo.push(saldo); saldosPorProduto.set(saldo.produto_id, grupo);
   }
   return catalogo.produtos.filter(p => {
+    if (filtros.busca && !normalizar(`${p.nome} ${p.codigo}`).includes(normalizar(filtros.busca))) return false;
     if (filtros.categoria && p.categoria_id !== categoriaId) return false;
     if (colecaoSlug && p.colecao_id !== colecaoId) return false;
     const variacoes = saldosPorProduto.get(p.id) ?? [];
@@ -43,14 +48,14 @@ export function selecionarProdutos(catalogo: Catalogo, filtros: Filtros) {
     const diferenca = filtros.ordem === 'menor' ? precoAtual(a) - precoAtual(b)
       : filtros.ordem === 'maior' ? precoAtual(b) - precoAtual(a)
       : Number(b.selo === 'novidade') - Number(a.selo === 'novidade');
-    return diferenca || comparador.compare(a.nome, b.nome) || a.id.localeCompare(b.id);
+    return diferenca || comparador.compare(a.codigo, b.codigo) || a.id.localeCompare(b.id);
   });
 }
 export function lerFiltros(busca: string): Filtros {
   const q = new URLSearchParams(busca), ordem = q.get('ordem');
   return { categoria: q.get('categoria') ?? '', colecao: q.has('colecao') ? q.get('colecao')! : null,
     tamanho: q.get('tamanho') ?? '', ordem: ordem === 'menor' || ordem === 'maior' ? ordem : 'novidades',
-    disponiveis: q.get('disponiveis') === '1' };
+    disponiveis: q.get('disponiveis') === '1', ...(q.get('busca') ? { busca: q.get('busca')! } : {}) };
 }
 export function buscaDosFiltros(f: Filtros) {
   const q = new URLSearchParams();
@@ -59,6 +64,7 @@ export function buscaDosFiltros(f: Filtros) {
   if (f.tamanho) q.set('tamanho', f.tamanho);
   if (f.ordem !== 'novidades') q.set('ordem', f.ordem);
   if (f.disponiveis) q.set('disponiveis', '1');
+  if (f.busca?.trim()) q.set('busca', f.busca.trim());
   return q.toString();
 }
 export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
@@ -74,11 +80,12 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
       if (!data || data.length < pagina) return linhas;
     }
   }
-  const [categorias, colecoes, produtos, saldos, configuracoes] = await Promise.all([
+  const [categorias, colecoes, produtos, saldos, medidas, configuracoes] = await Promise.all([
     lerLista<Categoria>('categorias', 'id,nome,slug,ordem', 'id'),
     lerLista<Colecao>('colecoes', 'id,nome,slug,atual', 'id'),
-    lerLista<Produto>('produtos', 'id,codigo,nome,slug,categoria_id,colecao_id,preco,preco_promocional,selo,midias(caminho_storage,alt_texto,tipo,principal,ordem)', 'id'),
+    lerLista<Produto>('produtos', 'id,codigo,nome,slug,descricao,modelo_veste,categoria_id,colecao_id,preco,preco_promocional,selo,variacoes(id,sku,tamanho,cor),midias(caminho_storage,alt_texto,tipo,principal,ordem)', 'id'),
     lerLista<Saldo>('v_estoque_disponivel', 'variacao_id,produto_id,tamanho,cor,disponivel', 'variacao_id'),
+    lerLista<Medida>('medidas_tamanho', 'produto_id,tamanho,medida,rotulo,valor_cm,ordem', 'id'),
     lerLista<{ chave: string; valor: unknown }>('configuracoes', 'chave,valor', 'chave'),
   ]);
   const texto = (chave: string, padrao: string) => {
@@ -88,9 +95,24 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
   const caminhoLogo = texto('logo_caminho', '');
   return { categorias: categorias.sort((a, b) => a.ordem - b.ordem || comparador.compare(a.nome, b.nome)),
     colecoes: colecoes.sort((a, b) => Number(b.atual) - Number(a.atual) || comparador.compare(a.nome, b.nome)),
-    produtos, saldos, nomeLoja: texto('nome_loja', 'Rose Menezes'),
+    produtos, saldos, medidas, nomeLoja: texto('nome_loja', 'Rose Menezes'),
     descricaoLoja: texto('descricao_loja', 'Moda feminina escolhida com carinho para vestir o seu dia.'),
-    logoUrl: caminhoLogo ? urlDaMidia(caminhoLogo) : null };
+    logoUrl: caminhoLogo ? urlDaMidia(caminhoLogo) : null,
+    whatsappNumero: numeroWhatsApp(texto('whatsapp_numero', '')),
+    instagramUrl: linkInstagram(texto('instagram_url', '')) };
+}
+export const normalizar = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+export function numeroWhatsApp(s: string) {
+  const n = s.replace(/[^0-9]/g, '');
+  return /^55[1-9][0-9][0-9]{8,9}$/.test(n) ? n : null;
+}
+export function linkWhatsApp(numero: string | null | undefined, mensagem: string) {
+  const n = numero ? numeroWhatsApp(numero) : null;
+  return n ? `https://wa.me/${n}?text=${encodeURIComponent(mensagem)}` : null;
+}
+export function linkInstagram(s: string) {
+  try { const u = new URL(s); return u.protocol === 'https:' && ['instagram.com', 'www.instagram.com'].includes(u.hostname) ? u.href : null; }
+  catch { return null; }
 }
 export function urlDaMidia(caminho: string) {
   if (!caminho || caminho.startsWith('/') || caminho.includes('://') || caminho.split('/').some(p => p === '..')) return null;

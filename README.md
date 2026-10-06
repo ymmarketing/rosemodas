@@ -1,6 +1,6 @@
 # Rose Modas
 
-**Construção — Tarefa 3 da Fase 0: Home e coleção, aguardando homologação da Yasmin.**
+**Construção — Fase 0: vitrine em correção de homologação, aguardando validação da Yasmin.**
 
 Referência técnica: Arquitetura V2. Referência visual: `prototipo/index.html`.
 O `index.html` da raiz continua sendo o kit de marca; a aplicação fica em `apps/vitrine`.
@@ -85,7 +85,7 @@ de produção; não existem variáveis da Rose no ambiente Production da Vercel.
 continuam aceitando somente bases locais; a execução SQL hospedada desta entrega
 foi direcionada explicitamente ao projeto exclusivo de homologação.
 
-## Home e coleção — Tarefa 3, em construção
+## Primeira entrega da Home e coleção — substituída pela correção abaixo
 
 A organização, cores, fontes, logo, hero, categorias, barra de filtros e cards
 seguem `prototipo/index.html`. Nenhuma migration nova foi necessária.
@@ -123,16 +123,47 @@ Os sete testes de catálogo e sete de ambiente passaram localmente, assim como
 build, inspeção de credenciais e os dois bancos limpos. CI e smoke no Preview
 fazem parte da entrega; a aprovação de UX e operação continua com a Yasmin.
 
-O escopo termina na Home e listagem da coleção. Página do produto e WhatsApp
-ficam para a próxima tarefa autorizada. Não há carrinho, checkout, cadastro,
-favoritos, avise-me ou módulos internos nesta aplicação.
+## Correção da homologação inicial — fidelidade ao mockup
+
+Solicitação da Yasmin em 06/10/2026: entregar a vitrine conforme o mockup,
+completando as pendências da Fase 0. São ajustes da primeira homologação, não melhoria.
+
+- Home e coleção restauradas: mesmos textos, cores, fontes, logo, ilustrações,
+  espaçamentos, header, categorias, cards, esgotados e rodapé da referência.
+- Cards abrem página do produto: galeria, cores, saldo por tamanho, medidas,
+  descrição e peças relacionadas. Busca por nome/código, favoritos neste navegador,
+  guia de medidas, Quem somos e Trocas implementados.
+- Banner fixo identifica dados fictícios e ausência de vendas. Textos de condições,
+  CNPJ de exemplo, avaliações e cotação de frete permanecem demonstrativos.
+  Não há integração de pagamento, frete, criação de cliente, pedido ou reserva.
+- Área da cliente, sacola/checkout e painel operacional mantêm seus pontos de
+  navegação visuais e informam a fase prevista; não simulam operações concluídas.
+- Avise-me abre solicitação por WhatsApp com consentimento, sem criar cadastro.
+  O envio final é feito pelo usuário no aplicativo. O número comercial ainda não
+  foi informado. Botões não inventam um destinatário nem confirmam envio inexistente.
+- Migration adicional `20261006170640_fase_0_contatos_publicos.sql`: amplia somente
+  a lista explícita de configurações públicas com `whatsapp_numero` e `instagram_url`.
+  Não altera a migration original, tabelas, FKs, estoque ou permissões internas.
+  Histórico remoto usa a mesma versão do arquivo (normalizado após a versão MCP).
+- Seed `homologacao-mockup.sql`: somente `kernpudxhwkpoadahgqj`, marcador privado
+  obrigatório. Completa 12 modelos, 96 variações e 216 medidas fictícias; renomeia
+  cores das variações de exemplo existentes, preservando os respectivos saldos.
+  Total: 181 unidades fictícias, 74 movimentos e 539 registros de auditoria.
+  Reaplicação hospedada preservou todas essas contagens.
+- O build de homologação disponibiliza `/referencia/index.html`, cópia exata e
+  separada de `prototipo/index.html`, para comparação visual. Essa referência não
+  executa consultas nem alimenta a vitrine; não é implementação de fases futuras.
+- Testes: sete de catálogo, três da vitrine (incluindo seed e RLS), sete de ambiente,
+  build/inspeção de secrets e duas bases limpas com as migrations sequenciais.
+
+Permanece em CONSTRUÇÃO. Não representa aprovação, release ou congelamento.
 
 ## Banco e testes
 
 Com Docker/Podman: `npm run db:start` e `npm run db:reset:dev` aplicam a migration
 no Supabase local (PostgreSQL 17). O reset é somente local e descarta seus dados.
 
-`npm run test:db` cria duas bases PGlite independentes (PostgreSQL 18.3), aplica a mesma migration e
+`npm run test:db` cria duas bases PGlite independentes (PostgreSQL 18.3), aplica as migrations da Fase 0 e
 confere os mesmos testes e a igualdade dos schemas. A fixture Auth/Storage usada
 nesse runner fica em `tests/database/platform-fixture.sql`, fora das migrations.
 
@@ -149,7 +180,7 @@ remotos e todos os dados de teste são descartados por rollback.
   transação. Não há reserva na Fase 0; `estoque_reservado` é zero nesta fase.
 - A view `v_estoque_disponivel` usa `security_invoker`. Um helper privado retorna
   apenas saldo publicável, preservando o bloqueio de custo e saldos internos.
-- Configurações públicas: apenas `nome_loja`, `descricao_loja` e `logo_caminho`.
+- Configurações públicas: `nome_loja`, `descricao_loja`, `logo_caminho` e, nesta correção, `whatsapp_numero` e `instagram_url`.
 - Bucket `produtos-publico` criado pela migration. Fotos nesse bucket são públicas;
   visitantes têm somente leitura. Não foram criados buckets de fases futuras.
 

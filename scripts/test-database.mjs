@@ -6,11 +6,11 @@ import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import pg from 'pg';
 
 const migrations = (await readdir('supabase/migrations')).filter(n => n.endsWith('.sql')).sort();
-assert.equal(migrations.length, 1, 'Tarefa 1 deve conter somente a primeira migration.');
-const migration = await readFile(`supabase/migrations/${migrations[0]}`, 'utf8');
+assert.equal(migrations[0], '20261001171459_fase_0_catalogo.sql', 'A fundação aprovada deve permanecer como primeira migration.');
+const migration = (await Promise.all(migrations.map(n => readFile(`supabase/migrations/${n}`, 'utf8')))).join('\n');
 const suite = await readFile('tests/database/fase-0.sql', 'utf8');
 const fixture = await readFile('tests/database/platform-fixture.sql', 'utf8');
-const report = { status: 'CONSTRUCAO_AGUARDANDO_VALIDACAO', migration: migrations[0], runs: [] };
+const report = { status: 'CONSTRUCAO_AGUARDANDO_VALIDACAO', migrations, runs: [] };
 
 async function validate(db, name, apply) {
   if (apply) {

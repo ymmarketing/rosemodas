@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { validarAmbiente, variaveisPublicas } from './src/ambiente.ts';
@@ -20,7 +21,16 @@ export default defineConfig(({ mode }) => {
     root: fileURLToPath(new URL('.', import.meta.url)),
     envDir,
     envPrefix: [...variaveisPublicas],
-    plugins: [react()],
+    plugins: [react(), {
+      name: 'referencia-visual-de-homologacao',
+      apply: 'build',
+      generateBundle() {
+        // Referência separada para comparar a entrega; nunca alimenta a aplicação.
+        if (env.VITE_APP_ENV === 'homologation') this.emitFile({ type: 'asset',
+          fileName: 'referencia/index.html',
+          source: readFileSync(fileURLToPath(new URL('../../prototipo/index.html', import.meta.url)), 'utf8') });
+      },
+    }],
     server: { host: '127.0.0.1', port: 5173, strictPort: true },
     build: { outDir: '../../dist/vitrine', emptyOutDir: true },
   };
