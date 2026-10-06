@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validarAmbiente } from '../apps/vitrine/src/ambiente.ts';
 import criarConfig from '../apps/vitrine/vite.config.ts';
+import { build } from 'vite';
 
 const referencia = 'abcdefghijklmnopqrst';
 const homologacao = {
@@ -50,5 +51,30 @@ test('configuração Vite bloqueia preview não vinculado à homologação', () 
   finally {
     if (anterior === undefined) delete process.env.VERCEL_ENV; else process.env.VERCEL_ENV = anterior;
     if (ambienteAnterior === undefined) delete process.env.VITE_APP_ENV; else process.env.VITE_APP_ENV = ambienteAnterior;
+  }
+});
+test('preview compila com metadados Vercel e não os envia ao navegador', async () => {
+  const metadado = 'HOMOLOGACAO_METADADO_INTERNO_NAO_PUBLICAR';
+  const variaveis = {
+    ...homologacao, VERCEL_ENV: 'preview', VITE_VERCEL_ENV: 'preview',
+    VITE_VERCEL_GIT_COMMIT_MESSAGE: metadado,
+  };
+  const anteriores = Object.fromEntries(Object.keys(variaveis).map(nome => [nome, process.env[nome]]));
+  Object.assign(process.env, variaveis);
+  try {
+    const config = criarConfig({ command: 'build', mode: 'homologation' });
+    const resultado = await build({ ...config, configFile: false, logLevel: 'silent',
+      build: { ...config.build, write: false } });
+    const artefatos = (Array.isArray(resultado) ? resultado : [resultado])
+      .flatMap(item => item.output).map(item => item.type === 'chunk' ? item.code : String(item.source)).join('\n');
+    assert.ok(artefatos.includes(homologacao.VITE_SUPABASE_PUBLISHABLE_KEY));
+    assert.ok(!artefatos.includes(metadado));
+    process.env.VITE_ADMIN_TOKEN = 'CREDENCIAL_FICTICIA_NAO_PERMITIDA';
+    try { assert.throws(() => criarConfig({ command: 'build', mode: 'homologation' }), /não prevista/); }
+    finally { delete process.env.VITE_ADMIN_TOKEN; }
+  } finally {
+    for (const [nome, valor] of Object.entries(anteriores)) {
+      if (valor === undefined) delete process.env[nome]; else process.env[nome] = valor;
+    }
   }
 });

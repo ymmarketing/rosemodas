@@ -1,9 +1,10 @@
 type Variaveis = Record<string, string | undefined>;
 
-const permitidas = new Set([
+export const variaveisPublicas = [
   'VITE_APP_ENV', 'VITE_SUPABASE_URL',
   'VITE_SUPABASE_PUBLISHABLE_KEY', 'VITE_SUPABASE_PROJECT_REF',
-]);
+] as const;
+const permitidas = new Set<string>(variaveisPublicas);
 
 // Compartilhado pelo build e pelo navegador; nunca aceita credenciais de servidor.
 export function validarAmbiente(variaveis: Variaveis, exigirConfiguracao = false) {
