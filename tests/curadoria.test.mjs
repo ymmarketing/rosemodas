@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {pendenciasDaPeca,prepararUpload,entradaInterna} from '../apps/vitrine/src/painel/catalogoInterno.ts';
 import {sessaoPorCodigo,telefoneDeAcesso,mensagemErroAcesso} from '../apps/vitrine/src/painel/acessoSemSenha.ts';
+import {validarPrecos} from '../apps/vitrine/src/painel/precos.ts';
+test('promoção vazia salva preço normal, menor salva e igual ou maior informa a correção',()=>{
+  assert.deepEqual(validarPrecos('120',''),{preco:120,preco_promocional:null});
+  assert.deepEqual(validarPrecos('120','99.90'),{preco:120,preco_promocional:99.9});
+  assert.deepEqual(validarPrecos('',''),{preco:null,preco_promocional:null});
+  for(const promo of ['120','121'])assert.throws(()=>validarPrecos('120',promo),/menor que o preço de venda.*deixe a promoção vazia/);
+  assert.throws(()=>validarPrecos('','80'),/Informe o preço de venda/);
+  assert.throws(()=>validarPrecos('100','99.999'),/duas casas decimais/);
+});
 test('acesso por canal validado distingue código de senha e rejeita métodos malformados',()=>{
   for(const method of ['otp','magiclink','invite'])assert.equal(sessaoPorCodigo([{method}]),true);
   for(const methods of [null,{},'otp',[],[{method:'password'}],[{method:'token_refresh'}],[null]])assert.equal(sessaoPorCodigo(methods),false);

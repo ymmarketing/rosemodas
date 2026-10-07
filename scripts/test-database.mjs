@@ -8,7 +8,7 @@ import pg from 'pg';
 const migrations = (await readdir('supabase/migrations')).filter(n => n.endsWith('.sql')).sort();
 assert.equal(migrations[0], '20261001171459_fase_0_catalogo.sql', 'A fundação aprovada deve permanecer como primeira migration.');
 const migration = (await Promise.all(migrations.map(n => readFile(`supabase/migrations/${n}`, 'utf8')))).join('\n');
-const suite = await readFile('tests/database/fase-0.sql', 'utf8') + '\n' + await readFile('tests/database/curadoria.sql', 'utf8') + '\n' + await readFile('tests/database/acesso-email-sms.sql','utf8');
+const suite = await readFile('tests/database/fase-0.sql', 'utf8') + '\n' + await readFile('tests/database/curadoria.sql', 'utf8') + '\n' + await readFile('tests/database/acesso-email-sms.sql','utf8') + '\n' + await readFile('tests/database/precos-colecao.sql','utf8');
 const fixture = await readFile('tests/database/platform-fixture.sql', 'utf8');
 const report = { status: 'CONSTRUCAO_AGUARDANDO_VALIDACAO', migrations, runs: [] };
 
@@ -38,7 +38,7 @@ async function validate(db, name, apply) {
   try { await db.exec(suite); }
   catch (error) { throw new Error(`Suíte ${error.code}: ${error.message}\n${error.where ?? ''}`); }
   const passed = notices.filter(message => message.includes('PASS:')).map(message => message.slice(message.indexOf('PASS:')));
-  assert.equal(passed.length, 19, `Esperados 19 grupos de testes, encontrados ${passed.length}`);
+  assert.equal(passed.length, 20, `Esperados 20 grupos de testes, encontrados ${passed.length}`);
   console.log(`${name}: ${passed.length} grupos aprovados; schema ${fingerprint.slice(0,12)}`);
   report.runs.push({ name, version, fingerprint, passed });
   return fingerprint;
