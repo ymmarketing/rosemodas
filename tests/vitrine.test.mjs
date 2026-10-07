@@ -4,6 +4,51 @@ import { readFile, readdir } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import { filtrosIniciais, selecionarProdutos, linkWhatsApp, linkInstagram, numeroWhatsApp, buscaDosFiltros, lerFiltros } from '../apps/vitrine/src/catalogo.ts';
+import { mensagemCompraWhatsApp } from '../apps/vitrine/src/compraWhatsApp.ts';
+import { recursosDeHomologacao } from '../apps/vitrine/src/ambiente.ts';
+import { createServer } from 'vite';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+test('telas renderizadas ocultam sacola, frete, fases futuras e exemplos fora da homologação',async()=>{
+ const server=await createServer({configFile:'apps/vitrine/vite.config.ts',mode:'homologation',server:{middlewareMode:true},appType:'custom'});
+ const anteriorWindow=globalThis.window, anteriorStorage=globalThis.localStorage;
+ try {
+  const {Loja}=await server.ssrLoadModule('/src/Loja.tsx');
+  const {PaginaProduto}=await server.ssrLoadModule('/src/Produto.tsx');
+  globalThis.window={location:{hash:'#/loja',search:''}};globalThis.localStorage={getItem:()=>null};
+  const p={id:'peca-1',nome:'Peça fictícia de teste',codigo:'RM-TESTE',slug:'peca-teste',preco:120,preco_promocional:null,selo:null,categoria_id:'cat',descricao:'Peça de teste',midias:[],variacoes:[{sku:'RM-TESTE-48',cor:'Preto',tamanho:'48'}]};
+  const catalogo={produtos:[p],categorias:[{id:'cat',nome:'Vestidos'}],colecoes:[],medidas:[],saldos:[{produto_id:p.id,cor:'Preto',tamanho:'48',disponivel:1}]};
+  for(const homologacao of [true,false]){
+   const loja=renderToStaticMarkup(createElement(Loja,{homologacao}));
+   assert.equal(loja.includes('aria-label="Sacola"'),homologacao);
+   assert.equal(loja.includes('id="homolog"'),homologacao);
+   assert.equal(loja.includes('00.000.000/0001-00'),homologacao);
+   assert.equal(loja.includes('Frete grátis'),homologacao);
+   const produto=renderToStaticMarkup(createElement(PaginaProduto,{produto:p,catalogo,aviso:()=>{},whatsapp:()=>{},aviseMe:()=>{},relacionados:null,homologacao}));
+   assert.ok(produto.includes('Comprar pelo WhatsApp'));
+   assert.ok(!produto.includes('Adicionar à sacola'));
+   assert.equal(produto.includes('Calcular frete'),homologacao);
+   assert.equal(produto.includes('5% off no Pix'),homologacao);
+   globalThis.window.location.hash='#/loja/sacola';
+   const rotaFutura=renderToStaticMarkup(createElement(Loja,{homologacao}));
+   assert.equal(rotaFutura.includes('Próxima fase'),homologacao);
+   globalThis.window.location.hash='#/loja';
+  }
+ }finally{globalThis.window=anteriorWindow;globalThis.localStorage=anteriorStorage;await server.close();}
+});
+test('compra pelo WhatsApp exige a combinação disponível e leva peça, código e link sem filtros',()=>{
+ const p={id:'peca-1',nome:'Vestido Íris & Rosa',codigo:'RM-C001',slug:'vestido-iris'};
+ const saldos=[{produto_id:'peca-1',cor:'Preto',tamanho:'48',disponivel:1},{produto_id:'peca-1',cor:'Nude',tamanho:'48',disponivel:0},{produto_id:'outra',cor:'Nude',tamanho:'48',disponivel:2}];
+ assert.throws(()=>mensagemCompraWhatsApp(p,saldos,'','48','https://homolog.rosemenezesmodas.com.br/'),/Escolha uma cor/);
+ assert.throws(()=>mensagemCompraWhatsApp(p,saldos,'Preto','','https://homolog.rosemenezesmodas.com.br/'),/Escolha o tamanho/);
+ assert.throws(()=>mensagemCompraWhatsApp(p,saldos,'Nude','48','https://homolog.rosemenezesmodas.com.br/'),/esgotado nessa cor/);
+ const msg=mensagemCompraWhatsApp(p,saldos,'Preto','48','https://homolog.rosemenezesmodas.com.br/?categoria=vestidos#/loja');
+ for(const trecho of ['Peça: Vestido Íris & Rosa','Código: RM-C001','Cor: Preto','Tamanho: 48','Link: https://homolog.rosemenezesmodas.com.br/#/loja/produto/vestido-iris'])assert.ok(msg.includes(trecho));
+ const url=new URL(linkWhatsApp('5531975417483',msg));
+ assert.equal(url.pathname,'/5531975417483');assert.equal(url.searchParams.get('text'),msg);
+ assert.equal(recursosDeHomologacao('homologation'),true);
+ for(const env of ['development','production',undefined,''])assert.equal(recursosDeHomologacao(env),false);
+});
 test('busca por nome com acentos ou código preserva isolamento dos filtros e a sequência da coleção', () => {
  const c={categorias:[],colecoes:[],produtos:[{id:'1',codigo:'HOM-RM01',nome:'Vestido Íris',selo:null},{id:'2',codigo:'HOM-RM02',nome:'Blusa',selo:null},{id:'3',codigo:'HOM-RM03',nome:'Conjunto',selo:'novidade'}],saldos:[]};
  assert.deepEqual(selecionarProdutos(c,filtrosIniciais).map(p=>p.codigo),['HOM-RM03','HOM-RM01','HOM-RM02']);

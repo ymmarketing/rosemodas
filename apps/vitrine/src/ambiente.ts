@@ -1,5 +1,7 @@
 type Variaveis = Record<string, string | undefined>;
 
+export const recursosDeHomologacao = (ambiente: string | undefined) => ambiente === 'homologation';
+
 export const variaveisPublicas = [
   'VITE_APP_ENV', 'VITE_SUPABASE_URL',
   'VITE_SUPABASE_PUBLISHABLE_KEY', 'VITE_SUPABASE_PROJECT_REF',
