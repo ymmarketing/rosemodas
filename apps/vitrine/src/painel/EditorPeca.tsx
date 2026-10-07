@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { moeda } from '../Visual';
 import { urlDaMidia } from '../catalogo';
@@ -7,25 +7,31 @@ import type { ListaInterna, PecaInterna, VariacaoInterna, MedidaInterna } from '
 import { validarPrecos } from './precos';
 
 function Campo({nome,children}:{nome:string;children:ReactNode}) {return <label className="field"><span>{nome}</span>{children}</label>;}
-export function EditorPeca({inicial,lista,fechar,salvou}:{inicial:PecaInterna;lista:ListaInterna;fechar:()=>void;salvou:(p:PecaInterna)=>void}) {
+export function EditorPeca({inicial,lista,fechar,salvou,operacao=operar}:{inicial:PecaInterna;lista:ListaInterna;fechar:()=>void;salvou:(p:PecaInterna)=>void;operacao?:typeof operar}) {
   const [p,setP]=useState(inicial),[nome,setNome]=useState(inicial.nome??''),[descricao,setDescricao]=useState(inicial.descricao);
   const [preco,setPreco]=useState(inicial.preco?.toString()??''),[promo,setPromo]=useState(inicial.preco_promocional?.toString()??'');
   const [categoria,setCategoria]=useState(inicial.categoria_id??''),[colecao,setColecao]=useState(inicial.colecao_id??'');
   const [modelo,setModelo]=useState(inicial.modelo_veste??''),[vars,setVars]=useState(inicial.variacoes),[medidas,setMedidas]=useState(inicial.medidas);
   const [motivo,setMotivo]=useState(''),[ocupado,setOcupado]=useState(false),[erro,setErro]=useState(''),[mensagem,setMensagem]=useState('');
   const [alterado,setAlterado]=useState(false);
-  function mexeu(){setAlterado(true);setMensagem('');}
+  const aviso=useRef<HTMLParagraphElement>(null), adicionarVariacao=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{if(erro)aviso.current?.focus();},[erro]);
+  function mexeu(){setAlterado(true);setMensagem('');setErro('');}
   function aceitar(nova:PecaInterna){setP(nova);salvou(nova);}
   function mudarVar(i:number,campos:Partial<VariacaoInterna>){setVars(v=>v.map((x,j)=>i===j?{...x,...campos}:x));mexeu();}
   function mudarMedida(i:number,campos:Partial<MedidaInterna>){setMedidas(v=>v.map((x,j)=>i===j?{...x,...campos}:x));mexeu();}
   async function executar(acao:()=>Promise<void>){setOcupado(true);setErro('');setMensagem('');try{await acao();}catch(e){setErro(e instanceof Error?e.message:'Não foi possível concluir.');}finally{setOcupado(false);}}
   async function salvar(e:FormEvent){e.preventDefault();await executar(async()=>{
     const precos=validarPrecos(preco,promo);
-    const nova=await operar<PecaInterna>('salvar',p.id,{atualizado_em:p.atualizado_em,nome,descricao,categoria_id:categoria,colecao_id:colecao,
+    const nova=await operacao<PecaInterna>('salvar',p.id,{atualizado_em:p.atualizado_em,nome,descricao,categoria_id:categoria,colecao_id:colecao,
       ...precos,modelo_veste:modelo,variacoes:vars,medidas,motivo_estoque:motivo});
     aceitar(nova);setVars(nova.variacoes);setMedidas(nova.medidas);setAlterado(false);setMotivo('');setMensagem('Alterações salvas.');
   });}
-  async function mudarStatus(acao:string){await executar(async()=>{const nova=await operar<PecaInterna>(acao,p.id,{atualizado_em:p.atualizado_em});aceitar(nova);setMensagem(acao==='publicar'?'Peça publicada na vitrine.':'Peça retirada da vitrine e salva como rascunho.');});}
+  async function mudarStatus(acao:string){
+    if(alterado){setMensagem('');setErro('Salve as alterações antes de '+(acao==='publicar'?'publicar a peça.':'retirar a peça da vitrine.'));return;}
+    if(acao==='publicar'&&faltas.length){setMensagem('');setErro(`A peça ainda não foi publicada. Preencha: ${faltasAmigaveis.join(', ')}. Depois salve as alterações e clique em Publicar na vitrine.`);return;}
+    await executar(async()=>{const nova=await operacao<PecaInterna>(acao,p.id,{atualizado_em:p.atualizado_em});aceitar(nova);setMensagem(acao==='publicar'?'Peça publicada na vitrine.':'Peça retirada da vitrine e salva como rascunho.');});
+  }
   async function arquivos(files:FileList|null){if(!files?.length)return;await executar(async()=>{
     let atual=p;let enviados=0;
     try{for(const f of Array.from(files)){atual=await enviarMidia(atual,f);enviados++;aceitar(atual);}}
@@ -33,6 +39,7 @@ export function EditorPeca({inicial,lista,fechar,salvou}:{inicial:PecaInterna;li
     setMensagem(`${enviados} arquivo(s) enviado(s).`);
   });}
   const faltas=pendenciasDaPeca(p);
+  const faltasAmigaveis=faltas.map(f=>f==='variação e quantidade'?'tamanho, cor e quantidade':f);
   return <section className="editor-peca" aria-label={`Editar ${p.codigo}`}>
     <div className="editor-top"><div><span className="eyebrow">{p.codigo} · {p.status_catalogo==='rascunho'?'RASCUNHO':'PUBLICADO'}</span><h2>{p.nome??p.nome_sugerido??'Peça para revisar'}</h2></div>
       <button className="btn btn-s btn-sm" disabled={ocupado} onClick={()=>{if(!alterado||window.confirm('Há alterações ainda não salvas. Fechar mesmo assim?'))fechar();}}>Voltar ao catálogo</button></div>
@@ -56,8 +63,9 @@ export function EditorPeca({inicial,lista,fechar,salvou}:{inicial:PecaInterna;li
         <Campo nome="Preço promocional (R$)"><input className="input" type="number" min="0" step="0.01" value={promo} placeholder="Opcional" aria-describedby="ajuda-promocao" onChange={e=>{setPromo(e.target.value);mexeu();}}/><small id="ajuda-promocao">Opcional. Deve ser menor que o preço de venda; deixe vazio para vender pelo preço normal.</small></Campo>
       </div>{p.observacoes_curadoria&&<p className="small muted">Curadoria: {p.observacoes_curadoria}</p>}<Campo nome="Descrição"><textarea className="input" rows={4} value={descricao} placeholder="Tecido, detalhes e caimento…" onChange={e=>{setDescricao(e.target.value);mexeu();}}/></Campo>
       <Campo nome="A modelo veste"><input className="input" value={modelo} placeholder="Opcional" onChange={e=>{setModelo(e.target.value);mexeu();}}/></Campo></div>
-      <div className="painel-card"><div className="secao-acao"><h3>Tamanhos, cores e estoque</h3><button type="button" className="btn btn-s btn-sm" onClick={()=>{setVars(v=>[...v,{id:crypto.randomUUID(),sku:'',tamanho:'',cor:'',quantidade:'',ativo:true}]);mexeu();}}>+ Variação</button></div>
+      <div className="painel-card"><div className="secao-acao"><h3>Tamanhos, cores e estoque</h3><button ref={adicionarVariacao} type="button" className="btn btn-s btn-sm" disabled={ocupado} onClick={()=>{setVars(v=>[...v,{id:crypto.randomUUID(),sku:'',tamanho:'',cor:'',quantidade:'',ativo:true}]);mexeu();}}>+ Variação</button></div>
         <p className="small muted">Cadastre cada combinação real. O SKU é gerado ao salvar; alterações de quantidade ficam no histórico.</p>
+        {vars.length===0&&<p className="painel-pendencia">Falta cadastrar tamanho, cor e quantidade. Clique em <b>+ Variação</b>, preencha os dados reais e salve antes de publicar.</p>}
         {vars.map((v,i)=><div key={v.id} className={`linha-variacao ${!v.ativo?'linha-inativa':''}`}>
           <Campo nome="Tamanho"><input className="input" value={v.tamanho} required={v.ativo} onChange={e=>mudarVar(i,{tamanho:e.target.value})}/></Campo>
           <Campo nome="Cor"><input className="input" value={v.cor} required={v.ativo} onChange={e=>mudarVar(i,{cor:e.target.value})}/></Campo>
@@ -74,11 +82,12 @@ export function EditorPeca({inicial,lista,fechar,salvou}:{inicial:PecaInterna;li
           <Campo nome="Valor (cm)"><input className="input" type="number" min="0.01" step="0.01" value={m.valor_cm} required onChange={e=>mudarMedida(i,{valor_cm:e.target.value})}/></Campo>
           <button type="button" className="btn btn-s btn-sm" onClick={()=>{if(!inicial.medidas.some(x=>x.id===m.id)){setMedidas(ms=>ms.filter(x=>x.id!==m.id));mexeu();}else mudarMedida(i,{ativo:!m.ativo});}}>{m.ativo?'Desativar':'Reativar'}</button></div>)}</div>
       <div className="editor-acoes"><button className="btn btn-p" type="submit" disabled={ocupado}>{ocupado?'Salvando…':'Salvar alterações'}</button>
-        {p.ativo?<button type="button" className="btn btn-s" disabled={ocupado||alterado} onClick={()=>mudarStatus('rascunho')}>Retirar da vitrine</button>:<button type="button" className="btn btn-s" disabled={ocupado||alterado||faltas.length>0} onClick={()=>mudarStatus('publicar')}>Publicar na vitrine</button>}
+        {p.ativo?<button type="button" className="btn btn-s" disabled={ocupado} onClick={()=>mudarStatus('rascunho')}>Retirar da vitrine</button>:<button type="button" className="btn btn-s" disabled={ocupado} onClick={()=>mudarStatus('publicar')}>Publicar na vitrine</button>}
         {alterado&&<p className="small muted">Salve as alterações antes de publicar.</p>}
-        {!alterado&&!p.ativo&&<p className="small muted">{faltas.length?`Antes de publicar: ${faltas.join(', ')}.`:'Pronta para publicar após sua revisão.'}</p>}
+        {!alterado&&!p.ativo&&<p className="small muted">{faltas.length?`Antes de publicar: ${faltasAmigaveis.join(', ')}.`:'Pronta para publicar após sua revisão.'}</p>}
+        {!p.ativo&&faltas.includes('variação e quantidade')&&<button type="button" className="btn btn-s btn-sm" disabled={ocupado} onClick={()=>{adicionarVariacao.current?.scrollIntoView({block:'center',behavior:'smooth'});adicionarVariacao.current?.focus({preventScroll:true});}}>Preencher tamanho, cor e quantidade ↑</button>}
         {p.preco!==null&&<span className="small">Preço salvo: {moeda(p.preco_promocional??p.preco)}</span>}
-        {mensagem&&<p className="painel-sucesso" role="status">{mensagem}</p>}{erro&&<p className="painel-erro" role="alert">{erro}</p>}
+        {mensagem&&<p className="painel-sucesso" role="status">{mensagem}</p>}{erro&&<p ref={aviso} className="painel-erro" role="alert" tabIndex={-1}>{erro}</p>}
       </div>
     </form></div>
   </section>;

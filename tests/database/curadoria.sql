@@ -70,6 +70,11 @@ reset role;
 do $$ begin raise notice 'PASS: 15 upload só de equipe com MFA, sem URLs externas; rascunhos ocultos'; end $$;
 
 set local role authenticated;
+select public.operar_catalogo('salvar','44000000-0000-0000-0000-000000000001','{"nome":"Peça teste","preco":120,"categoria_id":"22000000-0000-0000-0000-000000000001","variacoes":[]}');
+do $$ begin
+  perform pg_temp.negado($q$select public.operar_catalogo('publicar','44000000-0000-0000-0000-000000000001')$q$,'23514');
+  perform pg_temp.checar((public.operar_catalogo('abrir','44000000-0000-0000-0000-000000000001')->>'ativo')::boolean=false,'foto e preço não publicam sem tamanho, cor e quantidade');
+end $$;
 select public.operar_catalogo('salvar','44000000-0000-0000-0000-000000000001','{"nome":"Peça teste","preco":120,"categoria_id":"22000000-0000-0000-0000-000000000001","variacoes":[{"id":"55000000-0000-0000-0000-000000000001","tamanho":"48","cor":"Preto","quantidade":3}],"motivo_estoque":"Inventário fictício"}');
 select public.operar_catalogo('publicar','44000000-0000-0000-0000-000000000001');
 reset role;
@@ -100,4 +105,10 @@ do $$ begin
   perform pg_temp.checar(not exists(select 1 from pg_tables where schemaname='public' and tablename in ('clientes','pedidos','pagamentos','reservas_estoque','fornecedores')),'domínios futuros ausentes');
   raise notice 'PASS: 17 concorrência, validação de quantidade, retirada da vitrine e ausência de fases completas';
 end $$;
+set local role anon;
+do $$ begin
+  perform pg_temp.checar((select count(id)=0 from public.produtos where id='44000000-0000-0000-0000-000000000001'),'retirar esconde a peça do catálogo público');
+  perform pg_temp.checar((select count(id)=0 from public.variacoes where produto_id='44000000-0000-0000-0000-000000000001'),'retirar esconde as variações do catálogo público');
+end $$;
+reset role;
 rollback;
