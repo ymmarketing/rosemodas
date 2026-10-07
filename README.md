@@ -1,6 +1,6 @@
 # Rose Modas
 
-**Construção — Fase 0: vitrine em correção de homologação, aguardando validação da Yasmin.**
+**Construção — vitrine e curadoria do catálogo, aguardando validação da Yasmin.**
 
 Referência técnica: Arquitetura V2. Referência visual: `prototipo/index.html`.
 O `index.html` da raiz continua sendo o kit de marca; a aplicação fica em `apps/vitrine`.
@@ -28,7 +28,7 @@ Ambiente dedicado configurado e verificado em 06/10/2026:
 - Branch: `feat/fase-0-fundacao`; somente Preview, sem merge na `main`.
 - URL da branch: https://rosemodas-homologacao-git-feat-fas-4df791-ym-marketing-negocios.vercel.app/
   O Preview mantém a proteção de acesso da Vercel. O subdomínio
-  `homolog.rosemenezes.com.br` não foi configurado nesta tarefa.
+  `homolog.rosemenezesmodas.com.br` foi configurado posteriormente, com DNS válido.
 
 Na Tarefa 2, a tela técnica validou a consulta pública (`produtos.id`). A Tarefa 3
 substitui essa tela pela Home e coleção. Configure, somente em
@@ -174,8 +174,9 @@ remotos e todos os dados de teste são descartados por rollback.
 ## Decisões de implementação desta tarefa, ainda em validação
 
 - Somente as nove tabelas da Fase 0; FK de autoria usa `auth.users`.
-- `usuarios_internos` e autorização da equipe entram na Fase 1. Agora, escritas
-  são restritas ao servidor; nenhum usuário autenticado ganha acesso interno.
+- Na Tarefa 1, `usuarios_internos` e autorização da equipe ficaram para a Fase 1.
+  A solicitação operacional de 07/10 introduz somente essa tabela da V2, com uso
+  real no cadastro do catálogo. Contas autenticadas sem equipe ativa e MFA continuam bloqueadas.
 - Saldo é alterado por `ajustar_estoque`, com ledger, projeção e auditoria na mesma
   transação. Não há reserva na Fase 0; `estoque_reservado` é zero nesta fase.
 - A view `v_estoque_disponivel` usa `security_invoker`. Um helper privado retorna
@@ -186,3 +187,41 @@ remotos e todos os dados de teste são descartados por rollback.
 
 Este registro é operacional e de construção. Não constitui homologação,
 documentação final, release ou congelamento da baseline.
+
+## Curadoria e cadastro interno — entrega em construção de 07/10/2026
+
+Yasmin solicitou iniciar o cadastro pelas fotos e completar nome, preço, tamanhos,
+medidas e descrição pelo painel. A entrega usa a tela Nova peça do protótipo e a
+autorização prevista na V2: `usuarios_internos`, papéis admin/estoque, sessão e host
+separados, MFA obrigatório. Não cria clientes, pedidos, reservas ou pagamentos.
+
+- Migration adicional `20261007144351_catalogo_curadoria_acesso_interno.sql`.
+  Preserva a fundação original; inclui rascunhos ocultos e informações de curadoria.
+  Preço, nome e categoria podem ficar pendentes no rascunho. Publicação exige nome,
+  preço válido, categoria ativa, foto de capa enviada e variação com quantidade.
+- Painel: `https://rosemodas-painel-homologacao.vercel.app/`. Em DEV, `/painel`.
+  Permite criar peça, enviar fotos/vídeo, escolher capa, editar dados/variações/SKU,
+  registrar quantidade pelo ledger, cadastrar medidas, publicar e retirar da vitrine.
+  Paginação em 48 registros; busca e filtro por situação. Alterações concorrentes
+  impedem sobrescrever uma revisão anterior. Arquivos não são sobrescritos/apagados.
+- A RPC pública é invoker; a implementação privilegiada fica em `private` e
+  verifica equipe ativa, papel e AAL2 em toda operação. Metadados editáveis não
+  concedem autorização. Acesso direto de visitantes a custos, auditoria e estoque
+  interno continua bloqueado. Nenhuma chave de servidor está no navegador.
+- Curadoria do Drive: 168 fotos analisadas, 18 peças/modelos sugeridos, 66 fotos
+  selecionadas. Manifesto e DML idempotente em `supabase/importacoes/`. Os nomes
+  sugeridos são internos e precisam de revisão. Preço, quantidade, variações e
+  medidas não foram inferidos. Os rascunhos não entram na loja automaticamente.
+- As fotos selecionadas são WebP com até 1600 px, sem corte, preservando proporção.
+  Os originais permanecem no Drive. O upload operacional confere SHA-256 e só
+  aceita arquivos de um lote com autorização privada temporária; esta é desativada
+  após a importação. A credencial temporária fica fora do Git e do front-end.
+- WhatsApp comercial configurado conforme o número informado pela Yasmin.
+  Não cria pedido, reserva ou cobrança. O envio da mensagem é feito pela cliente.
+- Validação: 21 testes de aplicação/ambiente, 17 grupos SQL em duas bases limpas,
+  typecheck/build e inspeção de credenciais. Os testes específicos do cadastro
+  também são executados no hospedado com dados isolados por rollback.
+
+Primeiro acesso da equipe depende do convite Auth e da URL de retorno configurada
+no Supabase. A habilitação da conta não representa homologação da experiência de
+login ou do cadastro pela Yasmin. Produção e main permanecem sem alteração.

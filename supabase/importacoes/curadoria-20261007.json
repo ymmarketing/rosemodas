@@ -1,0 +1,876 @@
+{
+  "status": "CONSTRUCAO_AGUARDANDO_REVISAO",
+  "drive_pasta": "1tlJy6dxwgeJgobijmVV4j8QwqMlmcq8y",
+  "produtos": [
+    {
+      "id": "8e1fa490-41f5-5645-9038-6061016e15d1",
+      "codigo": "RM-C001",
+      "nome_sugerido": "Vestido floral amarelo de alças",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "433e8a2f-fca6-596a-a268-443e61ac6c77",
+          "drive_id": "1r4VEDbzKJvtRVnPOyO7xT-GcvKxKS8VX",
+          "arquivo_nome_original": "IMG_20261003_121626.jpg",
+          "caminho_storage": "8e1fa490-41f5-5645-9038-6061016e15d1/433e8a2f-fca6-596a-a268-443e61ac6c77.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "2d125c69d55a5582b3870f5bebc4b4288bd7c0e0c4ef0585ffbbbcd44c88235b",
+          "bytes": 222740
+        },
+        {
+          "id": "6492f451-1cc0-502f-baf1-0dc07dbc024b",
+          "drive_id": "1y5pN9gIXnpC_RSvYlKyb9twnMs6gxJQb",
+          "arquivo_nome_original": "IMG_20261003_121628.jpg",
+          "caminho_storage": "8e1fa490-41f5-5645-9038-6061016e15d1/6492f451-1cc0-502f-baf1-0dc07dbc024b.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "5a330091661b4736c83e136437e0b017581eff9f3104078fe19c71b75efc5c36",
+          "bytes": 222786
+        },
+        {
+          "id": "986a02d8-aa78-5747-8eb6-83554e449587",
+          "drive_id": "1SNAq4jTLSW7Yj4Br1PDiEzGJElbqN8rm",
+          "arquivo_nome_original": "IMG_20261003_121636.jpg",
+          "caminho_storage": "8e1fa490-41f5-5645-9038-6061016e15d1/986a02d8-aa78-5747-8eb6-83554e449587.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "680eb95dcd63ec6622a7678c3459879d44516129a53be11bcf1c8c3b5569ec09",
+          "bytes": 184162
+        },
+        {
+          "id": "2828d9a5-555d-5af0-880f-f8bce2bfe722",
+          "drive_id": "1h6EBkSorvUxuUIPA3-Cu3KiV6SmCO7RC",
+          "arquivo_nome_original": "IMG_20261003_121641.jpg",
+          "caminho_storage": "8e1fa490-41f5-5645-9038-6061016e15d1/2828d9a5-555d-5af0-880f-f8bce2bfe722.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "42a2b3d3c39a3123d96c7f75b3f3ade07c55ec4eb830090fff1078ac0efa9b37",
+          "bytes": 129448
+        },
+        {
+          "id": "52f1bc72-5bfe-5423-8f03-1bb8e1102f41",
+          "drive_id": "1ZqizNFUYs6uT4PGEtp1AiyOR3z6Qazdo",
+          "arquivo_nome_original": "IMG_20261003_122800.jpg",
+          "caminho_storage": "8e1fa490-41f5-5645-9038-6061016e15d1/52f1bc72-5bfe-5423-8f03-1bb8e1102f41.webp",
+          "tipo": "foto",
+          "ordem": 4,
+          "principal": false,
+          "sha256": "fc2ecb51c362fcb53a6261f25e50b5b6940c818fe855debf8d93be06b420eba6",
+          "bytes": 209908
+        },
+        {
+          "id": "723a1f51-f8b7-59af-a51d-d86dc9b2c191",
+          "drive_id": "196WYHncYYzAH2fmmVjpup9ZfkfWs-tLp",
+          "arquivo_nome_original": "IMG_20261003_122812.jpg",
+          "caminho_storage": "8e1fa490-41f5-5645-9038-6061016e15d1/723a1f51-f8b7-59af-a51d-d86dc9b2c191.webp",
+          "tipo": "foto",
+          "ordem": 5,
+          "principal": false,
+          "sha256": "510f74eb163ed846ad37b723b4e528541e73c28392d451832d9e8f95868e0312",
+          "bytes": 99632
+        }
+      ]
+    },
+    {
+      "id": "ceabea3b-bf46-549d-8d00-30a0dd233e6e",
+      "codigo": "RM-C002",
+      "nome_sugerido": "Vestido claro sem mangas",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "70074659-b443-54a9-99c0-6f3cd9ccfcfd",
+          "drive_id": "1O1fbt8SP2y0Iola15briBL2WBMjF3_XQ",
+          "arquivo_nome_original": "IMG_20261003_123011.jpg",
+          "caminho_storage": "ceabea3b-bf46-549d-8d00-30a0dd233e6e/70074659-b443-54a9-99c0-6f3cd9ccfcfd.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "c1c6455c8083d50a9748d481cbfdc2cc21dc40dae427ba9eb25eacc5879554f9",
+          "bytes": 231064
+        },
+        {
+          "id": "f334476c-1187-59a9-9228-26f26d20f864",
+          "drive_id": "1QADfU0pQwMr3FproeJSD3-djJvPEM6vv",
+          "arquivo_nome_original": "IMG_20261003_122550.jpg",
+          "caminho_storage": "ceabea3b-bf46-549d-8d00-30a0dd233e6e/f334476c-1187-59a9-9228-26f26d20f864.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "06ea219991905df302907823e785c9451c829460a55811e9944def490e454540",
+          "bytes": 224458
+        }
+      ]
+    },
+    {
+      "id": "d10be028-a82e-5075-b37e-41183a3c0424",
+      "codigo": "RM-C003",
+      "nome_sugerido": "Conjunto claro com botões",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "514e2a2c-d7ef-57f4-967e-d819740a4eb8",
+          "drive_id": "1yku6t5629ymx9P-sWezZzqVTjVF-diAf",
+          "arquivo_nome_original": "IMG_20261003_122556.jpg",
+          "caminho_storage": "d10be028-a82e-5075-b37e-41183a3c0424/514e2a2c-d7ef-57f4-967e-d819740a4eb8.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "c021867a37264453878cf55811d51f4d41b36ef618642649dde461555e2b5e77",
+          "bytes": 121602
+        },
+        {
+          "id": "4b8c0408-aec3-5087-bb8b-f96940b5c30f",
+          "drive_id": "1OpkfOkJbmc0zvW8su2wWgfBrWsef6fsv",
+          "arquivo_nome_original": "IMG_20261003_122603.jpg",
+          "caminho_storage": "d10be028-a82e-5075-b37e-41183a3c0424/4b8c0408-aec3-5087-bb8b-f96940b5c30f.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "f872ae3b8d2d5ade5762fedaa374b82c110670a6961239bfb84d816c3eaf6379",
+          "bytes": 178268
+        },
+        {
+          "id": "605602f8-574b-5cac-b7a4-5c88e047e91c",
+          "drive_id": "1FuJgszTF52CDCJ8KfHDMkhNJRepr0nND",
+          "arquivo_nome_original": "IMG_20261003_123006.jpg",
+          "caminho_storage": "d10be028-a82e-5075-b37e-41183a3c0424/605602f8-574b-5cac-b7a4-5c88e047e91c.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "24e9cad3f6b8367e56d2c94e78fe0f4bb39c29c5ad241e1a1dbcaf4b0a1cc0ab",
+          "bytes": 159612
+        }
+      ]
+    },
+    {
+      "id": "4873ba0d-51ef-5c4f-9b73-be4d75125556",
+      "codigo": "RM-C004",
+      "nome_sugerido": "Vestido floral azul com babado",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "927e9f34-e88a-5954-876a-f32377685cac",
+          "drive_id": "1_ejQPYRR-KdUWhDD1l0Ykf_fNAeDUfDB",
+          "arquivo_nome_original": "IMG_20261003_123123.jpg",
+          "caminho_storage": "4873ba0d-51ef-5c4f-9b73-be4d75125556/927e9f34-e88a-5954-876a-f32377685cac.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "2b24713f948981ed76912159e6016f5a7e7f53d6f9bd9a0aa98e9b152bb3746f",
+          "bytes": 192324
+        },
+        {
+          "id": "d4a3a0c1-0014-5039-a81b-343778cdb33a",
+          "drive_id": "1IdMf_8sxcgY2sUhgXSnj4KE_WtIgyaFj",
+          "arquivo_nome_original": "IMG_20261003_123104.jpg",
+          "caminho_storage": "4873ba0d-51ef-5c4f-9b73-be4d75125556/d4a3a0c1-0014-5039-a81b-343778cdb33a.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "70fb53c6c07890b8994d4893874408812c4593e8d22d44707b5fc199a17b6dcf",
+          "bytes": 197372
+        },
+        {
+          "id": "aaa15142-480d-599f-8340-20e8fa7a377a",
+          "drive_id": "1e8OyGlEMXS5HU3afv3P_0TFXsT0DSBRQ",
+          "arquivo_nome_original": "IMG_20261003_123107.jpg",
+          "caminho_storage": "4873ba0d-51ef-5c4f-9b73-be4d75125556/aaa15142-480d-599f-8340-20e8fa7a377a.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "1d051175712e6584712ca69576a4a3aaca96e3aa8eb8df94955c6120a48f6bee",
+          "bytes": 192776
+        },
+        {
+          "id": "327ff17b-0a46-5d79-8201-00873675f8b7",
+          "drive_id": "1t7obmoydVixkzzs95pfw5dRuwmADKgYB",
+          "arquivo_nome_original": "IMG_20261003_123110.jpg",
+          "caminho_storage": "4873ba0d-51ef-5c4f-9b73-be4d75125556/327ff17b-0a46-5d79-8201-00873675f8b7.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "da9dd44e063dd205b97bc2727fe3a30dd7ee4f222475479c1a489975003bd51c",
+          "bytes": 190246
+        },
+        {
+          "id": "cd7d1c6e-b579-572c-9a6a-97ad4e3cdc3c",
+          "drive_id": "1f7MNtMaENKwYtEQUFMrKT-FzZXek6LCY",
+          "arquivo_nome_original": "IMG_20261003_123114.jpg",
+          "caminho_storage": "4873ba0d-51ef-5c4f-9b73-be4d75125556/cd7d1c6e-b579-572c-9a6a-97ad4e3cdc3c.webp",
+          "tipo": "foto",
+          "ordem": 4,
+          "principal": false,
+          "sha256": "fb592820e17e413d59cbb3de439bd780c7921cfb4a91841ed81310d2d9f9bd0b",
+          "bytes": 221896
+        }
+      ]
+    },
+    {
+      "id": "83107c13-7282-553c-bac1-5142b5c2dfa1",
+      "codigo": "RM-C005",
+      "nome_sugerido": "Vestido floral vermelho de decote V",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "3b696d0d-c923-56f0-a266-7d23ee24c86e",
+          "drive_id": "1udReHwI4W4iX1vDtCULqsvBtxJKCJILe",
+          "arquivo_nome_original": "IMG_20261003_123405.jpg",
+          "caminho_storage": "83107c13-7282-553c-bac1-5142b5c2dfa1/3b696d0d-c923-56f0-a266-7d23ee24c86e.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "d8f970e127398cb809d6d0ee0c09dad28c430a9608755ab8b2dd9b273fb651a1",
+          "bytes": 190258
+        },
+        {
+          "id": "0fc26c34-27d2-522c-9d12-edf5ee293ef5",
+          "drive_id": "1vvXnJxgpLR2C81McXEYrHhYMasKiNpPI",
+          "arquivo_nome_original": "IMG_20261003_123346.jpg",
+          "caminho_storage": "83107c13-7282-553c-bac1-5142b5c2dfa1/0fc26c34-27d2-522c-9d12-edf5ee293ef5.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "955cf7d090a60ad75edc8faf854e93a1a86f27baaf5bb8e5686c1f6bacda6eaf",
+          "bytes": 186306
+        },
+        {
+          "id": "7f12d315-35e1-5207-aa43-6e77f2b1ddf6",
+          "drive_id": "17z45zLR1Fu4II1yAZrxeuieceP_OpCcR",
+          "arquivo_nome_original": "IMG_20261003_123349.jpg",
+          "caminho_storage": "83107c13-7282-553c-bac1-5142b5c2dfa1/7f12d315-35e1-5207-aa43-6e77f2b1ddf6.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "de4d0832fbbabf8b438c014243776c68c714bae342af6c47e4bb3e8a84ea3130",
+          "bytes": 193160
+        },
+        {
+          "id": "975e20d0-59cf-5282-806d-5534f02ea080",
+          "drive_id": "1XjC1sK9sEzKVvHP9MwN507xIaFxCqNM_",
+          "arquivo_nome_original": "IMG_20261003_123353.jpg",
+          "caminho_storage": "83107c13-7282-553c-bac1-5142b5c2dfa1/975e20d0-59cf-5282-806d-5534f02ea080.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "8515542ff536ec432469bd1d762416281a2b1f04590fdd2d3430715b1d76cf72",
+          "bytes": 171768
+        },
+        {
+          "id": "543139a3-3710-5df0-bcd5-189036b6d2bb",
+          "drive_id": "13b43ZMF6JFKVmFODcvj2TRgT0Hsh6GyF",
+          "arquivo_nome_original": "IMG_20261003_123401.jpg",
+          "caminho_storage": "83107c13-7282-553c-bac1-5142b5c2dfa1/543139a3-3710-5df0-bcd5-189036b6d2bb.webp",
+          "tipo": "foto",
+          "ordem": 4,
+          "principal": false,
+          "sha256": "e241125ade5dac11fd09cb6c240661cabce93915fb3c508f75b0d88a1baebcbe",
+          "bytes": 170474
+        }
+      ]
+    },
+    {
+      "id": "a818ee2b-e826-5d79-ad40-91aa59000885",
+      "codigo": "RM-C006",
+      "nome_sugerido": "Vestido floral azul de decote reto",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "70b9efb7-2027-597a-b5c8-b37893412e87",
+          "drive_id": "1xU4_qstywmGsxBltJQuD2nfvp64vhT5X",
+          "arquivo_nome_original": "IMG_20261003_123838.jpg",
+          "caminho_storage": "a818ee2b-e826-5d79-ad40-91aa59000885/70b9efb7-2027-597a-b5c8-b37893412e87.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "fcc1db213bdfa8c452b1dd262f7140c83f2fc20b2f8432ade28bb1ea625984fd",
+          "bytes": 188140
+        },
+        {
+          "id": "312f0cac-5af8-57a8-9723-132a2472ebc8",
+          "drive_id": "1rgpC7u_5nDwi7eHJ9XZdtbHqKxUhof7T",
+          "arquivo_nome_original": "IMG_20261003_123822.jpg",
+          "caminho_storage": "a818ee2b-e826-5d79-ad40-91aa59000885/312f0cac-5af8-57a8-9723-132a2472ebc8.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "46e8a560a61b047638c87b2e1db2c3ceb074c5ec55deb4fd8986f1a1eba11719",
+          "bytes": 162826
+        },
+        {
+          "id": "83530484-235c-5d9d-b044-f2539523c5a0",
+          "drive_id": "1Ll4qrXG34KNZA48_KfmSrZ6ng-fn7Dak",
+          "arquivo_nome_original": "IMG_20261003_123825.jpg",
+          "caminho_storage": "a818ee2b-e826-5d79-ad40-91aa59000885/83530484-235c-5d9d-b044-f2539523c5a0.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "271f6d17d2445d3adeafb15f005f81e43913614207104b30cd0f923302673d2d",
+          "bytes": 150440
+        },
+        {
+          "id": "41dd2efa-c24a-56cc-98eb-875e003a0c01",
+          "drive_id": "1DTSU5jhaEFNIw4E1XrBop7YEDmueUITB",
+          "arquivo_nome_original": "IMG_20261003_123826.jpg",
+          "caminho_storage": "a818ee2b-e826-5d79-ad40-91aa59000885/41dd2efa-c24a-56cc-98eb-875e003a0c01.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "c568bc197ce3a5fb1e23f57368713613a9d741c9c1f342f843fb76c5359fc933",
+          "bytes": 170710
+        },
+        {
+          "id": "ac56d274-c13a-5327-b427-77cfc1141a19",
+          "drive_id": "1ZCi1_LCtK25xbpj_-Abd6kuy80bL3izb",
+          "arquivo_nome_original": "IMG_20261003_123834.jpg",
+          "caminho_storage": "a818ee2b-e826-5d79-ad40-91aa59000885/ac56d274-c13a-5327-b427-77cfc1141a19.webp",
+          "tipo": "foto",
+          "ordem": 4,
+          "principal": false,
+          "sha256": "c2f2a2c6dd95bd9f15b4b3e5f816938ba6142e69e41093511e7d50118e51035c",
+          "bytes": 187992
+        }
+      ]
+    },
+    {
+      "id": "d13649a4-17b6-502a-80ad-d3abde1fa953",
+      "codigo": "RM-C007",
+      "nome_sugerido": "Vestido floral vermelho de decote reto",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "b81560c4-01e0-5460-a082-4bc740f23797",
+          "drive_id": "1HOCijCaAc5ehX4ff8qtutPnxOIZf-A1O",
+          "arquivo_nome_original": "IMG_20261003_124038.jpg",
+          "caminho_storage": "d13649a4-17b6-502a-80ad-d3abde1fa953/b81560c4-01e0-5460-a082-4bc740f23797.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "d448139b5ed14b8de4cbb2770b08666a395ce45aaee6a0bb05ddad3c157171e6",
+          "bytes": 192628
+        },
+        {
+          "id": "12a2fc84-f07d-58c4-aa2e-736e96e78d21",
+          "drive_id": "1nq1EWRhuItYbMVGA8d-ZVwc-0G3s80p_",
+          "arquivo_nome_original": "IMG_20261003_124040.jpg",
+          "caminho_storage": "d13649a4-17b6-502a-80ad-d3abde1fa953/12a2fc84-f07d-58c4-aa2e-736e96e78d21.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "7f901572b2a62b0f30a444d3aa0c2acbbedaedf6e4b567a9d4d2d0aed6ccb905",
+          "bytes": 214320
+        },
+        {
+          "id": "6417c000-c8e5-5e62-b300-57c59e034a36",
+          "drive_id": "1yIM0g4JWhkCasy9_kmIBp0WLEjCxF2c1",
+          "arquivo_nome_original": "IMG_20261003_124042.jpg",
+          "caminho_storage": "d13649a4-17b6-502a-80ad-d3abde1fa953/6417c000-c8e5-5e62-b300-57c59e034a36.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "8f886f70694bf0c61cb10b7ee1b1836c0eda11712126e7a79b6379aa98115d50",
+          "bytes": 183792
+        },
+        {
+          "id": "df98f043-4b7f-567a-9355-cc60eb0fdc37",
+          "drive_id": "1QIdUOheRDzwII9HMoLli62keYNBsE5Kz",
+          "arquivo_nome_original": "IMG_20261003_124043.jpg",
+          "caminho_storage": "d13649a4-17b6-502a-80ad-d3abde1fa953/df98f043-4b7f-567a-9355-cc60eb0fdc37.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "d740dd639e5e64b7145e275760d3b43056774b940b451ebebf8e0210bbe80590",
+          "bytes": 130708
+        },
+        {
+          "id": "c39929d0-0d3b-52a8-9e15-8661a8795e40",
+          "drive_id": "1h1nIb6nzrabeT8y7PqceJZ51p7KFKHHq",
+          "arquivo_nome_original": "IMG_20261003_124052.jpg",
+          "caminho_storage": "d13649a4-17b6-502a-80ad-d3abde1fa953/c39929d0-0d3b-52a8-9e15-8661a8795e40.webp",
+          "tipo": "foto",
+          "ordem": 4,
+          "principal": false,
+          "sha256": "188deec53e6843ae352cab0d184407b2bc676821b68caee76a38a2a91f05cc64",
+          "bytes": 229798
+        }
+      ]
+    },
+    {
+      "id": "dd536d71-b626-5287-ab8e-c5f7254b30cd",
+      "codigo": "RM-C008",
+      "nome_sugerido": "Vestido floral de alças com cintura marcada",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "e6dd7c9d-b894-51ed-9dcf-a1ea9d527cad",
+          "drive_id": "1yWm-XSdTQuZf2J-7sRDJWtAX071NgEYp",
+          "arquivo_nome_original": "IMG_20261003_124249.jpg",
+          "caminho_storage": "dd536d71-b626-5287-ab8e-c5f7254b30cd/e6dd7c9d-b894-51ed-9dcf-a1ea9d527cad.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "4f8490957a653d2c06b8d9fc2da480abad3bac22720b641011169dafadd8cbba",
+          "bytes": 166972
+        },
+        {
+          "id": "6281afc0-1c24-579e-8af2-0f22c202b7fd",
+          "drive_id": "1DCSsh1cKm1GfQ_INVOZ0sHulc56QJvLL",
+          "arquivo_nome_original": "IMG_20261003_124251.jpg",
+          "caminho_storage": "dd536d71-b626-5287-ab8e-c5f7254b30cd/6281afc0-1c24-579e-8af2-0f22c202b7fd.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "e1fe02108e360ea37db7908a34fc10569e90cbf6ec38640de9d125507f8abd85",
+          "bytes": 156930
+        },
+        {
+          "id": "43e5c8da-7034-55cd-aeb7-3c6d0cffdb2a",
+          "drive_id": "1S2W3T61eintv9fSMGtbD7qOt4A3WcE-x",
+          "arquivo_nome_original": "IMG_20261003_124252.jpg",
+          "caminho_storage": "dd536d71-b626-5287-ab8e-c5f7254b30cd/43e5c8da-7034-55cd-aeb7-3c6d0cffdb2a.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "f066dd5b8d7a3c45f10e1048f713e15d43af52c9a75f7b98e57cc8922f6e2f83",
+          "bytes": 114510
+        },
+        {
+          "id": "34c81794-94fe-5bda-87f8-2b6ecea69a61",
+          "drive_id": "1x69uBQivJeq17qKJPH4FE9gYvmyzPNK7",
+          "arquivo_nome_original": "IMG_20261003_124255.jpg",
+          "caminho_storage": "dd536d71-b626-5287-ab8e-c5f7254b30cd/34c81794-94fe-5bda-87f8-2b6ecea69a61.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "ea3aa8e77a63f133d6cc7fc497657da36ee742d3e5917a54912c72916b9735f1",
+          "bytes": 155152
+        },
+        {
+          "id": "cff44880-4d24-5126-bf7f-26654b1b349c",
+          "drive_id": "1em-lmOy7wVcZhuirMXCHMgioY4anMxan",
+          "arquivo_nome_original": "IMG_20261003_124309.jpg",
+          "caminho_storage": "dd536d71-b626-5287-ab8e-c5f7254b30cd/cff44880-4d24-5126-bf7f-26654b1b349c.webp",
+          "tipo": "foto",
+          "ordem": 4,
+          "principal": false,
+          "sha256": "00bb5533d7178f14f1c64adaf6bf404ef83a9e31e77f653993250d6a9470d950",
+          "bytes": 137440
+        }
+      ]
+    },
+    {
+      "id": "12558ddd-02d6-5d72-8711-2bacba67bf28",
+      "codigo": "RM-C009",
+      "nome_sugerido": "Conjunto de poá preto e branco",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "b430e41c-a939-5109-adee-e8c778c896c7",
+          "drive_id": "1GFeQzYAzaOwCQceiimZ4PT5oKs5VKRmQ",
+          "arquivo_nome_original": "IMG_20261003_125007.jpg",
+          "caminho_storage": "12558ddd-02d6-5d72-8711-2bacba67bf28/b430e41c-a939-5109-adee-e8c778c896c7.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "97d0c7c219345bed6e868391274fd2be9e9107104964f625e2fe792372d00702",
+          "bytes": 157864
+        },
+        {
+          "id": "162060a0-f41a-5bc7-aa4c-f7338bc16495",
+          "drive_id": "1eFGPpY2O-Xd1obl0vsKy0L_yLAlbHknh",
+          "arquivo_nome_original": "IMG_20261003_124956.jpg",
+          "caminho_storage": "12558ddd-02d6-5d72-8711-2bacba67bf28/162060a0-f41a-5bc7-aa4c-f7338bc16495.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "d9580ea85b7930bdea6f70b31ee88f62a41403924ab811c8f2d2fa15c23a2127",
+          "bytes": 145378
+        },
+        {
+          "id": "ebafec4e-8da0-507d-b9c0-b8aad7ac1568",
+          "drive_id": "1qruPa0q7aNIFTYkwfYz8uI7sBDGbzhte",
+          "arquivo_nome_original": "IMG_20261003_125015.jpg",
+          "caminho_storage": "12558ddd-02d6-5d72-8711-2bacba67bf28/ebafec4e-8da0-507d-b9c0-b8aad7ac1568.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "6f308cfa63b4fbe84ef4453940e1d111421581cbd33f8154bccc708b1569158d",
+          "bytes": 92720
+        },
+        {
+          "id": "53926c3a-ab4e-5165-9656-b75edbd243e3",
+          "drive_id": "1cjgcd8I4D1yWP8zUlhp4wlUxiKDYqGHT",
+          "arquivo_nome_original": "IMG_20261003_125020.jpg",
+          "caminho_storage": "12558ddd-02d6-5d72-8711-2bacba67bf28/53926c3a-ab4e-5165-9656-b75edbd243e3.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "083d3bccfcd963e8eccb88f02cf926b32e4e4ea717f4068b4dcb275fdc196f2e",
+          "bytes": 92780
+        }
+      ]
+    },
+    {
+      "id": "1dcbe4e6-ae2b-56d9-8f5e-ed8c6e9ed74b",
+      "codigo": "RM-C010",
+      "nome_sugerido": "Macacão verde com faixa",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "7561820d-efd8-5f16-b5c6-1526eede75c8",
+          "drive_id": "18w1H9YaTEtzuY1GRh8KfHYYWJyeLXrog",
+          "arquivo_nome_original": "IMG_20261003_125512.jpg",
+          "caminho_storage": "1dcbe4e6-ae2b-56d9-8f5e-ed8c6e9ed74b/7561820d-efd8-5f16-b5c6-1526eede75c8.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "a7780f8f31fd385d270b38ac15aa4d9e161f567c6e5017fa430e1701708f0e67",
+          "bytes": 183606
+        },
+        {
+          "id": "14b0f1d6-ccf3-514e-ab35-64fb510d9759",
+          "drive_id": "18tPPFVYxqaNC2wVO1A3tmbLvKBdARfGg",
+          "arquivo_nome_original": "IMG_20261003_125459.jpg",
+          "caminho_storage": "1dcbe4e6-ae2b-56d9-8f5e-ed8c6e9ed74b/14b0f1d6-ccf3-514e-ab35-64fb510d9759.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "8c9eb4a08a280985283df6691e3a1185feb440a152cac493e5bc2cb654ed08cf",
+          "bytes": 125182
+        },
+        {
+          "id": "0160dd93-0d52-5107-a136-0fa1281f753a",
+          "drive_id": "1n-2rl7vX2y5AzrU-2M2GYOkcNzsHWHEr",
+          "arquivo_nome_original": "IMG_20261003_125504.jpg",
+          "caminho_storage": "1dcbe4e6-ae2b-56d9-8f5e-ed8c6e9ed74b/0160dd93-0d52-5107-a136-0fa1281f753a.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "db42cf9f25ceeacedef625cc259f6cdc64f4a095685d6a334f207ecbb5cf9b72",
+          "bytes": 107694
+        },
+        {
+          "id": "e0c985d5-a4f1-55e6-af24-d6b47aa06591",
+          "drive_id": "1XHnupD22hQ7B3vxIdg2JyRX9vJGK44ml",
+          "arquivo_nome_original": "IMG_20261003_125508.jpg",
+          "caminho_storage": "1dcbe4e6-ae2b-56d9-8f5e-ed8c6e9ed74b/e0c985d5-a4f1-55e6-af24-d6b47aa06591.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "9b1c65229d73e5d0fd8329995fdbe5370f4fddf673b558ed72f3963330acb7f0",
+          "bytes": 109150
+        }
+      ]
+    },
+    {
+      "id": "1a035518-d6fe-58bd-8cf4-a8ede970995b",
+      "codigo": "RM-C011",
+      "nome_sugerido": "Conjunto listrado laranja e branco",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "5f196819-007d-5058-b56e-363715c69b95",
+          "drive_id": "10wtt8lfYM9a1ADvCVhoAMcAVddXj722t",
+          "arquivo_nome_original": "IMG_20261003_131328.jpg",
+          "caminho_storage": "1a035518-d6fe-58bd-8cf4-a8ede970995b/5f196819-007d-5058-b56e-363715c69b95.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "47c83fbd5b5ce0671883b5c81e11bd73a8d0394a9bed07742df44e0fb092fb3a",
+          "bytes": 181022
+        },
+        {
+          "id": "1a8b2505-209e-571a-9257-64180432007f",
+          "drive_id": "1JIxbq0KnfMd7r8RDOM-wvijkx7qxkcij",
+          "arquivo_nome_original": "IMG_20261003_131319.jpg",
+          "caminho_storage": "1a035518-d6fe-58bd-8cf4-a8ede970995b/1a8b2505-209e-571a-9257-64180432007f.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "11532001c012cd9542130c0ae179744254cb7db7207fc94aee6e78145c2d5052",
+          "bytes": 199722
+        },
+        {
+          "id": "a6b89e5d-59f2-5180-aece-4cd9f9eb1686",
+          "drive_id": "1Z99y9XMFXdORtASQofpKxBqy2pMjLe9U",
+          "arquivo_nome_original": "IMG_20261003_131333.jpg",
+          "caminho_storage": "1a035518-d6fe-58bd-8cf4-a8ede970995b/a6b89e5d-59f2-5180-aece-4cd9f9eb1686.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "f77ec998ba0dcc30b2f2ba3e4b4cf47843458bdcfc8112c4bec0a68a5370ec8a",
+          "bytes": 176156
+        },
+        {
+          "id": "151f5fc2-6031-5480-9535-6a534a59c75d",
+          "drive_id": "1SBOW7hg8TEiQQomccYQH_RgWDvTw-3Oj",
+          "arquivo_nome_original": "IMG_20261003_131335.jpg",
+          "caminho_storage": "1a035518-d6fe-58bd-8cf4-a8ede970995b/151f5fc2-6031-5480-9535-6a534a59c75d.webp",
+          "tipo": "foto",
+          "ordem": 3,
+          "principal": false,
+          "sha256": "9c91da94d86d04c35f4d6f9d8f0f59d62cdbce84edb14ac1f0e64e38a10c69aa",
+          "bytes": 131520
+        },
+        {
+          "id": "c3f6477e-556f-5178-8bc1-b09162556602",
+          "drive_id": "1ti-iAQnS9_uIpvkQ6b_FuFNhw_g5t_MJ",
+          "arquivo_nome_original": "IMG_20261003_131345.jpg",
+          "caminho_storage": "1a035518-d6fe-58bd-8cf4-a8ede970995b/c3f6477e-556f-5178-8bc1-b09162556602.webp",
+          "tipo": "foto",
+          "ordem": 4,
+          "principal": false,
+          "sha256": "218fa7ab84dbdc9c10fb421b41e578aaa80994b62395e29183d17b6226b08ba3",
+          "bytes": 208864
+        }
+      ]
+    },
+    {
+      "id": "85141df2-e0d8-5345-9d26-66dc04d76430",
+      "codigo": "RM-C012",
+      "nome_sugerido": "Blusa sem mangas floral laranja",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "79dc9d59-fd84-53e2-92cf-0bdf6e3adc91",
+          "drive_id": "14UC40CJPu6Fk2zUqltIXVy4ei2XERQtU",
+          "arquivo_nome_original": "IMG_20261003_132416.jpg",
+          "caminho_storage": "85141df2-e0d8-5345-9d26-66dc04d76430/79dc9d59-fd84-53e2-92cf-0bdf6e3adc91.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "e0edddb04d85ae30e7a5085906cf88af056dfaadd355b8365bd7758d7ccd06fb",
+          "bytes": 170172
+        },
+        {
+          "id": "9c0e317b-62f2-5c7f-aea3-3311959da0f1",
+          "drive_id": "1Z_bQvlBZtjg1V8enbTLJrtgKhKpMlhcR",
+          "arquivo_nome_original": "IMG_20261003_132347.jpg",
+          "caminho_storage": "85141df2-e0d8-5345-9d26-66dc04d76430/9c0e317b-62f2-5c7f-aea3-3311959da0f1.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "9c7e3f01c93e78c304a53bcefb666874a061e6d0b2988fe2ca9d94a95e29c87e",
+          "bytes": 424208
+        },
+        {
+          "id": "11ea3c56-d018-5ce3-9284-70df090f990d",
+          "drive_id": "1wgoH9Ke3NtOvljcBjpfnItI-Z18WrjpL",
+          "arquivo_nome_original": "IMG_20261003_132353.jpg",
+          "caminho_storage": "85141df2-e0d8-5345-9d26-66dc04d76430/11ea3c56-d018-5ce3-9284-70df090f990d.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "f0eb49a7e45a0980cbbff4958368ed0ff2625edc4e4df0c108412d8333261ac0",
+          "bytes": 380986
+        }
+      ]
+    },
+    {
+      "id": "f0c913ff-8918-5746-ac8f-411d49ff9aca",
+      "codigo": "RM-C013",
+      "nome_sugerido": "Blusa preta sem mangas",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "23418a74-ceeb-56cd-9fc0-6f0305eb8af3",
+          "drive_id": "1sujJhWIYjtTUdtQoRi4dBRYY8vMsWhqx",
+          "arquivo_nome_original": "IMG_20261003_132439.jpg",
+          "caminho_storage": "f0c913ff-8918-5746-ac8f-411d49ff9aca/23418a74-ceeb-56cd-9fc0-6f0305eb8af3.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "c6957fd0646ddbd290b21c102137f9d1226174f689fe7b635a0f4e1d8f86755f",
+          "bytes": 77738
+        },
+        {
+          "id": "2713f095-7bd5-5c47-a37c-f6855ba504b0",
+          "drive_id": "14U-lncI1maC4XVCdfR4ks4QyMB7jEg2N",
+          "arquivo_nome_original": "IMG_20261003_132459.jpg",
+          "caminho_storage": "f0c913ff-8918-5746-ac8f-411d49ff9aca/2713f095-7bd5-5c47-a37c-f6855ba504b0.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "3935f95e46ce00c143089d83f41a551af20c881f8542e07d9a0f4c7af8b2dc37",
+          "bytes": 218556
+        }
+      ]
+    },
+    {
+      "id": "8fedd7c5-7c0f-551f-9a80-5fc8e28fd37c",
+      "codigo": "RM-C014",
+      "nome_sugerido": "Blusa azul com estampa abstrata",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "b66b970f-96f7-55b2-a0c8-43004cca9c5d",
+          "drive_id": "1HBRgh3-2BHuHOO4ESVzRr4BRewKEXSNx",
+          "arquivo_nome_original": "IMG_20261003_132514.jpg",
+          "caminho_storage": "8fedd7c5-7c0f-551f-9a80-5fc8e28fd37c/b66b970f-96f7-55b2-a0c8-43004cca9c5d.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "6a39fa55049efddb02c323ae3a3a52842517733e60e5098151aa6e75b036bff9",
+          "bytes": 130838
+        },
+        {
+          "id": "43813991-3089-556d-aa6c-fea7049c1f7c",
+          "drive_id": "1KRt1NxTaslou3QO8IGYIrmBdcc7AlEpd",
+          "arquivo_nome_original": "IMG_20261003_132517.jpg",
+          "caminho_storage": "8fedd7c5-7c0f-551f-9a80-5fc8e28fd37c/43813991-3089-556d-aa6c-fea7049c1f7c.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "d01e1383acfb8c7c4c1d731dde2bd6ebe4406f57f1a1cc66631b9b766f31ebba",
+          "bytes": 145480
+        },
+        {
+          "id": "cc312269-807e-5dd8-9009-4579c816f0f2",
+          "drive_id": "1NKsxBwTImS6qYIKxiyeERcaxRx6Wmemx",
+          "arquivo_nome_original": "IMG_20261003_132532.jpg",
+          "caminho_storage": "8fedd7c5-7c0f-551f-9a80-5fc8e28fd37c/cc312269-807e-5dd8-9009-4579c816f0f2.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "5c83d84e90ef52f761aeb6573becc17cc9060b440b0e2632e54136387b4951b0",
+          "bytes": 310452
+        }
+      ]
+    },
+    {
+      "id": "17a7a8af-4c4f-5ba3-8ffc-e9ab6e133372",
+      "codigo": "RM-C015",
+      "nome_sugerido": "Blusa azul com flores claras",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "1e9c9f93-0a6a-5708-9d4b-6b8797221cd6",
+          "drive_id": "19G7nR5rofVLSDBXYyozkw5hLuB8TbcC3",
+          "arquivo_nome_original": "IMG_20261003_132550.jpg",
+          "caminho_storage": "17a7a8af-4c4f-5ba3-8ffc-e9ab6e133372/1e9c9f93-0a6a-5708-9d4b-6b8797221cd6.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "788238e8637dba997c2e83fccbec10ed02abc67d1a8fb31d513a415f7eaca48e",
+          "bytes": 150838
+        },
+        {
+          "id": "e1753599-b434-529b-a532-973dfa192fff",
+          "drive_id": "1_nIrMM7BvXny1yRuqHpmKgcsF30X0ifO",
+          "arquivo_nome_original": "IMG_20261003_132559.jpg",
+          "caminho_storage": "17a7a8af-4c4f-5ba3-8ffc-e9ab6e133372/e1753599-b434-529b-a532-973dfa192fff.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "183c99c8b3e0199b7fecf3d95ad8163cac9b38c2556d4f7c349a08f3d5d3db3a",
+          "bytes": 331258
+        }
+      ]
+    },
+    {
+      "id": "d32c00ed-14ca-5b5f-b006-45a4e6e86436",
+      "codigo": "RM-C016",
+      "nome_sugerido": "Blusa verde com estampa abstrata",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "944e87c8-c083-582e-a13a-feb51a047ce5",
+          "drive_id": "1-GH2zgxDI9_HSIsJ8LGiMdb6iZjHdDgU",
+          "arquivo_nome_original": "IMG_20261003_132620.jpg",
+          "caminho_storage": "d32c00ed-14ca-5b5f-b006-45a4e6e86436/944e87c8-c083-582e-a13a-feb51a047ce5.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "d47f36ce86f745801b50beacc5f6f0aedd45835ac199eaf34a6b68c9207ce9c9",
+          "bytes": 118368
+        },
+        {
+          "id": "9a625c14-e3ed-59ec-94a1-1d6e90c5682d",
+          "drive_id": "1cjKkRyK4n6DImIQPdol-UPLnE4hVzkyH",
+          "arquivo_nome_original": "IMG_20261003_132630.jpg",
+          "caminho_storage": "d32c00ed-14ca-5b5f-b006-45a4e6e86436/9a625c14-e3ed-59ec-94a1-1d6e90c5682d.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "e7ebaf2407f1ca3786eb43779897e37e92908b6ac637759f3701af060d5f792f",
+          "bytes": 284040
+        }
+      ]
+    },
+    {
+      "id": "d380b844-f6cd-5a8f-9798-65d4e9fc6ea9",
+      "codigo": "RM-C017",
+      "nome_sugerido": "Blusa vinho sem mangas",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "c2c9bb0d-7ab8-53f1-a9e2-e11c2a0c09ce",
+          "drive_id": "1QSrau_Oc8xq9q4yEJpWVxw5Kp6TIp-AY",
+          "arquivo_nome_original": "IMG_20261003_132648.jpg",
+          "caminho_storage": "d380b844-f6cd-5a8f-9798-65d4e9fc6ea9/c2c9bb0d-7ab8-53f1-a9e2-e11c2a0c09ce.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "ae366ad80f9cd18f377f52a2c24c9876aed1ad8bdf21d544bffa89f382e4be5e",
+          "bytes": 114038
+        },
+        {
+          "id": "87b94934-c90a-5b8a-b92e-6260633aee77",
+          "drive_id": "1_Qr4XfqQTswbBJeD-bByY-_fFKEOqabw",
+          "arquivo_nome_original": "IMG_20261003_132656.jpg",
+          "caminho_storage": "d380b844-f6cd-5a8f-9798-65d4e9fc6ea9/87b94934-c90a-5b8a-b92e-6260633aee77.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "19af7c8576c776d1d42d6be1d95b30b43130b1712db72a462ecb40471d8fc32e",
+          "bytes": 221006
+        }
+      ]
+    },
+    {
+      "id": "df9f5ab7-45c2-54a9-8928-14751668712f",
+      "codigo": "RM-C018",
+      "nome_sugerido": "Blusa verde-azulada sem mangas",
+      "observacoes_curadoria": "Identificação visual sugerida. Confirmar modelo, composição, cor e se é peça avulsa ou conjunto. Preço, medidas, tamanhos e quantidade não inferidos.",
+      "midias": [
+        {
+          "id": "443ca7ba-13ca-53d3-afca-52b42fac9abb",
+          "drive_id": "1X9h5WbFH1pyAGicfvkTaRBpAJ9_fGNCX",
+          "arquivo_nome_original": "IMG_20261003_132709.jpg",
+          "caminho_storage": "df9f5ab7-45c2-54a9-8928-14751668712f/443ca7ba-13ca-53d3-afca-52b42fac9abb.webp",
+          "tipo": "foto",
+          "ordem": 0,
+          "principal": true,
+          "sha256": "3e1a02d98d3f6c9debecf4764d9997155edbebfd0263bc438fc94ae20c0936e9",
+          "bytes": 103160
+        },
+        {
+          "id": "a59457ae-ce70-5b6c-90b7-c9e9e558fc0f",
+          "drive_id": "1Q8ID1wvw9tCtMNoixChT8eO3w0qfN9xe",
+          "arquivo_nome_original": "IMG_20261003_132719.jpg",
+          "caminho_storage": "df9f5ab7-45c2-54a9-8928-14751668712f/a59457ae-ce70-5b6c-90b7-c9e9e558fc0f.webp",
+          "tipo": "foto",
+          "ordem": 1,
+          "principal": false,
+          "sha256": "85c514cb8b5ae8b160ebe6f0acc184411221c08ae08b22f04afffc4ce51dac99",
+          "bytes": 111014
+        },
+        {
+          "id": "ee6fd633-9af3-5c6b-9c73-df62cb3b9ac0",
+          "drive_id": "11oIXIBcctOAgkeUwuTn3ScNqZhTsw1fk",
+          "arquivo_nome_original": "IMG_20261003_132726.jpg",
+          "caminho_storage": "df9f5ab7-45c2-54a9-8928-14751668712f/ee6fd633-9af3-5c6b-9c73-df62cb3b9ac0.webp",
+          "tipo": "foto",
+          "ordem": 2,
+          "principal": false,
+          "sha256": "976589e239c5fa6d62a6225b2627bf9b88714fd672ee010d48886410d37a4389",
+          "bytes": 334200
+        }
+      ]
+    }
+  ]
+}

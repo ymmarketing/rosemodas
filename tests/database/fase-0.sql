@@ -19,10 +19,10 @@ begin
 end $$;
 
 do $$ declare tabelas text[]; begin
-  select array_agg(tablename::text order by tablename) into tabelas from pg_tables where schemaname='public';
+  select array_agg(tablename::text order by tablename) into tabelas from pg_tables where schemaname='public' and tablename<>'usuarios_internos';
   perform pg_temp.deve_ser(tabelas = array['audit_log','categorias','colecoes','configuracoes','medidas_tamanho','midias','movimentos_estoque','produtos','variacoes'], 'exatamente nove tabelas');
-  perform pg_temp.deve_ser((select count(*) = 9 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relrowsecurity), 'RLS habilitada nas nove tabelas');
-  perform pg_temp.deve_ser((select count(*) = 9 from pg_constraint where connamespace='public'::regnamespace and contype='p'), 'PK nas nove tabelas');
+  perform pg_temp.deve_ser((select count(*) = 9 from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relname<>'usuarios_internos' and c.relrowsecurity), 'RLS habilitada nas nove tabelas da fundação');
+  perform pg_temp.deve_ser((select count(*) = 9 from pg_constraint where connamespace='public'::regnamespace and contype='p' and conrelid<>'public.usuarios_internos'::regclass), 'PK nas nove tabelas da fundação');
   perform pg_temp.deve_ser(not exists(select 1 from pg_constraint c join pg_class r on r.oid=c.confrelid join pg_namespace n on n.oid=r.relnamespace where c.connamespace='public'::regnamespace and c.contype='f' and (not c.convalidated or not (n.nspname='auth' and r.relname='users' or n.nspname='public' and r.relname = any(tabelas)))), 'FKs válidas, somente catálogo ou Auth');
   perform pg_temp.deve_ser(not exists(select 1 from information_schema.columns where table_schema='public' and column_name in ('pedido_id','reserva_id','troca_id','entrada_id','fornecedor_id','live_id','campanha_id')), 'nenhuma coluna de FK futura');
   perform pg_temp.deve_ser(not exists(select 1 from information_schema.columns where table_schema='public' and table_name='movimentos_estoque' and column_name='usuario_id'), 'usuário interno do movimento não antecipado');
