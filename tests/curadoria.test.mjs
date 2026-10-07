@@ -2,6 +2,19 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {pendenciasDaPeca,prepararUpload,entradaInterna} from '../apps/vitrine/src/painel/catalogoInterno.ts';
+import {sessaoPorCodigo,telefoneDeAcesso,mensagemErroAcesso} from '../apps/vitrine/src/painel/acessoSemSenha.ts';
+test('acesso por canal validado distingue código de senha e rejeita métodos malformados',()=>{
+  for(const method of ['otp','magiclink','invite'])assert.equal(sessaoPorCodigo([{method}]),true);
+  for(const methods of [null,{},'otp',[],[{method:'password'}],[{method:'token_refresh'}],[null]])assert.equal(sessaoPorCodigo(methods),false);
+  assert.equal(telefoneDeAcesso('(31) 98888-7777'),'+5531988887777');
+  assert.equal(telefoneDeAcesso('+55 31 98888-7777'),'+5531988887777');
+  assert.throws(()=>telefoneDeAcesso('123456'));
+});
+test('limites de envio não prometem entrega nem expõem erro interno do provedor',()=>{
+  assert.match(mensagemErroAcesso({status:429}),/limite temporário/);
+  assert.match(mensagemErroAcesso({code:'over_email_send_rate_limit'}),/último e-mail/);
+  assert.match(mensagemErroAcesso({code:'phone_provider_disabled'}),/SMS ainda indisponível/);
+});
 test('rascunho iniciado com foto não inventa preço ou variações e não fica pronto para publicar',()=>{
   const p={nome:null,preco:null,categoria_id:null,midias:[{tipo:'foto',principal:true,ativo:true}],variacoes:[]};
   assert.deepEqual(pendenciasDaPeca(p),['nome','preço','categoria','variação e quantidade']);

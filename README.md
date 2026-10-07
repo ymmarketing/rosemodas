@@ -225,3 +225,31 @@ separados, MFA obrigatório. Não cria clientes, pedidos, reservas ou pagamentos
 Primeiro acesso da equipe depende do convite Auth e da URL de retorno configurada
 no Supabase. A habilitação da conta não representa homologação da experiência de
 login ou do cadastro pela Yasmin. Produção e main permanecem sem alteração.
+
+## Ajuste de acesso solicitado durante homologação — 07/10/2026
+
+Yasmin pediu retirar senha e configuração de autenticador, escolhendo e-mail OU
+SMS. Este pedido substitui a exigência de TOTP para seu acesso; é construção,
+sem aprovação final ou congelamento. Migration: `20261007175733_catalogo_acesso_email_sms.sql`.
+
+- E-mail: link de acesso de uso único, como no protótipo. Também aceita código
+  quando o template do Supabase incluir `{{ .Token }}`. Convites existentes podem
+  abrir o catálogo sem criar senha. Link expirado permite solicitar novo acesso.
+- SMS: caminho de código implementado, exibido conforme os canais habilitados
+  no Auth. No hospedado está desativado: exige configurar um provedor de envio e
+  verificar o telefone da mesma conta. O WhatsApp comercial não foi usado como
+  telefone de autenticação da Yasmin. Nenhum provedor ou plano foi contratado.
+- Cadastro automático desativado nas duas chamadas `signInWithOtp`. E-mail/SMS
+  não concedem papel: a conta precisa estar ativa em `usuarios_internos` e ser
+  admin/estoque. A escolha do método fica na tabela interna, sem autoalteração.
+- Para a conta autorizada a entrar sem TOTP, o banco exige método real `otp`,
+  `magiclink` ou `invite`, emitido pelo Auth. Sessão só por senha, anônima, método
+  ausente ou metadados fabricados não habilitam o catálogo. Outras contas mantêm
+  o padrão de MFA até configuração administrativa explícita.
+- Reenvio espera 60 segundos e apresenta limites do provedor sem prometer envio.
+  A sessão interna continua separada da vitrine. Nenhuma credencial é exibida.
+
+Validação do ajuste: 23 testes de aplicação/ambiente, 19 grupos SQL em duas bases
+limpas e testes de autorização executados também no hospedado com rollback.
+A conta administrativa da Yasmin foi habilitada para o método sem TOTP.
+Entrega para nova validação de acesso; não altera catálogo nem produção.
