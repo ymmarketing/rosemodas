@@ -46,9 +46,20 @@ node scripts/lancamento/carga-oficial.mjs despublicar \
 
 `admin.json`: URL do projeto aprovado, chave publishable e sessão de admin autenticada por senha (`accessToken`). Arquivo privado fora do repo; não colocar em Vercel/VITE, GitHub ou relatório. Não inclui senha nem exige `service_role`. A sessão precisa estar válida na execução. Reversão despublica toda a carga sem apagar fotos, registros, ledger ou auditoria; não republica o lote automaticamente.
 
+Se a retirada de fotos falhar após commit, retomar sem reaplicar estoque:
+
+```bash
+node scripts/lancamento/carga-oficial.mjs finalizar \
+  --credenciais /diretorio-privado/admin.json \
+  --backup-dir /diretorio-privado/backups \
+  --lote UUID-DO-LOTE
+```
+
+O script verifica o lote já aplicado, o manifesto e hashes do backup. Não inicia outra carga nem rebaixa estoque na recuperação.
+
 ## Dados fictícios autorizados
 
-Migration `20261008030827`: preparo condicionado à existência dos 18 IDs originais com suas capas. Banco limpo não recebe as fotos reais. Todos os produtos preparados recebem `dado_teste=true`, nome `[TESTE] <nome sugerido>`, descrição explícita de teste, preço de R$ 101 a R$ 118 na ordem RM-C001..018, promoção vazia, cor `Demonstração`, tamanho `48`, estoque de 1 unidade, ordem de vitrine 1..18. Categoria também é de demonstração. Variações anteriores ficam arquivadas e seus saldos são ajustados pelo ledger. Fotos atuais são preservadas.
+Migration `20261008030827`: preparo condicionado à existência dos 18 códigos originais com suas capas. Banco limpo não recebe as fotos reais. Todos os produtos preparados recebem `dado_teste=true`, nome `[TESTE] <nome sugerido>`, descrição explícita de teste, preço de R$ 101 a R$ 118 na ordem RM-C001..018, promoção vazia, cor `Demonstração`, tamanho `48`, estoque de 1 unidade, ordem de vitrine 1..18. Categoria também é de demonstração. Variações anteriores ficam arquivadas e seus saldos são ajustados pelo ledger. Fotos atuais são preservadas.
 
 Limpeza confirmada: os 12 HOM-RM são arquivados, com variações e medidas; a coleção compartilhada é preservada e renomeada `Coleção de lançamento`; os valores anteriores de teste de RM-C011 são substituídos pelo teste controlado acima. SMOKE-01 é arquivada se existir. Nenhuma conta ou pedido de teste hospedado será criado enquanto `mailer_autoconfirm=false`.
 
@@ -92,5 +103,5 @@ Backup nativo diário: conferir no Supabase → Database → Backups o plano e a
 
 - `npm run test:carga`: 17 casos de CSV/imagens e ausência de escrita em entrada inválida.
 - `npm run test:db`: duas bases PGlite limpas; transação/rollback, isolamento, conciliação, corte e demo.
-- CI a executar: dois resets Supabase reais, Auth real, 10 logins, cadastro duplicado e `test:carga:api` com Storage, cópia privada e reversão.
+- CI aprovado: [run 37721888071](https://github.com/ymmarketing/rosemodas/actions/runs/37721888071), SHA `df6320f99527f5841f0daeedcaee72030f07f4bf`: dois resets Supabase reais com schema idêntico `8a8bcb25fc06`, Auth real (6 grupos), 10 logins, cadastro duplicado e carga/Storage/reversão (3 grupos). Nova execução também cobre retomada após falha na retirada das fotos.
 - Registrar SHA, CI e deploy após execução, sem chamar a fase de homologada.

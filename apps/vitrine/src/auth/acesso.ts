@@ -28,10 +28,18 @@ export type ServicoAcesso = {
   perfil:()=>Promise<PerfilAcesso|null>;
   sair:()=>Promise<void>;
   observar:(mudou:()=>void)=>()=>void;
+  cadastroDisponivel?:()=>Promise<boolean>;
 };
 export function servicoAcesso(area:'equipe'|'cliente'):ServicoAcesso {
   const sb=clienteAutenticado(area);
   return {
+    async cadastroDisponivel() {
+      if(area!=='cliente')return false;
+      const ambiente=validarAmbiente(import.meta.env,true)!;
+      const r=await fetch(`${ambiente.url}/auth/v1/settings`,{headers:{apikey:ambiente.chave}});
+      if(!r.ok)return false;
+      const c=await r.json();return c.mailer_autoconfirm===true&&c.disable_signup!==true;
+    },
     async entrar(email,senha) {
       const {error}=await sb.auth.signInWithPassword({email:email.trim().toLowerCase(),password:senha});
       if(error)throw new Error(mensagemErroSenha(error));

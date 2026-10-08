@@ -110,12 +110,17 @@ export async function executarCarga({sb,pasta,backupDir,lote=randomUUID(),apenas
    throw new Error(`${e.message}${falhas.length?' '+falhas.join(' '):''}`);
   }
  }
+ return await retirarFotosAntigas({sb,dir,lote,hashes,resultado});
+}
+async function retirarFotosAntigas({sb,dir,lote,hashes,resultado}){
  // Somente após commit: preservar cópia privada e retirar o acesso público antigo.
  const pendencias=[];
- for(const caminho of anteriores){
+ for(const {caminho,sha256} of hashes){
   try{
    const bytes=await readFile(path.join(dir,'fotos',caminho));
-   conferir(await sb.storage.from('catalogo-privado').upload(`backup/${lote}/${caminho}`,bytes,{upsert:false}));
+   if(sha(bytes)!==sha256)throw new Error('O backup local foi alterado.');
+   const existente=await sb.storage.from('catalogo-privado').download(`backup/${lote}/${caminho}`);
+   if(existente.error)conferir(await sb.storage.from('catalogo-privado').upload(`backup/${lote}/${caminho}`,bytes,{upsert:false}));
    const copia=conferir(await sb.storage.from('catalogo-privado').download(`backup/${lote}/${caminho}`));
    if(sha(Buffer.from(await copia.arrayBuffer()))!==sha(bytes))throw new Error('Cópia privada não confere.');
    conferir(await sb.storage.from('produtos-publico').remove([caminho]));
@@ -125,16 +130,24 @@ export async function executarCarga({sb,pasta,backupDir,lote=randomUUID(),apenas
  const relatorio={status:pendencias.length?'catalogo_aplicado_retirada_fotos_pendente':'concluido',...resultado,backup:dir,integridade:hashes,pendencias};
  await writeFile(path.join(dir,'resultado.json'),JSON.stringify(relatorio,null,2),{mode:0o600});return relatorio;
 }
+export async function finalizarCarga({sb,backupDir,lote}){
+ if(!/^[0-9a-f-]{36}$/i.test(lote??''))throw new Error('Informe o UUID do lote já aplicado.');
+ const dir=path.join(backupDir,lote),manifesto=JSON.parse(await readFile(path.join(dir,'manifesto.json'),'utf8'));
+ const hashes=JSON.parse(await readFile(path.join(dir,'integridade.json'),'utf8'));
+ // A RPC só retorna um lote aplicado e com manifesto idêntico. Assinatura vazia impede iniciar uma carga nesta recuperação.
+ const resultado=await rpc(sb,'aplicar_carga_oficial',{p_lote:lote,p_manifesto:manifesto,p_assinatura:'',p_backup:dir});
+ return await retirarFotosAntigas({sb,dir,lote,hashes,resultado});
+}
 async function cli(){
  const [acao,...args]=process.argv.slice(2),op={};for(let i=0;i<args.length;i+=2)op[args[i]]=args[i+1];
  if(acao==='validar'){
   const cats=JSON.parse(await readFile(op['--categorias'],'utf8'));const r=await validarEntrada(op['--pasta'],cats);console.log(JSON.stringify({erros:r.erros,pecas:r.manifesto.length},null,2));if(r.erros.length)process.exitCode=1;return;
  }
- if(!['aplicar','despublicar'].includes(acao))throw new Error('Use validar, aplicar ou despublicar. Consulte o registro de lançamento.');
+ if(!['aplicar','finalizar','despublicar'].includes(acao))throw new Error('Use validar, aplicar, finalizar ou despublicar. Consulte o registro de lançamento.');
  const creds=JSON.parse(await readFile(op['--credenciais'],'utf8'));
  if(!['https://kernpudxhwkpoadahgqj.supabase.co','http://127.0.0.1:54321','http://localhost:54321'].includes(creds.url)||!creds.publishableKey||!creds.accessToken)throw new Error('Credenciais de admin por senha e projeto aprovado são obrigatórios.');
  const sb=createClient(creds.url,creds.publishableKey,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:`Bearer ${creds.accessToken}`}}});
- const resultado=acao==='despublicar'?{despublicadas:await rpc(sb,'despublicar_carga_oficial',{p_lote:op['--lote']})}:await executarCarga({sb,pasta:op['--pasta'],backupDir:op['--backup-dir'],lote:op['--lote']??randomUUID()});
+ const resultado=acao==='despublicar'?{despublicadas:await rpc(sb,'despublicar_carga_oficial',{p_lote:op['--lote']})}:acao==='finalizar'?await finalizarCarga({sb,backupDir:op['--backup-dir'],lote:op['--lote']}):await executarCarga({sb,pasta:op['--pasta'],backupDir:op['--backup-dir'],lote:op['--lote']??randomUUID()});
  console.log(JSON.stringify(resultado,null,2));if(resultado.status&&resultado.status!=='concluido')process.exitCode=1;
 }
 if(process.argv[1]&&fileURLToPath(import.meta.url)===path.resolve(process.argv[1]))cli().catch(e=>{console.error('Carga interrompida: '+e.message);process.exitCode=1;});

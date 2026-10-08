@@ -8,7 +8,7 @@ import os from 'node:os';
 import {createClient} from '@supabase/supabase-js';
 import pg from 'pg';
 import sharp from 'sharp';
-import {executarCarga,colunas} from './lancamento/carga-oficial.mjs';
+import {executarCarga,finalizarCarga,colunas} from './lancamento/carga-oficial.mjs';
 const status=JSON.parse(execFileSync('node_modules/.bin/supabase',['status','-o','json'],{encoding:'utf8',stdio:['ignore','pipe','ignore']}));
 assert.ok(['127.0.0.1','localhost'].includes(new URL(status.API_URL).hostname));
 const dbUrl=process.env.SUPABASE_TEST_DATABASE_URL;assert.ok(dbUrl&&['127.0.0.1','localhost'].includes(new URL(dbUrl).hostname));
@@ -35,7 +35,15 @@ try{
  const antes=(await db.query('select count(*)::int as n from public.audit_log')).rows[0].n;
  const invalido=await executarCarga({sb,pasta,backupDir:backups});assert.equal(invalido.status,'erros_validacao');assert.equal((await db.query('select count(*)::int as n from public.audit_log')).rows[0].n,antes);assert.ok(!(await sb.storage.from('produtos-publico').download(antigo)).error);grupos.push('Planilha inválida: nenhuma escrita em banco ou Storage; foto antiga preservada.');
  await writeFile(path.join(pasta,'estoque-oficial.csv'),csv(linhas));
- const lote=randomUUID();const result=await executarCarga({sb,pasta,backupDir:backups,lote});
+ const falhaSb={rpc:(...args)=>sb.rpc(...args),storage:{from:bucket=>{
+  const storage=sb.storage.from(bucket);if(bucket!=='catalogo-privado')return storage;
+  return new Proxy(storage,{get(target,p){if(p==='upload')return (nome,...args)=>nome.startsWith('backup/')?Promise.resolve({error:{message:'Falha simulada de cópia privada'}}):target.upload(nome,...args);const v=target[p];return typeof v==='function'?v.bind(target):v;}});
+ }}};
+ const lote=randomUUID();const parcial=await executarCarga({sb:falhaSb,pasta,backupDir:backups,lote});
+ assert.equal(parcial.status,'catalogo_aplicado_retirada_fotos_pendente');assert.ok(!(await sb.storage.from('produtos-publico').download(antigo)).error);
+ const movimentos=(await db.query('select count(*)::int as n from public.movimentos_estoque')).rows[0].n;
+ const result=await finalizarCarga({sb,backupDir:backups,lote});
+ assert.equal((await db.query('select count(*)::int as n from public.movimentos_estoque')).rows[0].n,movimentos);grupos.push('Falha após commit: foto anterior preservada; retomada completa sem reaplicar estoque.');
  assert.equal(result.status,'concluido',JSON.stringify(result.pendencias));assert.equal(result.publicadas,1);assert.equal(result.rascunhos,1);assert.equal(result.fotos,2);
  assert.deepEqual(await readFile(path.join(result.backup,'fotos',antigo)),bytes);assert.ok((await sb.storage.from('produtos-publico').download(antigo)).error);
  assert.ok(!(await sb.storage.from('catalogo-privado').download(`backup/${lote}/${antigo}`)).error);

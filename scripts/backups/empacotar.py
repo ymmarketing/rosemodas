@@ -73,9 +73,10 @@ def empacotar(arquivo, destino, project_ref):
     for caminho in [banco, *sorted(schema.glob('*.sql'))]:
         conteudo = caminho.read_bytes()
         arquivos.append({'caminho': caminho.relative_to(destino).as_posix(), 'bytes': len(conteudo), 'sha256': hashlib.sha256(conteudo).hexdigest()})
-    manifesto = {'formato': dados['formato'], 'ambiente': 'homologacao', 'project_ref': project_ref,
+    manifesto = {'formato': dados['formato'], 'ambiente': 'producao', 'project_ref': project_ref,
                  'exportado_em': dados['exportado_em'], 'tabelas': {k: len(v) for k, v in dados['tabelas'].items()},
                  'migrations': len(dados['schema_migrations']), 'fotos': len(dados['storage']['objetos']), 'arquivos': arquivos,
+                 'privado': {k: len(v) for k, v in dados.get('privado', {}).items()},
                  'limites': 'Export lógico da aplicação. Credenciais/sessões de Auth e secrets da infraestrutura não são copiados. Referências de contas são incluídas para recuperação assistida.'}
     (destino / 'manifesto.json').write_text(json.dumps(manifesto, ensure_ascii=False, indent=2))
     zip_path = destino.with_suffix('.zip')

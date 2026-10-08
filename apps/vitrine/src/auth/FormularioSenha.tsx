@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { ServicoAcesso } from './acesso';
 import { linkRecuperacaoCliente } from './acesso';
@@ -8,8 +8,10 @@ export function FormularioSenha({area,servico,entrou}:{area:'equipe'|'cliente';s
   const [email,setEmail]=useState(''),[senha,setSenha]=useState(''),[mostrar,setMostrar]=useState(false);
   const [nome,setNome]=useState(''),[whatsapp,setWhatsapp]=useState(''),[aceite,setAceite]=useState(false);
   const [cadastro,setCadastro]=useState(false),[recuperar,setRecuperar]=useState(false);
+  const [cadastroLiberado,setCadastroLiberado]=useState(!servico.cadastroDisponivel);
   const [erro,setErro]=useState(''),[ocupado,setOcupado]=useState(false);
   const emAndamento=useRef(false);
+  useEffect(()=>{let vivo=true;if(area==='cliente'&&servico.cadastroDisponivel)servico.cadastroDisponivel().then(v=>{if(vivo)setCadastroLiberado(v);}).catch(()=>{if(vivo)setCadastroLiberado(false);});return()=>{vivo=false;};},[area,servico]);
   async function enviar(e:FormEvent) {
     e.preventDefault();if(emAndamento.current)return;
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setErro('Informe um e-mail válido.');return;}
@@ -43,7 +45,7 @@ export function FormularioSenha({area,servico,entrou}:{area:'equipe'|'cliente';s
         <button className="btn btn-p btn-block" disabled={ocupado}>{ocupado?'Aguarde…':cadastro?'Criar conta':'Entrar'}</button>
       </form>
       {!cadastro&&<button className="link-acesso" disabled={ocupado} onClick={()=>{setRecuperar(true);setErro('');setSenha('');}}>Esqueci minha senha</button>}
-      {area==='cliente'&&<button className="link-acesso" disabled={ocupado} onClick={mudar}>{cadastro?'Já tenho conta · Entrar':'Ainda não tenho conta · Cadastrar'}</button>}
+      {area==='cliente'&&cadastroLiberado&&<button className="link-acesso" disabled={ocupado} onClick={mudar}>{cadastro?'Já tenho conta · Entrar':'Ainda não tenho conta · Cadastrar'}</button>}
     </>}
   </div>;
 }

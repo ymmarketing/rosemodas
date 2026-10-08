@@ -27,6 +27,10 @@ select jsonb_build_object(
   ),
   'auth_referencias',(select coalesce(jsonb_agg(jsonb_build_object('id',u.id,'email',u.email,'phone',u.phone) order by u.id),'[]'::jsonb)
     from auth.users u),
+  'privado',jsonb_build_object(
+    'lotes_catalogo',(select coalesce(jsonb_agg(to_jsonb(t) order by t.criado_em,t.id),'[]'::jsonb) from private.lotes_catalogo t),
+    'conciliacoes_clientes',(select coalesce(jsonb_agg(to_jsonb(t) order by t.criado_em,t.id),'[]'::jsonb) from private.conciliacoes_clientes t)
+  ),
   'storage',jsonb_build_object(
     'bucket',(select to_jsonb(b) from storage.buckets b where b.id='produtos-publico'),
     'objetos',(select coalesce(jsonb_agg(jsonb_build_object('name',o.name,'size',o.metadata->'size','mimetype',o.metadata->'mimetype','updated_at',o.updated_at) order by o.name),'[]'::jsonb)
