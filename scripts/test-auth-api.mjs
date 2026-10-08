@@ -31,7 +31,7 @@ try{
   const categoria=randomUUID(),produto=randomUUID(),variacao=randomUUID(),pedidoA=randomUUID(),pedidoB=randomUUID();
   await db.query('insert into public.categorias(id,nome,slug) values($1,$2,$3)',[categoria,'Categoria fictícia API',`teste-${categoria}`]);
   await db.query('insert into public.produtos(id,codigo,nome,slug,categoria_id,preco,ativo) values($1,$2,$3,$4,$5,10,false)',[produto,`TESTE-${produto}`,'Peça fictícia API',`teste-${produto}`,categoria]);
-  await db.query('insert into public.variacoes(id,produto_id,sku,tamanho,cor) values($1,$2,$3,$4,$5)',[variacao,produto,`TESTE-${variacao}`,'48','Fictícia']);
+  await db.query('insert into public.variacoes(id,produto_id,sku,tamanho,cor) values($1,$2,$3,$4,$5)',[variacao,produto,`TESTE-${variacao.toUpperCase()}`,'48','Fictícia']);
   for(const [pedido,u] of [[pedidoA,a],[pedidoB,b]]){
     await db.query('insert into public.pedidos(id,numero,cliente_id,canal,subtotal,total) select $1,$2,id,$3,10,10 from public.clientes where auth_user_id=$4',[pedido,`TESTE-${pedido}`,'whatsapp',u.id]);
     await db.query('insert into public.itens_pedido(pedido_id,produto_id,variacao_id,sku_snapshot,nome_snapshot,cor_snapshot,tamanho_snapshot,preco_unitario,quantidade,total_item) values($1,$2,$3,$4,$5,$6,$7,10,1,10)',[pedido,produto,variacao,'TESTE','Peça fictícia','Fictícia','48']);
