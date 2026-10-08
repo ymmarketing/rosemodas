@@ -35,7 +35,9 @@ substitui essa tela pela Home e coleção. Configure, somente em
 Preview na Vercel, `VITE_APP_ENV=homologation`, `VITE_SUPABASE_URL`,
 `VITE_SUPABASE_PUBLISHABLE_KEY` e `VITE_SUPABASE_PROJECT_REF`. A referência deve
 corresponder ao projeto exclusivo de homologação. Use chave publishable, nunca uma
-credencial de servidor. O build recusa produção, chaves privadas, variáveis públicas
+credencial de servidor. Na Tarefa 2 o build recusava produção; o ajuste de
+autenticação de 08/10 permite produção com configuração própria verificada.
+O build continua recusando chaves privadas, variáveis públicas
 não previstas e preview sem configuração completa. As quatro variáveis estão
 configuradas como encrypted, apenas em Preview e nesta branch. O bundle recebe
 somente essas quatro variáveis da aplicação; metadados automáticos `VITE_VERCEL_*`

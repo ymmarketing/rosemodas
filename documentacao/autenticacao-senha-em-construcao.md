@@ -120,9 +120,14 @@ O build verifica ambiente e correspondência URL/ref e recusa credenciais privad
 - Login administrativo real por e-mail/senha no painel hospedado: aprovado. Catálogo
   com 30 peças carregou e a consulta de pedidos abriu sem erro (banco sem pedidos).
 - Teste direto detectou 404 em `/cliente`; rewrites específicos de `/cliente` e
-  `/painel` foram adicionados à Vercel e devem ser verificados no deploy entregue.
+  `/painel` foram adicionados à Vercel. `/cliente`, `/painel`, `/cliente/pedidos` e
+  `/painel/pecas` retornaram HTTP 200 no domínio hospedado após a correção. A
+  tela de cliente e a recuperação pelo WhatsApp também foram verificadas no browser.
 - CI inclui Auth real em Supabase local: cadastro imediato, A/B, admin e 10 logins
-  consecutivos. Resultado do CI e do deploy deve ser conferido no commit entregue.
+  consecutivos. Resultado aprovado no commit `8ed2bd52051d6655d054feeaf71c6922a8cff70f`,
+  workflow `37708439498`. Inclui duas aplicações limpas de Postgres/Supabase local,
+  comparação de schemas e advisor de segurança. Deploy Preview
+  `dpl_4DuYV9opnSTHJKL5acSvbHJWgfCQ` READY; sem promoção para produção.
 - SQL com JWT de teste valida RLS, mas não prova envio SMTP nem limites do serviço
   hospedado. Cadastro e logins reais hospedados dependem da configuração do painel
   e de uma conta com senha disponível para teste seguro. Não declarar esses critérios
@@ -148,3 +153,30 @@ Infra/testes: as duas migrations acima, `supabase/config.toml`, `vite.config.ts`
 Referências de configuração: documentação oficial de
 [senhas](https://supabase.com/docs/guides/auth/passwords) e
 [rate limits](https://supabase.com/docs/guides/auth/rate-limits).
+
+
+## Resultado individual dos critérios de aceite
+
+| # | Critério | Evidência executada | Pendência hospedada / produção |
+| --- | --- | --- | --- |
+| 1 | Admin por senha, sem e-mail no login | Login real no painel de homologação e Auth API local aprovados; aplicação chama somente signInWithPassword | Produção sem projeto identificado; caixa de e-mail não foi acessada |
+| 2 | Cliente se cadastra e entra imediatamente | Auth API real local aprovado, Confirm email OFF em config local | Homologação mantém Confirm email ON; signUp fica bloqueado para não disparar e-mail; produção pendente |
+| 3 | Cliente não abre painel admin por URL direta | Componente React real testado com cliente; RLS e RPC negam cliente no Supabase hospedado; Auth API real local nega RPC admin | Sessão de cliente real no browser hospedado depende do cadastro/configuração Auth |
+| 4 | Cliente A não vê pedidos B | Teste SQL hospedado com rollback e API Auth/PostgREST real local com duas contas aprovados | Não foram criadas contas de cliente permanentes no hospedado |
+| 5 | Admin vê todos pedidos | SQL hospedado e API local com os dois pedidos aprovados; tela hospedada sem erro | Banco hospedado sem pedidos reais cadastrados |
+| 6 | Dez logins consecutivos sem bloqueio | Auth API real local, dez signInWithPassword, aprovado | Valores efetivos de Rate Limits hospedados não estão disponíveis no plugin |
+| 7 | Nenhum fluxo chama OTP/magic link/SMS | Scanner do código atual e testes de formulário + rotas Auth real aprovados | Produção não publicada ainda |
+
+O último GET do endpoint público de configurações, após o deploy, confirmou:
+Email habilitado, cadastro permitido e **Confirm email ainda ligado**. Senhas,
+tokens e service_role não foram lidos nem armazenados nos relatórios.
+
+## Commits de implementação (mesma branch, sem merge em main)
+
+- `ef4aa64221103c00d51f5914301a0c72a9f9cc58`: autenticação, perfis, consulta protegida e testes.
+- `2c554ff5b4d3fc1cac26bc7bdc2ac542082ae945`: corrigiu arquivo incompleto identificado no envio ao GitHub; blob conferido contra o arquivo local antes do novo deploy.
+- `5d4453671a5fbf74c2b3494116b3bd597842e0ac`: corrigiu SKU fictício do teste de Auth real; constraint original do banco preservada.
+- `8ed2bd52051d6655d054feeaf71c6922a8cff70f`: rotas diretas de painel/cliente, verificadas por HTTP e browser.
+
+Essas correções foram feitas durante a construção e os testes desta entrega,
+antes de devolvê-la para homologação. Nenhuma migration adicional foi necessária.
