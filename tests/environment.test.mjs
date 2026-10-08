@@ -27,8 +27,9 @@ test('chaves secretas, JWT service_role e variáveis privadas são recusadas', (
   }
   assert.throws(() => validarAmbiente({ ...homologacao, VITE_ADMIN_TOKEN: 'teste' }, true));
 });
-test('produção é recusada e DEV não pode apontar para banco hospedado', () => {
-  assert.throws(() => validarAmbiente({ ...homologacao, VITE_APP_ENV: 'production' }, true));
+test('produção aceita configuração própria e DEV não pode apontar para banco hospedado', () => {
+  assert.equal(validarAmbiente({ ...homologacao, VITE_APP_ENV: 'production' }, true).ambiente,'production');
+  assert.throws(()=>validarAmbiente({...homologacao,VITE_APP_ENV:'production',VITE_SUPABASE_PROJECT_REF:'kernpudxhwkpoadahgqj',VITE_SUPABASE_URL:'https://kernpudxhwkpoadahgqj.supabase.co'},true),/homologação/);
   assert.throws(() => validarAmbiente({ ...homologacao, VITE_APP_ENV: 'development' }, true));
   assert.equal(validarAmbiente({ VITE_SUPABASE_URL: 'http://127.0.0.1:54321', VITE_SUPABASE_PUBLISHABLE_KEY: homologacao.VITE_SUPABASE_PUBLISHABLE_KEY }, true).ambiente, 'development');
 });

@@ -10,13 +10,13 @@ export default defineConfig(({ mode }) => {
   const env = Object.fromEntries(Object.entries(loadEnv(mode, envDir, 'VITE_'))
     .filter(([nome]) => !nome.startsWith('VITE_VERCEL_')));
   const preview = process.env.VERCEL_ENV === 'preview';
-  if (process.env.VERCEL_ENV === 'production') {
-    throw new Error('Deploy de produção não está autorizado nesta etapa.');
+  if (process.env.VERCEL_ENV === 'production' && env.VITE_APP_ENV!=='production') {
+    throw new Error('Deploy de produção exige configuração exclusiva de produção.');
   }
   if (preview && env.VITE_APP_ENV !== 'homologation') {
     throw new Error('O preview Vercel deve usar o ambiente de homologação.');
   }
-  validarAmbiente(env, preview);
+  validarAmbiente(env, preview||process.env.VERCEL_ENV==='production');
   return {
     root: fileURLToPath(new URL('.', import.meta.url)),
     envDir,

@@ -37,7 +37,13 @@ file_size_limit = "50MiB"
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:5173"
-enable_signup = false
+enable_signup = true
+minimum_password_length = 8
+additional_redirect_urls = ["http://127.0.0.1:5173/cliente", "http://127.0.0.1:5173/painel"]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
 
 [analytics]
 enabled = false

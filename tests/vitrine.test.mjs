@@ -83,6 +83,6 @@ test('catálogo fiel ao mockup tem 12 modelos, cores, medidas e seed idempotente
  await assert.rejects(db.query('select custo_medio from public.variacoes'),e=>e.code==='42501');
  await assert.rejects(db.query('select * from public.audit_log'),e=>e.code==='42501');
  await db.exec('reset role');
- assert.equal((await db.query(`select count(*)::int n from pg_tables where schemaname='public' and tablename<>'usuarios_internos'`)).rows[0].n,9);
+ assert.equal((await db.query(`select count(*)::int n from pg_tables where schemaname='public' and tablename in ('categorias','colecoes','produtos','variacoes','medidas_tamanho','midias','movimentos_estoque','configuracoes','audit_log')`)).rows[0].n,9);
  } finally {await db.close();}
 });

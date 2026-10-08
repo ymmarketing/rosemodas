@@ -1,23 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { validarAmbiente } from '../ambiente.ts';
+import { clienteAutenticado } from '../auth/acesso.ts';
 
-export const painelUrl = 'https://rosemodas-painel-homologacao.vercel.app/';
+export const painelUrl = '/painel';
 export function entradaInterna(host: string, path: string) {
   return host === 'rosemodas-painel-homologacao.vercel.app'
     || host === 'painel-homolog.rosemenezesmodas.com.br'
-    || (['127.0.0.1', 'localhost'].includes(host) && path.startsWith('/painel'));
+    || path==='/painel' || path.startsWith('/painel/');
 }
-let cliente: SupabaseClient | undefined;
 export function clienteInterno() {
-  if (!cliente) {
-    const ambiente = validarAmbiente(import.meta.env, true);
-    if (!ambiente) throw new Error('Ambiente ainda não configurado.');
-    cliente = createClient(ambiente.url, ambiente.chave, {
-      auth: { storageKey: `rose-equipe-${ambiente.referencia}`, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-    });
-  }
-  return cliente;
+  return clienteAutenticado('equipe');
 }
 export type MidiaInterna = { id: string; caminho_storage: string; tipo: 'foto'|'video'; alt_texto: string; principal: boolean; ativo: boolean; ordem: number };
 export type VariacaoInterna = { id: string; sku: string; tamanho: string; cor: string; quantidade: number|string; ativo: boolean };
@@ -49,12 +39,7 @@ export function prepararUpload(arquivo: Pick<File,'type'|'size'>, produtoId: str
   if (!ext) throw new Error('Use fotos JPG, PNG ou WebP e vídeos MP4 ou WebM.');
   if (arquivo.size > 50*1024*1024 || arquivo.size === 0) throw new Error('Cada arquivo deve ter até 50 MB e não pode estar vazio.');
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-  if (!uuid.test(produtoId) || !uuid.test(id)) throw new Error('Identificação de arquivo inválida.');
-  return { caminho: `${produtoId}/${id}.${ext}`, tipo: arquivo.type.startsWith('image/') ? 'foto' : 'video' };
-}
-export async function enviarMidia(p: PecaInterna, arquivo: File) {
-  const id = crypto.randomUUID(), { caminho, tipo } = prepararUpload(arquivo,p.id,id);
-  const {error} = await clienteInterno().storage.from('produtos-publico').upload(caminho,arquivo,{upsert:false,contentType:arquivo.type});
+  if (!uuid.test(produtoId) || !uuid.test(id)) throw new Error('Identi…112 tokens truncated…uivo.type});
   if (error) throw new Error(`Não foi possível enviar ${arquivo.name}: ${error.message}`);
   return operar<PecaInterna>('midia_adicionar',p.id,{id,caminho_storage:caminho,tipo,alt_texto:p.nome??`Peça ${p.codigo}`});
 }

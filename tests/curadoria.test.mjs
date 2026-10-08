@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {pendenciasDaPeca,prepararUpload,entradaInterna} from '../apps/vitrine/src/painel/catalogoInterno.ts';
-import {sessaoPorCodigo,telefoneDeAcesso,mensagemErroAcesso} from '../apps/vitrine/src/painel/acessoSemSenha.ts';
+import {mensagemErroSenha} from '../apps/vitrine/src/auth/acesso.ts';
 import {validarPrecos} from '../apps/vitrine/src/painel/precos.ts';
 test('promoção vazia salva preço normal, menor salva e igual ou maior informa a correção',()=>{
   assert.deepEqual(validarPrecos('120',''),{preco:120,preco_promocional:null});
@@ -12,17 +12,10 @@ test('promoção vazia salva preço normal, menor salva e igual ou maior informa
   assert.throws(()=>validarPrecos('','80'),/Informe o preço de venda/);
   assert.throws(()=>validarPrecos('100','99.999'),/duas casas decimais/);
 });
-test('acesso por canal validado distingue código de senha e rejeita métodos malformados',()=>{
-  for(const method of ['otp','magiclink','invite'])assert.equal(sessaoPorCodigo([{method}]),true);
-  for(const methods of [null,{},'otp',[],[{method:'password'}],[{method:'token_refresh'}],[null]])assert.equal(sessaoPorCodigo(methods),false);
-  assert.equal(telefoneDeAcesso('(31) 98888-7777'),'+5531988887777');
-  assert.equal(telefoneDeAcesso('+55 31 98888-7777'),'+5531988887777');
-  assert.throws(()=>telefoneDeAcesso('123456'));
-});
-test('limites de envio não prometem entrega nem expõem erro interno do provedor',()=>{
-  assert.match(mensagemErroAcesso({status:429}),/limite temporário/);
-  assert.match(mensagemErroAcesso({code:'over_email_send_rate_limit'}),/último e-mail/);
-  assert.match(mensagemErroAcesso({code:'phone_provider_disabled'}),/SMS ainda indisponível/);
+test('senha apresenta erros claros sem distinguir contas nem disparar e-mail',()=>{
+  assert.match(mensagemErroSenha({code:'invalid_credentials'}),/E-mail não cadastrado ou senha incorreta/);
+  assert.match(mensagemErroSenha({status:429}),/Muitas tentativas/);
+  assert.match(mensagemErroSenha({code:'weak_password'}),/8 caracteres/);
 });
 test('rascunho iniciado com foto não inventa preço ou variações e não fica pronto para publicar',()=>{
   const p={nome:null,preco:null,categoria_id:null,midias:[{tipo:'foto',principal:true,ativo:true}],variacoes:[]};
@@ -38,7 +31,7 @@ test('upload aceita apenas mídia prevista e caminho próprio; recusa arquivo in
 });
 test('painel usa host próprio; rota pública não recebe sessão da equipe',()=>{
   assert.equal(entradaInterna('rosemodas-painel-homologacao.vercel.app','/'),true);
-  assert.equal(entradaInterna('homolog.rosemenezesmodas.com.br','/painel'),false);
+  assert.equal(entradaInterna('homolog.rosemenezesmodas.com.br','/painel'),true);
   assert.equal(entradaInterna('127.0.0.1','/painel'),true);
 });
 test('curadoria preserva origem e uma única capa por peça, sem fabricar valores comerciais',async()=>{

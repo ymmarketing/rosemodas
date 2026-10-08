@@ -226,7 +226,7 @@ Primeiro acesso da equipe depende do convite Auth e da URL de retorno configurad
 no Supabase. A habilitação da conta não representa homologação da experiência de
 login ou do cadastro pela Yasmin. Produção e main permanecem sem alteração.
 
-## Ajuste de acesso solicitado durante homologação — 07/10/2026
+## Histórico: acesso sem senha — substituído por e-mail e senha em 08/10/2026
 
 Yasmin pediu retirar senha e configuração de autenticador, escolhendo e-mail OU
 SMS. Este pedido substitui a exigência de TOTP para seu acesso; é construção,
@@ -253,3 +253,18 @@ Validação do ajuste: 23 testes de aplicação/ambiente, 19 grupos SQL em duas 
 limpas e testes de autorização executados também no hospedado com rollback.
 A conta administrativa da Yasmin foi habilitada para o método sem TOTP.
 Entrega para nova validação de acesso; não altera catálogo nem produção.
+
+
+## Autenticação por e-mail e senha — em construção
+
+O acesso atual substitui o fluxo histórico por link mágico/SMS. Painel em
+`/painel` e área da cliente em `/#/cliente`, com sessões separadas. Admin não
+possui cadastro público; cliente se cadastra somente quando o projeto Auth está
+configurado para liberar a sessão sem confirmação de e-mail. Não há recuperação
+por e-mail: cliente recebe o contato do WhatsApp e equipe procura a administradora.
+
+Migrations únicas: `20261008002321_auth_email_senha_perfis.sql` e
+`20261008002336_area_cliente_consulta_pedidos.sql`. Configuração hospedada,
+permissões, testes e pendências estão em
+[Autenticação — em construção](documentacao/autenticacao-senha-em-construcao.md).
+Esta entrega não constitui homologação final, release nem congelamento.

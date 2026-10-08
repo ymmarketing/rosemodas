@@ -6,8 +6,12 @@ import type { ListaInterna, PecaInterna } from './catalogoInterno';
 import { urlDaMidia } from '../catalogo';
 import { moeda } from '../Visual';
 import './painel.css';
+import { Pedidos } from '../cliente/Pedidos';
 
 export function Painel() {
+  const [aba,setAba]=useState<'catalogo'|'pedidos'>('catalogo');
+  const homologacao=import.meta.env.VITE_APP_ENV==='homologation';
+  const vitrine=homologacao?'https://homolog.rosemenezesmodas.com.br/':'https://rosemenezesmodas.com.br/';
   const [autorizado,setAutorizado]=useState(false),[lista,setLista]=useState<ListaInterna|null>(null),[editando,setEditando]=useState<PecaInterna|null>(null);
   const [busca,setBusca]=useState(''),[status,setStatus]=useState(''),[pagina,setPagina]=useState(0);
   const [carregando,setCarregando]=useState(false),[erro,setErro]=useState(''),[revisao,setRevisao]=useState(0);
@@ -25,14 +29,14 @@ export function Painel() {
   async function novaPeca(){setCarregando(true);setErro('');try{const p=await operar<PecaInterna>('criar',crypto.randomUUID());setEditando(p);setRevisao(n=>n+1);}catch(e){setErro(e instanceof Error?e.message:'Não foi possível criar a peça.');}finally{setCarregando(false);}}
   if(!autorizado)return <Acesso onReady={entrou}/>;
   return <div className="painel-app"><aside className="painel-nav">
-    <a className="painel-marca" href="https://homolog.rosemenezesmodas.com.br/" target="_blank" rel="noreferrer"><img src="/marca/rose-menezes.jpg" alt=""/><span>Rose Menezes<small>PAINEL INTERNO</small></span></a>
-    <span className="eyebrow">GESTÃO DO CATÁLOGO</span><button className="nav-ativo" onClick={()=>setEditando(null)}>Peças e estoque</button>
-    <a href="https://homolog.rosemenezesmodas.com.br/" target="_blank" rel="noreferrer">Abrir vitrine ↗</a>
-    <div className="nav-base"><span className="pill">Homologação</span><p className="small muted">Em construção · cadastro real para revisão</p><button className="btn btn-s btn-block" onClick={()=>clienteInterno().auth.signOut()}>Sair do painel</button></div>
+    <a className="painel-marca" href={vitrine} target="_blank" rel="noreferrer"><img src="/marca/rose-menezes.jpg" alt=""/><span>Rose Menezes<small>PAINEL INTERNO</small></span></a>
+    <span className="eyebrow">GESTÃO</span><button className={aba==='catalogo'?'nav-ativo':''} onClick={()=>{setEditando(null);setAba('catalogo');}}>Peças e estoque</button><button className={aba==='pedidos'?'nav-ativo':''} onClick={()=>setAba('pedidos')}>Pedidos</button>
+    <a href={vitrine} target="_blank" rel="noreferrer">Abrir vitrine ↗</a>
+    <div className="nav-base"><span className="pill">{homologacao?'Homologação':'Rose Menezes'}</span><button className="btn btn-s btn-block" onClick={()=>clienteInterno().auth.signOut()}>Sair do painel</button></div>
   </aside><main className="painel-conteudo">
-    <div className="painel-aviso">HOMOLOGAÇÃO · Publicar aqui mostra a peça somente na vitrine de homologação.</div>
+    {homologacao&&<div className="painel-aviso">HOMOLOGAÇÃO · Publicar aqui mostra a peça somente na vitrine de homologação.</div>}
     {erro&&<div className="painel-erro" role="alert">{erro}<button className="btn btn-s btn-sm" onClick={()=>setRevisao(n=>n+1)}>Tentar novamente</button></div>}
-    {editando&&lista?<EditorPeca key={editando.id} inicial={editando} lista={lista} fechar={()=>{setEditando(null);setRevisao(n=>n+1);}} salvou={p=>{setEditando(p);setLista(l=>l?{...l,itens:l.itens.map(x=>x.id===p.id?p:x)}:null);}}/>
+    {aba==='pedidos'?<Pedidos sb={clienteInterno()} admin/>:editando&&lista?<EditorPeca key={editando.id} inicial={editando} lista={lista} fechar={()=>{setEditando(null);setRevisao(n=>n+1);}} salvou={p=>{setEditando(p);setLista(l=>l?{...l,itens:l.itens.map(x=>x.id===p.id?p:x)}:null);}}/>
       :<><div className="painel-cabecalho"><div><span className="eyebrow">CATÁLOGO</span><h1>Peças e estoque</h1><p>Comece pelas fotos. Revise os dados e publique quando estiver pronta.</p></div><button className="btn btn-p" disabled={carregando||!lista} onClick={novaPeca}>+ Nova peça</button></div>
         <div className="painel-filtros"><label>Buscar peça<input className="input" type="search" value={busca} placeholder="Nome ou código" onChange={e=>{setBusca(e.target.value);setPagina(0);}}/></label>
           <label>Situação<select className="input" value={status} onChange={e=>{setStatus(e.target.value);setPagina(0);}}><option value="">Todas</option><option value="rascunho">Rascunhos</option><option value="publicado">Publicadas</option></select></label><span>{lista?.total??0} peça(s)</span></div>

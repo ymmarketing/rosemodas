@@ -1,0 +1,27 @@
+import {before,afterEach,test} from 'node:test';
+import assert from 'node:assert/strict';
+import {build} from 'vite';
+import react from '@vitejs/plugin-react';
+import {JSDOM} from 'jsdom';
+import {readFile,readdir} from 'node:fs/promises';
+let codigo,dom,ui,desmontar,chamadas,entrou;
+before(async()=>{const p=await build({configFile:false,envFile:false,plugins:[react()],logLevel:'silent',define:{'import.meta.env':'{}','process.env.NODE_ENV':'"development"'},build:{write:false,minify:false,lib:{entry:'tests/auth-harness.tsx',name:'AuthTeste',formats:['iife']}}});codigo=(Array.isArray(p)?p[0]:p).output.find(c=>c.type==='chunk').code;});
+afterEach(async()=>{if(desmontar)await ui.act(()=>desmontar());dom?.window.close();desmontar=null;});
+async function montar({area='equipe',componente='formulario',erro,perfil=null}={}){
+  dom=new JSDOM('<div id="teste"></div>',{url:'https://homolog.example.test/painel',runScripts:'outside-only',beforeParse(w){w.MessageChannel=class{port1={onmessage:null};port2={postMessage:()=>setTimeout(()=>this.port1.onmessage?.(),0)}};}});
+  dom.window.eval(codigo);ui=dom.window.testeAuth;chamadas=[];entrou=0;
+  const servico={async entrar(email,senha){chamadas.push({acao:'senha',email,tamanho:senha.length});if(erro)throw new dom.window.Error(erro);},async cadastrar(email,senha){chamadas.push({acao:'cadastro',email,tamanho:senha.length});},async perfil(){return perfil;},async sair(){},observar(){return()=>{};}};
+  await ui.act(async()=>{desmontar=ui.montar(componente,{area,servico,entrou:()=>entrou++,onReady:()=>entrou++});});
+}
+const botao=texto=>[...dom.window.document.querySelectorAll('button')].find(b=>b.textContent===texto);
+const alerta=()=>dom.window.document.querySelector('[role=alert]');
+async function clicar(texto){const b=botao(texto);assert.ok(b,`controle presente: ${texto}`);await ui.act(()=>b.click());}
+async function preencher(sufixo,valor){const input=dom.window.document.querySelector(`input[id$="-${sufixo}"]`);await ui.act(()=>{Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set.call(input,valor);input.dispatchEvent(new dom.window.Event('input',{bubbles:true}));});}
+async function credenciais(){await preencher('email','TESTE@EXAMPLE.TEST');await preencher('senha',dom.window.crypto.randomUUID());}
+test('admin entra só por senha; formulário não oferece cadastro, OTP nem SMS',async()=>{await montar();await credenciais();await clicar('Entrar');assert.equal(chamadas[0].acao,'senha');assert.equal(entrou,1);assert.equal(chamadas[0].email,'TESTE@EXAMPLE.TEST');assert.equal(dom.window.document.querySelector('input[id$="-senha"]').value,'');assert.ok(!/SMS|link de acesso|Receber acesso|Cadastrar/.test(dom.window.document.body.textContent));});
+test('senha mínima, mostrar/ocultar e erro no topo sem chamada indevida',async()=>{await montar();await preencher('email','teste@example.test');await preencher('senha','curta');await clicar('Entrar');assert.equal(chamadas.length,0);assert.match(alerta().textContent,/8 caracteres/);const input=dom.window.document.querySelector('input[id$="-senha"]');assert.equal(input.type,'password');await clicar('Mostrar');assert.equal(input.type,'text');await clicar('Ocultar');assert.equal(input.type,'password');assert.ok(alerta().compareDocumentPosition(dom.window.document.querySelector('form'))&dom.window.Node.DOCUMENT_POSITION_FOLLOWING);});
+test('senha errada informa o erro e permite uma nova tentativa',async()=>{await montar({erro:'E-mail não cadastrado ou senha incorreta.'});await credenciais();await clicar('Entrar');assert.match(alerta().textContent,/senha incorreta/);assert.equal(botao('Entrar').disabled,false);assert.equal(entrou,0);});
+test('cliente usa cadastro próprio com senha e entra ao concluir',async()=>{await montar({area:'cliente'});await clicar('Ainda não tenho conta · Cadastrar');await credenciais();await clicar('Criar conta');assert.equal(chamadas[0].acao,'cadastro');assert.equal(entrou,1);});
+test('recuperação orienta WhatsApp para cliente e administradora para equipe, sem e-mail',async()=>{await montar({area:'cliente'});await clicar('Esqueci minha senha');assert.match(dom.window.document.body.textContent,/WhatsApp/);assert.ok(dom.window.document.querySelector('a[href^="https://wa.me/5531975417483"]'));assert.equal(chamadas.length,0);});
+test('cliente autenticada é bloqueada na entrada direta do painel; admin autorizada entra',async()=>{await montar({componente:'painel',perfil:{role:'cliente',ativo:true,admin_autorizado:false}});assert.match(alerta().textContent,/não tem permissão de admin/);assert.equal(entrou,0);await ui.act(()=>desmontar());desmontar=null;dom.window.close();await montar({componente:'painel',perfil:{role:'admin',ativo:true,admin_autorizado:true}});assert.equal(entrou,1);});
+test('código de produção da aplicação não chama OTP, magic link, SMS ou recuperação por e-mail',async()=>{async function arquivos(pasta){let textos=[];for(const e of await readdir(pasta,{withFileTypes:true})){const p=`${pasta}/${e.name}`;if(e.isDirectory())textos.push(...await arquivos(p));else if(/\.[tj]sx?$/.test(e.name))textos.push(await readFile(p,'utf8'));}return textos;}const src=(await arquivos('apps/vitrine/src')).join('\n');assert.ok(!/signInWithOtp\s*\(|verifyOtp\s*\(|resetPasswordForEmail\s*\(/.test(src));assert.ok(!/SMS ainda indisponível/.test(src));assert.match(src,/signInWithPassword/);assert.match(src,/signUp/);});
