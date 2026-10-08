@@ -39,7 +39,12 @@ export function prepararUpload(arquivo: Pick<File,'type'|'size'>, produtoId: str
   if (!ext) throw new Error('Use fotos JPG, PNG ou WebP e vídeos MP4 ou WebM.');
   if (arquivo.size > 50*1024*1024 || arquivo.size === 0) throw new Error('Cada arquivo deve ter até 50 MB e não pode estar vazio.');
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-  if (!uuid.test(produtoId) || !uuid.test(id)) throw new Error('Identi…112 tokens truncated…uivo.type});
+  if (!uuid.test(produtoId) || !uuid.test(id)) throw new Error('Identificação de arquivo inválida.');
+  return { caminho: `${produtoId}/${id}.${ext}`, tipo: arquivo.type.startsWith('image/') ? 'foto' : 'video' };
+}
+export async function enviarMidia(p: PecaInterna, arquivo: File) {
+  const id = crypto.randomUUID(), { caminho, tipo } = prepararUpload(arquivo,p.id,id);
+  const {error} = await clienteInterno().storage.from('produtos-publico').upload(caminho,arquivo,{upsert:false,contentType:arquivo.type});
   if (error) throw new Error(`Não foi possível enviar ${arquivo.name}: ${error.message}`);
   return operar<PecaInterna>('midia_adicionar',p.id,{id,caminho_storage:caminho,tipo,alt_texto:p.nome??`Peça ${p.codigo}`});
 }
