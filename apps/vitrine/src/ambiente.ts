@@ -1,7 +1,8 @@
 type Variaveis = Record<string, string | undefined>;
 
 export const recursosDeHomologacao = (ambiente: string | undefined) => ambiente === 'homologation';
-export const referenciaHomologacao='kernpudxhwkpoadahgqj';
+// Decisão expressa da Yasmin em 08/10/2026: um único banco, agora de produção.
+export const referenciaProducao='kernpudxhwkpoadahgqj';
 
 export const variaveisPublicas = [
   'VITE_APP_ENV', 'VITE_SUPABASE_URL',
@@ -31,7 +32,6 @@ export function validarAmbiente(variaveis: Variaveis, exigirConfiguracao = false
     if (!/^[a-z0-9]{20}$/.test(referencia) || url !== `https://${referencia}.supabase.co`) {
       throw new Error('O endereço deve corresponder ao projeto Supabase configurado para este ambiente.');
     }
-    if(ambiente==='production'&&referencia===referenciaHomologacao)throw new Error('Produção não pode utilizar o Supabase de homologação.');
   } else if (!['http://127.0.0.1:54321', 'http://localhost:54321'].includes(url)) {
     throw new Error('DEV desta etapa deve usar o Supabase local.');
   }

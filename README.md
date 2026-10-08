@@ -270,3 +270,15 @@ Migrations únicas: `20261008002321_auth_email_senha_perfis.sql` e
 permissões, testes e pendências estão em
 [Autenticação — em construção](documentacao/autenticacao-senha-em-construcao.md).
 Esta entrega não constitui homologação final, release nem congelamento.
+
+## Lançamento de 10/10/2026 — decisão de ambiente único
+
+Por decisão explícita da Yasmin em 08/10/2026, `kernpudxhwkpoadahgqj` é o único
+Supabase da Rose Modas e passa a ser **produção**. Previews protegidos usam o mesmo
+banco; dados de teste têm marcação e prazo. Testes automatizados usam apenas o
+Supabase local descartável do CI. Não criar outro projeto ou contratar serviços.
+Chaves privadas e `service_role` continuam recusadas pelo build público.
+A `main` só pode receber merge/publicação após aprovação final da Yasmin.
+
+Processo de carga, modelo no Drive, comandos de validação/reversão, prazos e
+pendências: [registro em construção](documentacao/carga-oficial-em-construcao.md).

@@ -21,7 +21,9 @@
     "db:reset:dev": "supabase db reset --local --no-seed",
     "db:stop": "supabase stop",
     "test:auth": "node --test tests/auth.test.mjs",
-    "test:auth:api": "node scripts/test-auth-api.mjs"
+    "test:auth:api": "node scripts/test-auth-api.mjs",
+    "test:carga": "node --test tests/lancamento/carga.test.mjs",
+    "test:carga:api": "node scripts/test-carga-api.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
@@ -31,6 +33,7 @@
     "@vitejs/plugin-react": "6.1.1",
     "jsdom": "30.1.2",
     "pg": "8.23.1",
+    "sharp": "0.35.5",
     "supabase": "2.119.0",
     "typescript": "7.0.2",
     "vite": "8.3.2"

@@ -24,7 +24,7 @@ export function mensagemErroSenha(erro:{code?:string;status?:number}) {
 }
 export type ServicoAcesso = {
   entrar:(email:string,senha:string)=>Promise<void>;
-  cadastrar:(email:string,senha:string)=>Promise<void>;
+  cadastrar:(email:string,senha:string,dados?:{nome:string;whatsapp:string;aceite_privacidade:boolean})=>Promise<void>;
   perfil:()=>Promise<PerfilAcesso|null>;
   sair:()=>Promise<void>;
   observar:(mudou:()=>void)=>()=>void;
@@ -36,7 +36,7 @@ export function servicoAcesso(area:'equipe'|'cliente'):ServicoAcesso {
       const {error}=await sb.auth.signInWithPassword({email:email.trim().toLowerCase(),password:senha});
       if(error)throw new Error(mensagemErroSenha(error));
     },
-    async cadastrar(email,senha) {
+    async cadastrar(email,senha,dados) {
       if(area!=='cliente')throw new Error('O painel interno não permite cadastro público.');
       const ambiente=validarAmbiente(import.meta.env,true)!;
       const resposta=await fetch(`${ambiente.url}/auth/v1/settings`,{headers:{apikey:ambiente.chave}});
@@ -44,7 +44,8 @@ export function servicoAcesso(area:'equipe'|'cliente'):ServicoAcesso {
       const configuracao=await resposta.json();
       if(configuracao.mailer_autoconfirm!==true||configuracao.disable_signup===true)
         throw new Error('O cadastro está temporariamente indisponível. Fale com a loja pelo WhatsApp.');
-      const {data,error}=await sb.auth.signUp({email:email.trim().toLowerCase(),password:senha});
+      if(!dados?.nome.trim()||!/^\+55[0-9]{10,11}$/.test(dados.whatsapp)||!dados.aceite_privacidade)throw new Error('Informe nome, WhatsApp e aceite a política de privacidade.');
+      const {data,error}=await sb.auth.signUp({email:email.trim().toLowerCase(),password:senha,options:{data:dados}});
       if(error)throw new Error(mensagemErroSenha(error));
       if(!data.session)throw new Error('O cadastro não liberou o acesso. Fale com a loja pelo WhatsApp.');
     },

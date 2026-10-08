@@ -7,7 +7,7 @@ export type Produto = {
   id: string; codigo: string; nome: string; slug: string; categoria_id: string;
   colecao_id: string | null; preco: number; preco_promocional: number | null;
   selo: 'aprovado_rose' | 'novidade' | 'ultimas_pecas' | null; midias: Midia[];
-  descricao?: string; modelo_veste?: string | null;
+  dado_teste?: boolean; ordem_vitrine?: number; descricao?: string; modelo_veste?: string | null;
   variacoes?: { id: string; sku: string; tamanho: string; cor: string }[];
 };
 export type Medida = { produto_id: string; tamanho: string; medida: string; rotulo: string; valor_cm: number; ordem: number };
@@ -15,7 +15,7 @@ export type Saldo = { variacao_id: string; produto_id: string; tamanho: string; 
 export type Catalogo = {
   categorias: Categoria[]; colecoes: Colecao[]; produtos: Produto[]; saldos: Saldo[];
   nomeLoja: string; descricaoLoja: string; logoUrl: string | null;
-  medidas?: Medida[]; whatsappNumero?: string | null; instagramUrl?: string | null;
+  cadastroClienteDisponivel?: boolean; medidas?: Medida[]; whatsappNumero?: string | null; instagramUrl?: string | null;
 };
 export type Filtros = { categoria: string; colecao: string | null; tamanho: string; ordem: 'novidades' | 'menor' | 'maior'; disponiveis: boolean; busca?: string };
 export const filtrosIniciais: Filtros = { categoria: '', colecao: null, tamanho: '', ordem: 'novidades', disponiveis: false };
@@ -47,7 +47,7 @@ export function selecionarProdutos(catalogo: Catalogo, filtros: Filtros) {
   }).sort((a, b) => {
     const diferenca = filtros.ordem === 'menor' ? precoAtual(a) - precoAtual(b)
       : filtros.ordem === 'maior' ? precoAtual(b) - precoAtual(a)
-      : Number(b.selo === 'novidade') - Number(a.selo === 'novidade');
+      : (a.ordem_vitrine??0)-(b.ordem_vitrine??0) || Number(b.selo === 'novidade') - Number(a.selo === 'novidade');
     return diferenca || comparador.compare(a.codigo, b.codigo) || a.id.localeCompare(b.id);
   });
 }
@@ -83,11 +83,14 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
   const [categorias, colecoes, produtos, saldos, medidas, configuracoes] = await Promise.all([
     lerLista<Categoria>('categorias', 'id,nome,slug,ordem', 'id'),
     lerLista<Colecao>('colecoes', 'id,nome,slug,atual', 'id'),
-    lerLista<Produto>('produtos', 'id,codigo,nome,slug,descricao,modelo_veste,categoria_id,colecao_id,preco,preco_promocional,selo,variacoes(id,sku,tamanho,cor),midias(caminho_storage,alt_texto,tipo,principal,ordem)', 'id'),
+    lerLista<Produto>('produtos', 'id,codigo,nome,slug,descricao,modelo_veste,categoria_id,colecao_id,preco,preco_promocional,selo,dado_teste,ordem_vitrine,variacoes(id,sku,tamanho,cor),midias(caminho_storage,alt_texto,tipo,principal,ordem)', 'id'),
     lerLista<Saldo>('v_estoque_disponivel', 'variacao_id,produto_id,tamanho,cor,disponivel', 'variacao_id'),
     lerLista<Medida>('medidas_tamanho', 'produto_id,tamanho,medida,rotulo,valor_cm,ordem', 'id'),
     lerLista<{ chave: string; valor: unknown }>('configuracoes', 'chave,valor', 'chave'),
   ]);
+  const ambiente=await import('./ambiente.ts').then(m=>m.validarAmbiente(import.meta.env,true));
+  let cadastroClienteDisponivel=false;
+  if(ambiente){try{const r=await fetch(`${ambiente.url}/auth/v1/settings`,{headers:{apikey:ambiente.chave},signal});if(r.ok){const c=await r.json();cadastroClienteDisponivel=c.mailer_autoconfirm===true&&c.disable_signup!==true;}}catch{}}
   const texto = (chave: string, padrao: string) => {
     const valor = configuracoes.find(c => c.chave === chave)?.valor;
     return typeof valor === 'string' && valor.trim() ? valor.trim() : padrao;
@@ -97,7 +100,7 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
     colecoes: colecoes.sort((a, b) => Number(b.atual) - Number(a.atual) || comparador.compare(a.nome, b.nome)),
     produtos, saldos, medidas, nomeLoja: texto('nome_loja', 'Rose Menezes'),
     descricaoLoja: texto('descricao_loja', 'Moda feminina escolhida com carinho para vestir o seu dia.'),
-    logoUrl: caminhoLogo ? urlDaMidia(caminhoLogo) : null,
+    cadastroClienteDisponivel, logoUrl: caminhoLogo ? urlDaMidia(caminhoLogo) : null,
     whatsappNumero: numeroWhatsApp(texto('whatsapp_numero', '')),
     instagramUrl: linkInstagram(texto('instagram_url', '')) };
 }

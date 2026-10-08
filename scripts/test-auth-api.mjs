@@ -14,7 +14,7 @@ const db=new pg.Client({connectionString:url});await db.connect();
 const requisicoes=[];
 const cliente=()=>createClient(api,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false},global:{fetch:async(input,init)=>{requisicoes.push(new URL(input instanceof Request?input.url:String(input)).pathname);return fetch(input,init);}}});
 const usuarios=[];
-async function conta(rotulo){const sb=cliente(),email=`teste-${rotulo}-${randomUUID()}@example.test`,senha=randomBytes(28).toString('base64url');const {data,error}=await sb.auth.signUp({email,password:senha,options:{data:{role:'admin'}}});assert.ifError(error);assert.ok(data.session,'Cadastro deve liberar sessão imediatamente.');usuarios.push(data.user.id);return{sb,email,senha,id:data.user.id};}
+async function conta(rotulo,emailEscolhido){const sb=cliente(),email=emailEscolhido??`teste-${rotulo}-${randomUUID()}@example.test`,senha=randomBytes(28).toString('base64url');const {data,error}=await sb.auth.signUp({email,password:senha,options:{data:{role:'admin',nome:'Cliente fictícia CI',whatsapp:'+5531999999999',aceite_privacidade:true}}});assert.ifError(error);assert.ok(data.session,'Cadastro deve liberar sessão imediatamente.');usuarios.push(data.user.id);return{sb,email,senha,id:data.user.id};}
 const aprovado=[];
 try{
   const settings=await fetch(api+'/auth/v1/settings',{headers:{apikey:key}}).then(r=>r.json());assert.equal(settings.mailer_autoconfirm,true);
@@ -48,6 +48,17 @@ try{
   }
   assert.equal((await admin.sb.from('pedidos').select('id')).data.length,2);
   aprovado.push('A/B isoladas em pedidos, itens, endereços, envios e eventos; admin vê ambos.');
+  const emailDuplicado=`duplicado-${randomUUID()}@example.test`,manual=randomUUID();
+  await db.query('insert into public.clientes(id,nome,email_normalizado) values($1,$2,$3)',[manual,'Cliente de venda WhatsApp',emailDuplicado]);
+  const duplicada=await conta('duplicada',emailDuplicado),antigo=randomUUID();
+  await db.query('insert into public.pedidos(id,numero,cliente_id,canal) values($1,$2,$3,$4)',[antigo,`ANTIGO-${antigo}`,manual,'whatsapp']);
+  assert.deepEqual((await duplicada.sb.from('pedidos').select('id')).data,[]);
+  const pendentes=await admin.sb.rpc('conciliacoes_clientes');assert.ifError(pendentes.error);const pendente=pendentes.data.find(q=>q.email_informado===emailDuplicado);assert.ok(pendente);
+  const vinculo=await admin.sb.rpc('conciliacoes_clientes',{p_id:pendente.id,p_confirmacao_whatsapp:'Titularidade confirmada pelo WhatsApp, teste local CI'});assert.ifError(vinculo.error);
+  assert.deepEqual((await duplicada.sb.from('pedidos').select('id')).data.map(p=>p.id),[antigo]);
+  assert.equal((await db.query('select count(*)::int n from public.clientes where auth_user_id=$1 and ativo',[admin.id])).rows[0].n,0);
+  const propria=(await db.query('select nome,whatsapp_normalizado,privacidade_aceita_em from public.clientes where auth_user_id=$1',[a.id])).rows[0];assert.equal(propria.whatsapp_normalizado,'+5531999999999');assert.ok(propria.privacidade_aceita_em);
+  aprovado.push('Cadastro com e-mail manual preexistente funciona; compra antiga só aparece após vínculo admin confirmado. Admin sem cliente ativo e consentimento salvo.');
   for(let i=0;i<10;i++){const r=await admin.sb.auth.signInWithPassword({email:admin.email,password:admin.senha});assert.ifError(r.error);assert.ok(r.data.session);}
   aprovado.push('10 logins consecutivos por senha sem bloqueio.');
   assert.ok(!requisicoes.some(p=>/\/auth\/v1\/(otp|recover|resend|verify)$/.test(p)));

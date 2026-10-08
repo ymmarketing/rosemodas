@@ -19,6 +19,7 @@ jobs:
       - run: npm ci
       - run: npm run test:environment
       - run: npm run test:catalogo
+      - run: npm run test:carga
       - run: npm run build:homologation
       - run: npm run test:public-build
       - run: npm run test:db
@@ -40,6 +41,10 @@ jobs:
           TEST_DATABASE_RUN_NAME: supabase-limpo-2
       - name: Auth real local, cadastro imediato, isolamento A/B e dez logins
         run: npm run test:auth:api
+        env:
+          SUPABASE_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      - name: Carga real local, Storage, backup, validação e reversão
+        run: npm run test:carga:api
         env:
           SUPABASE_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
       - name: Comparar schemas dos resets

@@ -11,18 +11,19 @@ import urllib.request
 import zipfile
 
 TABELAS = {'categorias', 'colecoes', 'produtos', 'variacoes', 'medidas_tamanho',
-           'midias', 'movimentos_estoque', 'configuracoes', 'audit_log', 'usuarios_internos'}
+           'midias', 'movimentos_estoque', 'configuracoes', 'audit_log', 'usuarios_internos', 'profiles', 'clientes', 'enderecos', 'pedidos',
+           'itens_pedido', 'enderecos_pedido', 'envios', 'eventos_envio'}
 
 def validar_snapshot(dados, project_ref):
     if not re.fullmatch(r'[a-z0-9]{20}', project_ref):
         raise ValueError('Referência de projeto inválida.')
-    if dados.get('formato') != 'rose-catalogo-v1' or set(dados.get('tabelas', {})) != TABELAS:
+    if dados.get('formato') != 'rose-catalogo-v2' or set(dados.get('tabelas', {})) != TABELAS:
         raise ValueError('Export fora da configuração da Fase 0.')
     if set(dados.get('tabelas_publicas', [])) != TABELAS:
         raise ValueError('Há tabelas novas: atualizar o export antes de considerá-lo completo.')
     ambiente = dados.get('ambiente') or {}
-    if ambiente.get('uso') != 'homologacao' or ambiente.get('project_ref') != project_ref:
-        raise ValueError('O export não pertence à homologação selecionada. Produção não está habilitada.')
+    if ambiente.get('uso') != 'producao' or ambiente.get('project_ref') != project_ref:
+        raise ValueError('O export não pertence ao projeto único de produção aprovado.')
     if dados.get('storage', {}).get('bucket', {}).get('id') != 'produtos-publico':
         raise ValueError('Bucket diferente do autorizado.')
     nomes = [o['name'] for o in dados['storage']['objetos']]
