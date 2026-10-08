@@ -117,6 +117,10 @@ O build verifica ambiente e correspondência URL/ref e recusa credenciais privad
 - 5 grupos SQL de autorização/isolamento/constraints passaram no Supabase hospedado,
   dentro de BEGIN/ROLLBACK. Nenhuma conta, pedido ou produto fictício ficou gravado.
 - Build e scanner de credenciais: aprovados; não há service_role/chave privada.
+- Login administrativo real por e-mail/senha no painel hospedado: aprovado. Catálogo
+  com 30 peças carregou e a consulta de pedidos abriu sem erro (banco sem pedidos).
+- Teste direto detectou 404 em `/cliente`; rewrites específicos de `/cliente` e
+  `/painel` foram adicionados à Vercel e devem ser verificados no deploy entregue.
 - CI inclui Auth real em Supabase local: cadastro imediato, A/B, admin e 10 logins
   consecutivos. Resultado do CI e do deploy deve ser conferido no commit entregue.
 - SQL com JWT de teste valida RLS, mas não prova envio SMTP nem limites do serviço
