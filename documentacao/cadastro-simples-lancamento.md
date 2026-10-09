@@ -37,3 +37,13 @@ CI de escrita roda somente Supabase local; novos testes de publicação mínima/
 ## Aprovação da produção
 
 PR #1 fica preparado com CI verde. Depois da aprovação expressa: confirmar SHA aprovado e quatro variáveis públicas do projeto Vercel rosemodas, merge PR em main, aguardar Production Ready correspondente ao merge, conferir domínio principal/www e ausência de Deployment Protection no domínio oficial; smoke de vitrine/WhatsApp/Instagram/institucionais/painel/console em 375px e desktop, relatório com prints. Nada disso é executado antes da aprovação.
+
+## Execução verificada — 09/10, 11h55 Brasília
+
+Commit de implementação `7ff0e73dc165e51a340ed4e8206a5514af938ae7`; preview `dpl_G2tctC1zWaB7FFi1kzPiYfpdoEpK` Ready e domínio homolog atribuído a ele. CI push `37947283283` e PR `37947288031` verdes: 7 ambiente, 40 catálogo/editor/auth/navegação, 20 carga, 47 grupos PGlite nas duas bases, 27 grupos Supabase nos dois resets, 6 Auth API e 9 carga API/Storage/reversão. A carga mínima sem categoria/cor/tamanho/estoque passou depois do corte simulado, mantendo estoque 1 e preço 189,90. Nenhuma carga oficial real foi executada.
+
+Smoke hospedado **PARCIAL, ainda obrigatório**: login admin confirmado, painel atualizado em iframe real de 375×812, Nova peça abriu editor diretamente com código automático editável, sem formulário intermediário. Antes de preencher dados ou enviar fotos, a captura retornou bloqueio nativo de observação após entrega segura de credenciais. Recuperação indicada pelo próprio navegador e reinicialização permitida não resolveram. Não foram enviados arquivos, nem publicada peça; não há prints desta execução. Não tratar testes CI como substituto do smoke solicitado. O rascunho vazio gerado foi marcado teste e arquivado às 11h54 Brasília, com salvaguardas de continuar vazio e sem publicação. Vitrine segue com 17 peças teste, 0 oficiais, RM-C011 em rascunho e 0 rascunhos ativos oriundos da tentativa.
+
+Itens que continuam exigindo navegador: barra móvel visual, navegação institucional em mobile/desktop, fluxo inteiro SMOKE-01 (2 fotos, capa, preço com vírgula, variação automática, publicar/WhatsApp, estoque 0/1, despublicar/arquivar), vitrine e console, prints. Sem homologação destes itens, manter aprovação de produção pendente.
+
+Produção conferida por API: quatro variáveis públicas Production corretas para kernpudxhwkpoadahgqj e `VITE_APP_ENV=production`; proteção Vercel Authentication somente Preview; domínio principal verificado, www redireciona 308; DNS A 216.198.79.1 sem conflito/misconfigured=false. Não foi feito merge nem deploy de produção.
