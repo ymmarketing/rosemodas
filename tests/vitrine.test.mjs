@@ -20,20 +20,22 @@ test('telas renderizadas ocultam sacola, frete, fases futuras e exemplos fora da
   const catalogo={produtos:[p],categorias:[{id:'cat',nome:'Vestidos'}],colecoes:[],medidas:[],saldos:[{produto_id:p.id,cor:'Preto',tamanho:'48',disponivel:1}]};
   for(const homologacao of [true,false]){
    const loja=renderToStaticMarkup(createElement(Loja,{homologacao}));
-   assert.equal(loja.includes('aria-label="Sacola"'),homologacao);
+   assert.equal(loja.includes('aria-label="Sacola"'),false);
    assert.equal(loja.includes('id="homolog"'),homologacao);
-   assert.equal(loja.includes('00.000.000/0001-00'),homologacao);
-   assert.equal(loja.includes('Frete grátis'),homologacao);
+   assert.equal(loja.includes('00.000.000/0001-00'),false);
+   assert.equal(loja.includes('Frete grátis'),false);
    const produto=renderToStaticMarkup(createElement(PaginaProduto,{produto:p,catalogo,aviso:()=>{},whatsapp:()=>{},aviseMe:()=>{},relacionados:null,homologacao}));
    assert.ok(produto.includes('Comprar pelo WhatsApp'));
    assert.ok(!produto.includes('Adicionar à sacola'));
-   assert.equal(produto.includes('Calcular frete'),homologacao);
+   assert.equal(produto.includes('Calcular frete'),false);
    assert.equal(produto.includes('5% off no Pix'),false);
    for(const texto of ['ou 3x de','Avise-me quando chegar','Aprovado pela Rose'])assert.ok(!produto.includes(texto));
    assert.ok(loja.includes('Live quinta, 20h'));assert.ok(loja.includes('do P ao Plus Size'));assert.ok(!loja.includes('Todos os tamanhos'));
+   const sem={...p,variacoes:[{sku:'SEM',cor:'',tamanho:''}]};const semCat={...catalogo,saldos:[{produto_id:p.id,cor:'',tamanho:'',disponivel:1}]};
+   const minimo=renderToStaticMarkup(createElement(PaginaProduto,{produto:sem,catalogo:semCat,aviso:()=>{},whatsapp:()=>{},relacionados:null,homologacao}));for(const txt of ['<h5>Cor','<h5>Tamanho','Medidas ainda','Calcular frete','4,9','12 avaliações'])assert.ok(!minimo.includes(txt));assert.ok(minimo.includes('Frete e prazo: consulte pelo WhatsApp'));
    globalThis.window.location.hash='#/loja/sacola';
    const rotaFutura=renderToStaticMarkup(createElement(Loja,{homologacao}));
-   assert.equal(rotaFutura.includes('Próxima fase'),homologacao);
+   assert.equal(rotaFutura.includes('Próxima fase'),false);
    globalThis.window.location.hash='#/loja';
   }
   const agora=Date.now;try{Date.now=()=>Date.parse('2026-10-09T21:00:00Z');const fechada=renderToStaticMarkup(createElement(Loja,{homologacao:true}));for(const texto of ['CNPJ 00.000','Frete grátis','aria-label="Sacola"'])assert.ok(!fechada.includes(texto));}finally{Date.now=agora;}
@@ -42,8 +44,9 @@ test('telas renderizadas ocultam sacola, frete, fases futuras e exemplos fora da
 test('compra pelo WhatsApp exige a combinação disponível e leva peça, código e link sem filtros',()=>{
  const p={id:'peca-1',nome:'Vestido Íris & Rosa',codigo:'RM-C001',slug:'vestido-iris'};
  const saldos=[{produto_id:'peca-1',cor:'Preto',tamanho:'48',disponivel:1},{produto_id:'peca-1',cor:'Nude',tamanho:'48',disponivel:0},{produto_id:'outra',cor:'Nude',tamanho:'48',disponivel:2}];
- assert.throws(()=>mensagemCompraWhatsApp(p,saldos,'','48','https://homolog.rosemenezesmodas.com.br/'),/Escolha uma cor/);
- assert.throws(()=>mensagemCompraWhatsApp(p,saldos,'Preto','','https://homolog.rosemenezesmodas.com.br/'),/Escolha o tamanho/);
+ assert.match(mensagemCompraWhatsApp(p,saldos,'','48','https://homolog.rosemenezesmodas.com.br/'),/Cor: Preto/);
+ assert.match(mensagemCompraWhatsApp(p,saldos,'Preto','','https://homolog.rosemenezesmodas.com.br/'),/Tamanho: 48/);
+ assert.throws(()=>mensagemCompraWhatsApp(p,[...saldos,{produto_id:p.id,cor:'Preto',tamanho:'M',disponivel:1}],'Preto','','https://homolog.rosemenezesmodas.com.br/'),/Escolha o tamanho/);
  assert.throws(()=>mensagemCompraWhatsApp(p,saldos,'Nude','48','https://homolog.rosemenezesmodas.com.br/'),/esgotado nessa cor/);
  const msg=mensagemCompraWhatsApp(p,saldos,'Preto','48','https://homolog.rosemenezesmodas.com.br/?categoria=vestidos#/loja');
  for(const trecho of ['Peça: Vestido Íris & Rosa','Código: RM-C001','Cor: Preto','Tamanho: 48','Link: https://homolog.rosemenezesmodas.com.br/#/loja/produto/vestido-iris'])assert.ok(msg.includes(trecho));
@@ -80,7 +83,7 @@ test('catálogo fiel ao mockup tem 12 modelos, cores, medidas e seed idempotente
  await db.exec(seed);assert.deepEqual(await resumo(),antes,'Reaplicação não deve recriar movimentos nem alterar cadastros');
  assert.equal((await db.query(`select count(*)::int n from public.variacoes where cor='Demonstrativa'`)).rows[0].n,0);
  await db.exec(`insert into public.configuracoes(chave,valor) values('whatsapp_numero','"5531999999999"'),('instagram_url','"https://instagram.com/rose/"'),('segredo_interno','"não publicar"');set role anon;`);
- assert.deepEqual((await db.query('select chave from public.configuracoes order by chave')).rows.map(r=>r.chave),['cadastro_cliente_liberado','instagram_url','whatsapp_numero']);
+ assert.deepEqual((await db.query('select chave from public.configuracoes order by chave')).rows.map(r=>r.chave),['cadastro_cliente_liberado','cnpj_loja','instagram_url','whatsapp_numero']);
  assert.equal((await db.query('select produto_id,tamanho,rotulo,valor_cm from public.medidas_tamanho')).rows.length,216);
  assert.equal((await db.query('select produto_id,tamanho,cor,disponivel from public.v_estoque_disponivel')).rows.length,96);
  await assert.rejects(db.query('select custo_medio from public.variacoes'),e=>e.code==='42501');
@@ -89,3 +92,5 @@ test('catálogo fiel ao mockup tem 12 modelos, cores, medidas e seed idempotente
  assert.equal((await db.query(`select count(*)::int n from pg_tables where schemaname='public' and tablename in ('categorias','colecoes','produtos','variacoes','medidas_tamanho','midias','movimentos_estoque','configuracoes','audit_log')`)).rows[0].n,9);
  } finally {await db.close();}
 });
+
+test('variação sem cor e tamanho compra direto e omite linhas vazias',()=>{const p={id:'sem',nome:'Peça única',codigo:'RM-UNICA',slug:'unica'};const msg=mensagemCompraWhatsApp(p,[{produto_id:'sem',cor:'',tamanho:'',disponivel:1}],'','','https://example.test/');assert.ok(msg.includes('RM-UNICA'));assert.ok(!msg.includes('Cor:'));assert.ok(!msg.includes('Tamanho:'));});

@@ -40,7 +40,7 @@ export async function validarEntrada(pasta,categorias,lote=randomUUID(),fonte){
   const publicar=d.publicar.toLocaleLowerCase('pt-BR');
   if(['','não','nao'].includes(publicar)){ignoradas.push({linha:l.numero,codigo:d.codigo});continue;}
   if(l.valores.length!==colunas.length)erros.push(`${label}: quantidade de colunas diferente do modelo.`);
-  for(const k of ['codigo','nome','categoria','preco','cor','tamanho','estoque'])if(!d[k])erros.push(`${label}: preencha ${k}.`);
+  for(const k of ['codigo','nome','preco'])if(!d[k])erros.push(`${label}: preencha ${k}.`);
   if(!/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(d.codigo))erros.push(`${label}: código inválido. Use letras maiúsculas, números e hífen.`);
   const combinacao=JSON.stringify([d.codigo,d.cor,d.tamanho]);
   if(vistos.has(combinacao))erros.push(`${label}: combinação código + cor + tamanho duplicado.`);vistos.add(combinacao);
@@ -49,14 +49,14 @@ export async function validarEntrada(pasta,categorias,lote=randomUUID(),fonte){
    const normalizar=v=>['preco','preco_promocional'].includes(campo)&&v?dinheiro(v):campo==='publicar'?v.toLocaleLowerCase('pt-BR'):v;
    if(normalizar(primeira.dados[campo])!==normalizar(d[campo]))erros.push(`${label}: ${campo} diverge da primeira linha ${primeira.numero} do código ${d.codigo}. Repita os mesmos dados da peça em todas as variações.`);
   }
-  if(!permitidas.has(d.categoria))erros.push(`${label}: categoria “${d.categoria}” não cadastrada. Uma categoria nova precisa ser cadastrada antes da carga.`);
+  if(d.categoria&&!permitidas.has(d.categoria))erros.push(`${label}: categoria “${d.categoria}” não cadastrada. Uma categoria nova precisa ser cadastrada antes da carga.`);
   const preco=dinheiro(d.preco),promocional=d.preco_promocional?dinheiro(d.preco_promocional):null;
   if(preco===null||preco<=0)erros.push(`${label}: preço deve ser maior que zero, com até duas casas decimais.`);
   if(d.preco_promocional&&(promocional===null||promocional>=preco))erros.push(`${label}: promoção deve ser um valor válido e menor que o preço.`);
-  if(!/^\d+$/.test(d.estoque)||Number(d.estoque)>2147483647)erros.push(`${label}: estoque deve ser um inteiro de zero a 2147483647.`);
+  if(d.estoque&&(!/^\d+$/.test(d.estoque)||Number(d.estoque)>2147483647))erros.push(`${label}: estoque deve ser um inteiro de zero a 2147483647.`);
   if(d.ordem_vitrine&&(!/^\d+$/.test(d.ordem_vitrine)||Number(d.ordem_vitrine)>2147483647))erros.push(`${label}: ordem da vitrine deve ser um inteiro não negativo.`);
   if(publicar!=='sim')erros.push(`${label}: publicar deve ser sim ou não.`);
-  const variacao={cor:d.cor,tamanho:d.tamanho,estoque:Number(d.estoque)};
+  const variacao={cor:d.cor,tamanho:d.tamanho,estoque:d.estoque?Number(d.estoque):1};
   if(grupos.has(d.codigo)){grupos.get(d.codigo).variacoes.push(variacao);continue;}
   const fotos=[],ordens=new Set(),dir=path.join(pasta,d.codigo);
   if(/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(d.codigo)&&pastas.some(p=>p.name===d.codigo&&p.isDirectory())){

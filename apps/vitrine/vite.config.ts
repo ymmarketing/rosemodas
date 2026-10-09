@@ -1,5 +1,4 @@
 import { fileURLToPath, URL } from 'node:url';
-import { readFileSync } from 'node:fs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { validarAmbiente, variaveisPublicas } from './src/ambiente.ts';
@@ -21,16 +20,7 @@ export default defineConfig(({ mode }) => {
     root: fileURLToPath(new URL('.', import.meta.url)),
     envDir,
     envPrefix: [...variaveisPublicas],
-    plugins: [react(), {
-      name: 'referencia-visual-de-homologacao',
-      apply: 'build',
-      generateBundle() {
-        // Referência separada para comparar a entrega; nunca alimenta a aplicação.
-        if (env.VITE_APP_ENV === 'homologation') this.emitFile({ type: 'asset',
-          fileName: 'referencia/index.html',
-          source: readFileSync(fileURLToPath(new URL('../../prototipo/index.html', import.meta.url)), 'utf8') });
-      },
-    }],
+    plugins: [react(),{name:'validacao-responsiva-preview',apply:'build',generateBundle(){if(env.VITE_APP_ENV==='homologation')this.emitFile({type:'asset',fileName:'validacao-mobile.html',source:`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Validação Rose Modas — 375 px</title><style>body{margin:0;background:#eee;font:14px sans-serif;text-align:center}nav{padding:8px}a{margin:0 12px}iframe{display:block;width:375px;height:812px;border:0;margin:0 auto;background:white}</style><nav><a href="?pagina=painel">Painel · 375 px</a><a href="?pagina=vitrine">Vitrine · 375 px</a></nav><iframe title="Rose Modas em 375 px" src="/"></iframe><script>document.querySelector('iframe').src=new URLSearchParams(location.search).get('pagina')==='painel'?'/painel':'/';</script></html>`});}}],
     server: { host: '127.0.0.1', port: 5173, strictPort: true },
     build: { outDir: '../../dist/vitrine', emptyOutDir: true },
   };

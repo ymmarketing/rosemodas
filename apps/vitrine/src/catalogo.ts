@@ -16,7 +16,7 @@ export type Saldo = { variacao_id: string; produto_id: string; tamanho: string; 
 export type Catalogo = {
   categorias: Categoria[]; colecoes: Colecao[]; produtos: Produto[]; saldos: Saldo[];
   nomeLoja: string; descricaoLoja: string; logoUrl: string | null;
-  cadastroClienteDisponivel?: boolean; medidas?: Medida[]; whatsappNumero?: string | null; instagramUrl?: string | null;
+  cadastroClienteDisponivel?: boolean; cnpj?:string; medidas?: Medida[]; whatsappNumero?: string | null; instagramUrl?: string | null;
 };
 export type Filtros = { categoria: string; colecao: string | null; tamanho: string; ordem: 'novidades' | 'menor' | 'maior'; disponiveis: boolean; busca?: string };
 export const filtrosIniciais: Filtros = { categoria: '', colecao: null, tamanho: '', ordem: 'novidades', disponiveis: false };
@@ -106,7 +106,7 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
     descricaoLoja: texto('descricao_loja', 'Moda feminina escolhida com carinho para vestir o seu dia.'),
     cadastroClienteDisponivel, logoUrl: caminhoLogo ? urlDaMidia(caminhoLogo) : null,
     whatsappNumero: numeroWhatsApp(texto('whatsapp_numero', '')),
-    instagramUrl: linkInstagram(texto('instagram_url', '')) };
+    instagramUrl: 'https://www.instagram.com/rosemenezes_modas/', cnpj: /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(texto('cnpj_loja',''))&&texto('cnpj_loja','')!=='00.000.000/0001-00'?texto('cnpj_loja',''):'' };
 }
 export const normalizar = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
 export function numeroWhatsApp(s: string) {

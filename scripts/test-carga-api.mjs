@@ -76,5 +76,10 @@ try{
  const manualDepois=(await db.query("select id from public.produtos where codigo='RM-MANUAL'")).rows;assert.equal(manualDepois.length,1);assert.equal(manualDepois[0].id,mp.id);assert.equal((await db.query('select count(*)::int n from public.variacoes where produto_id=$1 and ativo',[mp.id])).rows[0].n,1);grupos.push('Planilha atualiza o mesmo UUID da peça manual, sem duplicar variação ou apagar outras peças.');
  const reversao=await sb.rpc('despublicar_carga_oficial',{p_lote:lote});assert.ifError(reversao.error);assert.equal(reversao.data,1);
  assert.deepEqual((await publico.from('produtos').select('id').eq('codigo','RM-C001')).data,[]);grupos.push('Reversão real: todo o lote despublicado; IDs e históricos preservados.');
+ await mkdir(path.join(pasta,'RM-MINIMA'));await writeFile(path.join(pasta,'RM-MINIMA','01.jpg'),bytes);
+ const minimo=await executarCarga({sb,pasta,backupDir:backups,fonte:fonteGoogle([colunas,...['RM-C001','RM-NOVO','RM-MANUAL'].map(c=>[c,'','','','','','','','','não','','']),['RM-MINIMA','Peça mínima','','','189,90','','','','','sim','','']])});assert.equal(minimo.publicadas,1);
+ const minP=(await publico.from('produtos').select('id,categoria_id,preco').eq('codigo','RM-MINIMA')).data[0];assert.equal(minP.categoria_id,null);assert.equal(minP.preco,189.9);
+ const minV=(await publico.from('v_estoque_disponivel').select('cor,tamanho,disponivel').eq('produto_id',minP.id)).data;assert.deepEqual(minV,[{cor:'',tamanho:'',disponivel:1}]);
+ grupos.push('Planilha mínima depois do corte: nome preço foto, categoria opcional e variação padrão estoque 1.');
  await mkdir('test-results',{recursive:true});await writeFile('test-results/carga-api-local.json',JSON.stringify({ambiente:'supabase-local-descartavel',grupos,resultado:{publicadas:result.publicadas,rascunhos:result.rascunhos,fotos:result.fotos},credenciais:'não registradas'},null,2));console.log(`PASS: carga real local — ${grupos.length} grupos; catálogo, Auth, Storage e reversão.`);
 }finally{await sb.auth.signOut();await db.end();await rm(dir,{recursive:true,force:true});}

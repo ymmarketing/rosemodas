@@ -15,7 +15,7 @@ Carga oficial somente pelo comando **“suba o estoque oficial de lançamento”
 
 RM-C011 em rascunho, coleção `lancamento`, textos do P ao Plus Size; live quinta, 20h mantida. Compra pelo WhatsApp 5531975417483. Não exibir filtro de tamanho, parcelamento, aviso de reposição ou selo Aprovado pela Rose. Senha com botão Mostrar centralizado; rodapé aponta à página de privacidade.
 
-Cadastro/smoke hospedado aguarda Yasmin desligar Confirm email e conferência `mailer_autoconfirm=true`; não contornar nem enviar e-mail. SMOKE-01 é reservado e nunca é público, mesmo ao testar o botão Publicar. Contas teste autorizadas: cliente-a/b no Gmail da Yasmin, arquivadas/desativadas ao concluir. Pós-lançamento: registro de pedidos, baixa integrada e senha temporária pelo painel.
+Pedido consolidado de 09/10: lançamento sem área da cliente nem cadastro; `cadastro_cliente_liberado=false`, mesmo antes do corte. Não alterar Confirm email nem criar contas de cliente agora. Smoke da SMOKE-01 autorizado pelo painel, com publicação temporária antes do corte e arquivamento ao concluir. Publicação exige apenas nome, preço positivo e uma foto; categoria, cor e tamanho são opcionais, com uma variação padrão e estoque 1. Preço aceita vírgula. Fotos e catálogo podem ser preparados por painel ou planilha Google, a qualquer momento. Registro vigente: `documentacao/cadastro-simples-lancamento.md`.
 
 ## Desenvolvimento
 
