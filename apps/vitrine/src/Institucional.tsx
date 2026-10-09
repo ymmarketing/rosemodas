@@ -13,7 +13,7 @@ export function QuemSomos({catalogo,whatsapp,homologacao}:{catalogo:Catalogo|nul
  <p>Eu sou a Rose, tenho 66 anos e passei a vida procurando roupa bonita que coubesse em mim de verdade. Ou era confortável e sem graça, ou era bonita e apertava.</p>
  <p>Um dia pensei: se eu sinto isso, quantas mulheres sentem também? Foi assim que nasceu a Rose Menezes. Aqui cada peça passa primeiro pelo meu corpo. Se eu não me sinto linda e confortável, ela não entra na loja.</p>
  <div className="quote">“Para a mulher que já sabe quem é. Que não quer esconder o corpo, quer vesti-lo bem.”</div><h2>O que você encontra aqui</h2>
- <ul><li>{homologacao?'Peças do 44 ao 54, com medidas reais em todas as páginas.':'Confira os tamanhos disponíveis e as medidas de cada peça.'}</li>{homologacao&&<li>Provador ao vivo: toda quinta, 20h, a Rose veste as peças no Instagram.</li>}<li>Atendimento de amiga pelo WhatsApp para montar o look.</li>{homologacao&&<li>Troca facilitada na primeira compra.</li>}</ul>
+ <ul><li>Peças do P ao Plus Size. Confira os tamanhos e as medidas na página de cada peça.</li><li>Provador ao vivo: toda quinta, 20h, a Rose veste as peças no Instagram.</li><li>Atendimento de amiga pelo WhatsApp para montar o look.</li>{homologacao&&<li>Troca facilitada na primeira compra.</li>}</ul>
  <div style={{display:'flex',gap:10,flexWrap:'wrap',marginTop:18}}><a className="btn btn-p" href="#/loja">Ver coleção</a><a className="btn btn-g" href="#whatsapp" onClick={e=>{e.preventDefault();whatsapp();}}><Icone nome="wa" /> Falar com a Rose</a></div></div>;
 }
 export function Trocas({aviso,homologacao}:{aviso:()=>void;homologacao:boolean}) {

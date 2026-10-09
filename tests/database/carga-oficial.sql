@@ -48,7 +48,7 @@ do $$begin
  perform pg_temp.assert_carga((select nome='Vestido oficial' and not dado_teste and preco=123.45 and ativo from public.produtos where codigo='RM-C001'),'dados oficiais substituem fictícios');
  perform pg_temp.assert_carga((select estoque_fisico=1 from public.variacoes where produto_id='44000000-0000-4000-8000-000000000001'),'estoque pelo ledger');
  perform pg_temp.assert_carga((select arquivado_em is not null and not ativo from public.produtos where codigo='HOM-RM-OUTRO'),'peça ausente arquivada');
- perform pg_temp.assert_carga((select count(*)=1 from public.midias where produto_id='44000000-0000-4000-8000-000000000001' and principal and alt_texto='Vestido oficial · Azul'),'capa e alt');
+ perform pg_temp.assert_carga((select count(*)=1 from public.midias where produto_id='44000000-0000-4000-8000-000000000001' and principal and alt_texto='Vestido oficial'),'capa e alt');
  raise notice 'PASS: carga 4 substitui existentes, arquiva ausentes, mantém IDs, estoque e auditoria';
 end$$;
 set local role anon;

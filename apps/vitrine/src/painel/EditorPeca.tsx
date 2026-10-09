@@ -8,6 +8,7 @@ import { validarPrecos } from './precos';
 
 function Campo({nome,children}:{nome:string;children:ReactNode}) {return <label className="field"><span>{nome}</span>{children}</label>;}
 export function EditorPeca({inicial,lista,fechar,salvou,operacao=operar}:{inicial:PecaInterna;lista:ListaInterna;fechar:()=>void;salvou:(p:PecaInterna)=>void;operacao?:typeof operar}) {
+  const [codigo,setCodigo]=useState(inicial.codigo),[real,setReal]=useState(false);
   const [p,setP]=useState(inicial),[nome,setNome]=useState(inicial.nome??''),[descricao,setDescricao]=useState(inicial.descricao);
   const [preco,setPreco]=useState(inicial.preco?.toString()??''),[promo,setPromo]=useState(inicial.preco_promocional?.toString()??'');
   const [categoria,setCategoria]=useState(inicial.categoria_id??''),[colecao,setColecao]=useState(inicial.colecao_id??'');
@@ -23,15 +24,16 @@ export function EditorPeca({inicial,lista,fechar,salvou,operacao=operar}:{inicia
   async function executar(acao:()=>Promise<void>){setOcupado(true);setErro('');setMensagem('');try{await acao();}catch(e){setErro(e instanceof Error?e.message:'Não foi possível concluir.');}finally{setOcupado(false);}}
   async function salvar(e:FormEvent){e.preventDefault();await executar(async()=>{
     const precos=validarPrecos(preco,promo);
-    const nova=await operacao<PecaInterna>('salvar',p.id,{atualizado_em:p.atualizado_em,nome,descricao,categoria_id:categoria,colecao_id:colecao,
+    const nova=await operacao<PecaInterna>('salvar',p.id,{atualizado_em:p.atualizado_em,codigo,confirmar_real:real,nome,descricao,categoria_id:categoria,colecao_id:colecao,
       ...precos,modelo_veste:modelo,variacoes:vars,medidas,motivo_estoque:motivo});
-    aceitar(nova);setVars(nova.variacoes);setMedidas(nova.medidas);setAlterado(false);setMotivo('');setMensagem('Alterações salvas.');
+    aceitar(nova);setCodigo(nova.codigo);setReal(false);setVars(nova.variacoes);setMedidas(nova.medidas);setAlterado(false);setMotivo('');setMensagem('Alterações salvas.');
   });}
   async function mudarStatus(acao:string){
     if(alterado){setMensagem('');setErro('Salve as alterações antes de '+(acao==='publicar'?'publicar a peça.':'retirar a peça da vitrine.'));return;}
     if(acao==='publicar'&&faltas.length){setMensagem('');setErro(`A peça ainda não foi publicada. Preencha: ${faltasAmigaveis.join(', ')}. Depois salve as alterações e clique em Publicar na vitrine.`);return;}
     await executar(async()=>{const nova=await operacao<PecaInterna>(acao,p.id,{atualizado_em:p.atualizado_em});aceitar(nova);setMensagem(acao==='publicar'?'Peça publicada na vitrine.':'Peça retirada da vitrine e salva como rascunho.');});
   }
+  async function moverMidia(id:string,passo:number){await executar(async()=>{const ids=p.midias.filter(m=>m.ativo).map((m,i,midias)=>m.id),i=ids.indexOf(id);if(i<0||i+passo<0||i+passo>=ids.length)return;[ids[i],ids[i+passo]]=[ids[i+passo],ids[i]];aceitar(await operacao<PecaInterna>('midia_ordenar',p.id,{ids,atualizado_em:p.atualizado_em}));});}
   async function arquivos(files:FileList|null){if(!files?.length)return;await executar(async()=>{
     let atual=p;let enviados=0;
     try{for(const f of Array.from(files)){atual=await enviarMidia(atual,f);enviados++;aceitar(atual);}}
@@ -48,15 +50,16 @@ export function EditorPeca({inicial,lista,fechar,salvou,operacao=operar}:{inicia
         <b>Fotos e vídeos da peça</b><p>Arraste os arquivos aqui. A primeira foto será a capa.</p>
         <label className="btn btn-s btn-sm">Selecionar arquivos<input className="arquivo-input" type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" disabled={ocupado} onChange={e=>{void arquivos(e.target.files);e.target.value='';}}/></label>
         <small>JPG, PNG, WebP, MP4 ou WebM · até 50 MB por arquivo</small></div>
-      <div className="galeria-interna">{p.midias.filter(m=>m.ativo).map(m=><div key={m.id} className="midia-interna">
+      <div className="galeria-interna">{p.midias.filter(m=>m.ativo).map((m,i,midias)=><div key={m.id} className="midia-interna">
         {m.tipo==='foto'?<img src={urlDaMidia(m.caminho_storage)??undefined} alt={m.alt_texto} loading="lazy"/>:<video src={urlDaMidia(m.caminho_storage)??undefined} controls preload="metadata"/>}
         <div><span className="pill">{m.principal?'Capa':m.tipo==='video'?'Vídeo':'Foto'}</span>{m.tipo==='foto'&&!m.principal&&<button disabled={ocupado} onClick={()=>executar(async()=>aceitar(await operar<PecaInterna>('midia_capa',p.id,{midia_id:m.id,atualizado_em:p.atualizado_em})))}>Usar como capa</button>}
+          <button aria-label={`Mover foto ${i+1} para antes`} disabled={ocupado||i===0} onClick={()=>void moverMidia(m.id,-1)}>↑ Antes</button><button aria-label={`Mover foto ${i+1} para depois`} disabled={ocupado||i===midias.length-1} onClick={()=>void moverMidia(m.id,1)}>↓ Depois</button>
           <button disabled={ocupado} onClick={()=>{if(window.confirm('Remover esta mídia do cadastro? O arquivo e o histórico serão preservados.'))void executar(async()=>aceitar(await operar<PecaInterna>('midia_arquivar',p.id,{midia_id:m.id,atualizado_em:p.atualizado_em})));}}>Remover</button></div></div>)}</div>
       {p.midias.length===0&&<p className="small muted">Comece pelas fotos. Você pode preencher os outros dados depois.</p>}
     </aside><form onSubmit={salvar}>
       <div className="painel-card"><h3>Informações da peça</h3><div className="campos-duplos">
         <Campo nome="Nome da peça"><input className="input" value={nome} placeholder={p.nome_sugerido??'Definir durante a curadoria'} maxLength={200} onChange={e=>{setNome(e.target.value);mexeu();}}/>{p.nome_sugerido&&!nome&&<button className="small" type="button" onClick={()=>{setNome(p.nome_sugerido!);mexeu();}}>Usar nome sugerido</button>}</Campo>
-        <Campo nome="Código"><input className="input" value={p.codigo} readOnly/></Campo>
+        <Campo nome="Código"><input className="input" value={codigo} maxLength={80} onChange={e=>{setCodigo(e.target.value.toUpperCase());mexeu();}}/></Campo>
         <Campo nome="Categoria"><select className="input" value={categoria} onChange={e=>{setCategoria(e.target.value);mexeu();}}><option value="">Escolher depois</option>{lista.categorias.map(c=><option key={c.id} value={c.id}>{c.nome}</option>)}</select></Campo>
         <Campo nome="Coleção"><select className="input" value={colecao} onChange={e=>{setColecao(e.target.value);mexeu();}}><option value="">Sem coleção</option>{lista.colecoes.map(c=><option key={c.id} value={c.id}>{c.nome}</option>)}</select></Campo>
         <Campo nome="Preço de venda (R$)"><input className="input" type="number" min="0.01" step="0.01" value={preco} placeholder="Definir depois" onChange={e=>{setPreco(e.target.value);mexeu();}}/></Campo>
@@ -81,6 +84,7 @@ export function EditorPeca({inicial,lista,fechar,salvou,operacao=operar}:{inicia
           {m.medida==='outra'&&<Campo nome="Nome da medida"><input className="input" value={m.rotulo} required onChange={e=>mudarMedida(i,{rotulo:e.target.value})}/></Campo>}
           <Campo nome="Valor (cm)"><input className="input" type="number" min="0.01" step="0.01" value={m.valor_cm} required onChange={e=>mudarMedida(i,{valor_cm:e.target.value})}/></Campo>
           <button type="button" className="btn btn-s btn-sm" onClick={()=>{if(!inicial.medidas.some(x=>x.id===m.id)){setMedidas(ms=>ms.filter(x=>x.id!==m.id));mexeu();}else mudarMedida(i,{ativo:!m.ativo});}}>{m.ativo?'Desativar':'Reativar'}</button></div>)}</div>
+      {p.dado_teste&&p.codigo!=='SMOKE-01'&&<label className="painel-card small"><input type="checkbox" checked={real} onChange={e=>{setReal(e.target.checked);mexeu();}}/> Conferi os dados, fotos e estoque reais desta peça. Ao salvar, retirar a marcação de teste.</label>}
       <div className="editor-acoes"><button className="btn btn-p" type="submit" disabled={ocupado}>{ocupado?'Salvando…':'Salvar alterações'}</button>
         {p.ativo?<button type="button" className="btn btn-s" disabled={ocupado} onClick={()=>mudarStatus('rascunho')}>Retirar da vitrine</button>:<button type="button" className="btn btn-s" disabled={ocupado} onClick={()=>mudarStatus('publicar')}>Publicar na vitrine</button>}
         {alterado&&<p className="small muted">Salve as alterações antes de publicar.</p>}

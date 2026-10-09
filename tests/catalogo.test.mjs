@@ -18,7 +18,7 @@ const catalogo = {
 };
 const ids = filtros => selecionarProdutos(catalogo, { ...filtrosIniciais, ...filtros }).map(p => p.id);
 test('a coleção atual é padrão; todas e outras coleções podem ser selecionadas', () => {
-  assert.deepEqual(ids({}), ['Serena', 'Aurora', 'Jasmim', 'Lis']);
+  assert.deepEqual(ids({}), ['Serena', 'Aurora', 'Lis', 'Jasmim']);
   assert.equal(ids({ colecao: '' }).length, 5);
   assert.deepEqual(ids({ colecao: 'outra' }), ['Antiga']);
   assert.deepEqual(ids({ colecao: 'inexistente' }), []);
@@ -36,7 +36,7 @@ test('tamanho permanece disponível quando outra cor tem saldo; estoque zero fic
 });
 test('preço promocional governa ordenação; promoção de zero não usa falsamente preço cheio', () => {
   assert.deepEqual(ids({ ordem: 'menor' }), ['Serena', 'Lis', 'Aurora', 'Jasmim']);
-  assert.deepEqual(ids({ ordem: 'maior' }), ['Aurora', 'Jasmim', 'Lis', 'Serena']);
+  assert.deepEqual(ids({ ordem: 'maior' }), ['Aurora', 'Lis', 'Serena', 'Jasmim']);
   assert.equal(precoAtual(produto('zero', { preco_promocional: 0 })), 0);
 });
 test('filtros compartilhados sobrevivem à serialização; todas difere do padrão atual', () => {
@@ -59,3 +59,5 @@ test('catálogo vazio é um resultado válido e filtros não alteram o catálogo
   ids({ ordem: 'maior' });
   assert.deepEqual(catalogo.produtos.map(p => p.id), original);
 });
+
+test('slug antigo da coleção aponta para lancamento',()=>assert.equal(lerFiltros('?colecao=hom-lancamento').colecao,'lancamento'));

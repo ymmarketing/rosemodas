@@ -3,9 +3,9 @@ import { precoAtual, tamanhosDoProduto, urlDaMidia } from './catalogo';
 import type { Catalogo, Produto } from './catalogo';
 import { Arte, classeSelo, demoDaPeca, Icone, moeda, selos } from './Visual';
 import { mensagemCompraWhatsApp } from './compraWhatsApp';
-export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, aviseMe, relacionados, homologacao }: {
+export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, relacionados, homologacao }: {
   produto: Produto; catalogo: Catalogo; aviso: (s: string) => void; whatsapp: (s: string) => void;
-  aviseMe: (p: Produto, tamanho?: string) => void; relacionados: React.ReactNode; homologacao: boolean;
+  relacionados: React.ReactNode; homologacao: boolean;
 }) {
   const saldos = catalogo.saldos.filter(v => v.produto_id === p.id);
   const cores = [...new Set([
@@ -24,7 +24,7 @@ export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, aviseMe, 
   const video = p.midias.find(m => m.tipo === 'video'), midia = imagem < fotos.length ? fotos[imagem] : null;
   const categoria = catalogo.categorias.find(c => c.id === p.categoria_id);
   function comprar() {
-    if (!total) { aviseMe(p); return; }
+    if (!total) return;
     try { whatsapp(mensagemCompraWhatsApp(p,saldos,cor,tamanho,window.location.href)); }
     catch (e) { aviso(e instanceof Error ? e.message : 'Não foi possível preparar a compra pelo WhatsApp.'); }
   }
@@ -36,18 +36,17 @@ export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, aviseMe, 
     </div><div className="th">{Array.from({length:Math.max(3,fotos.length)},(_,i) => <button key={i} className={!videoAberto&&imagem===i?'on':''} aria-label={`Imagem ${i+1} de ${p.nome}`} onClick={() => {setImagem(i);setVideoAberto(false);}}>
       {fotos[i] ? <img src={urlDaMidia(fotos[i].caminho_storage) ?? undefined} alt={fotos[i].alt_texto} /> : <Arte produto={p} cor={cor} variante={i} />}</button>)}
       <button className={`video-thumb ${videoAberto?'on':''}`} onClick={() => video ? setVideoAberto(true) : aviso('Vídeo da Rose vestindo a peça: mídia ainda não cadastrada.')}>▶ vídeo</button></div></div>
-      <div className="pinfo">{p.selo && <span className={`pill ${classeSelo(p)}`}>{selos[p.selo]}</span>}
+      <div className="pinfo">{p.selo && p.selo!=='aprovado_rose' && <span className={`pill ${classeSelo(p)}`}>{selos[p.selo]}</span>}
         <h1 style={{marginTop:8}}>{p.nome}</h1><div className="code">CÓD. {demo?.id ?? p.codigo} · {categoria?.nome.toUpperCase()}</div>
         <div className="price">{p.preco_promocional !== null && <s style={{fontSize:16,color:'var(--taupe)',fontFamily:'var(--sans)',marginRight:8}}>{moeda(p.preco)}</s>}{moeda(preco)}</div>
-        {homologacao && <div className="parc">ou 3x de {moeda(preco/3)} sem juros · 5% off no Pix: {moeda(preco*.95)}</div>}
         <div className="blk"><h5>Cor <span style={{textTransform:'none',letterSpacing:0,color:'var(--tinta)'}}>{cor}</span></h5><div className="cores">{cores.map(c => {
           const hex = (demo?.cores as readonly {n:string;hex:string}[] | undefined)?.find(x => x.n === c)?.hex ?? '#C99A9A';
           return <button key={c} className={cor===c?'on':''} style={{background:hex}} title={c} aria-label={`Cor ${c}`} aria-pressed={cor===c} onClick={() => {setCor(c);setTamanho('');}} />;
         })}</div></div>
         <div className="blk"><h5>Tamanho <a className="small" style={{textTransform:'none',letterSpacing:0,color:'var(--vinho)'}} href="#medidas" onClick={e => {e.preventDefault();document.getElementById('medidas')?.scrollIntoView({behavior:'smooth'});}}>Ver medidas</a></h5>
-          <div className="sizes">{tamanhos.map(t => <button key={t} className={`${tamanho===t?'on':''} ${saldo(t)?'':'off'}`} aria-label={`Tamanho ${t}${saldo(t)?'':' esgotado'}`} aria-pressed={tamanho===t} onClick={() => saldo(t) ? setTamanho(t) : aviseMe(p,t)}>{t}{saldo(t)===1 && <span className="lt">última</span>}</button>)}</div>
+          <div className="sizes">{tamanhos.map(t => <button key={t} className={`${tamanho===t?'on':''} ${saldo(t)?'':'off'}`} aria-label={`Tamanho ${t}${saldo(t)?'':' esgotado'}`} aria-pressed={tamanho===t} disabled={!saldo(t)} onClick={() => setTamanho(t)}>{t}{saldo(t)===1 && <span className="lt">última</span>}</button>)}</div>
           {p.modelo_veste && <div className="veste">A Rose veste <b>{p.modelo_veste}</b>{demo && ' e tem 1,62 m. Ficou soltinho na medida certa.'}</div>}</div>
-        <div className="buy"><button className="btn btn-p btn-block" onClick={comprar}>{total?'Comprar pelo WhatsApp':'Avise-me quando chegar'}</button>
+        <div className="buy"><button className="btn btn-p btn-block" disabled={!total} onClick={comprar}>{total?'Comprar pelo WhatsApp':'Esgotado'}</button>
           <button className="btn btn-g btn-block" onClick={() => whatsapp(`Oi Rose! Quero tirar uma dúvida sobre o ${p.nome} (${p.codigo})${tamanho?`, tamanho ${tamanho}, cor ${cor}`:''}.`)}><Icone nome="wa" /> Tirar dúvida no WhatsApp</button></div>
         <div className="blk" id="medidas"><h5>Medidas da peça · tamanho {tamMedidas}</h5>{medidas.length ? <table className="meas"><tbody>{medidas.map(m => <tr key={m.medida}><td>{m.rotulo}</td><td>{m.valor_cm} cm</td></tr>)}</tbody></table> : <p className="small muted">Medidas ainda não cadastradas para este tamanho.</p>}
           <p className="xs muted" style={{marginTop:6}}>Medidas da peça deitada, de costura a costura. Entre dois tamanhos? Fale com a gente.</p></div>

@@ -7,6 +7,16 @@ O `index.html` da raiz continua sendo o kit de marca; a aplicação fica em `app
 Esta entrega implementa a Home e a coleção sobre o catálogo público da Fase 0.
 A Tarefa 1 foi validada tecnicamente; a Fase 0 continua sem homologação final.
 
+## Estado vigente — 09/10/2026
+
+As decisões desta seção e de `documentacao/carga-oficial-em-construcao.md` substituem descrições históricas abaixo. Supabase único `kernpudxhwkpoadahgqj` é produção; CI de escrita usa exclusivamente Supabase local. Não fazer merge na main/deploy de produção sem aprovação da Yasmin. Corte 09/10 às 18h Brasília (21h UTC); lançamento 10/10.
+
+Carga oficial somente pelo comando **“suba o estoque oficial de lançamento”**, lendo a planilha Google oficial (não o CSV de referência): múltiplas variações por código, linhas não publicadas ignoradas, validação antes de gravar, backup privado seletivo, transação auditada, carga incremental/idempotente e retirada de fotos somente das peças carregadas. Painel usa a mesma estrutura por código/UUID, fotos ordenáveis/capa e baixa manual com motivo. O corte oculta/arquiva somente testes; dados reais continuam editáveis/publicáveis/importáveis. Sem peça oficial, “Coleção chegando em breve”; atualização automática a cada 30s/foco.
+
+RM-C011 em rascunho, coleção `lancamento`, textos do P ao Plus Size; live quinta, 20h mantida. Compra pelo WhatsApp 5531975417483. Não exibir filtro de tamanho, parcelamento, aviso de reposição ou selo Aprovado pela Rose. Senha com botão Mostrar centralizado; rodapé aponta à página de privacidade.
+
+Cadastro/smoke hospedado aguarda Yasmin desligar Confirm email e conferência `mailer_autoconfirm=true`; não contornar nem enviar e-mail. SMOKE-01 é reservado e nunca é público, mesmo ao testar o botão Publicar. Contas teste autorizadas: cliente-a/b no Gmail da Yasmin, arquivadas/desativadas ao concluir. Pós-lançamento: registro de pedidos, baixa integrada e senha temporária pelo painel.
+
 ## Desenvolvimento
 
 Node 24 e `npm ci`. `npm run dev` inicia a Home e a coleção em localhost:5173.

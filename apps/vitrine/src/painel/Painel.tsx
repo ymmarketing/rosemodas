@@ -10,6 +10,7 @@ import {ConciliacoesClientes} from './ConciliacoesClientes';
 import { Pedidos } from '../cliente/Pedidos';
 
 export function Painel() {
+  const [novoCodigo,setNovoCodigo]=useState(''),[prepararReal,setPrepararReal]=useState(false),[criando,setCriando]=useState(false);
   const [aba,setAba]=useState<'catalogo'|'pedidos'|'clientes'>('catalogo');
   const homologacao=import.meta.env.VITE_APP_ENV==='homologation';
   const vitrine=homologacao?'https://homolog.rosemenezesmodas.com.br/':'https://rosemenezesmodas.com.br/';
@@ -27,7 +28,7 @@ export function Painel() {
     operar<ListaInterna>('listar',null,{busca,status,pagina}).then(d=>{if(vivo)setLista(d);}).catch(e=>{if(vivo)setErro(e.message);}).finally(()=>{if(vivo)setCarregando(false);});
     return()=>{vivo=false;};
   },[autorizado,busca,status,pagina,revisao]);
-  async function novaPeca(){setCarregando(true);setErro('');try{const p=await operar<PecaInterna>('criar',crypto.randomUUID());setEditando(p);setRevisao(n=>n+1);}catch(e){setErro(e instanceof Error?e.message:'Não foi possível criar a peça.');}finally{setCarregando(false);}}
+  async function novaPeca(){setCarregando(true);setErro('');try{const p=await operar<PecaInterna>('criar',crypto.randomUUID(),{codigo:novoCodigo.trim().toUpperCase(),preparar_real:prepararReal});setEditando(p);setCriando(false);setNovoCodigo('');setPrepararReal(false);setRevisao(n=>n+1);}catch(e){setErro(e instanceof Error?e.message:'Não foi possível criar a peça.');}finally{setCarregando(false);}}
   if(!autorizado)return <Acesso onReady={entrou}/>;
   return <div className="painel-app"><aside className="painel-nav">
     <a className="painel-marca" href={vitrine} target="_blank" rel="noreferrer"><img src="/marca/rose-menezes.jpg" alt=""/><span>Rose Menezes<small>PAINEL INTERNO</small></span></a>
@@ -38,7 +39,8 @@ export function Painel() {
     {homologacao&&<div className="painel-aviso">PREVIEW PROTEGIDO · Este painel utiliza o banco de produção. Publicar uma peça altera o catálogo real.</div>}
     {erro&&<div className="painel-erro" role="alert">{erro}<button className="btn btn-s btn-sm" onClick={()=>setRevisao(n=>n+1)}>Tentar novamente</button></div>}
     {aba==='clientes'?<ConciliacoesClientes/>:aba==='pedidos'?<Pedidos sb={clienteInterno()} admin/>:editando&&lista?<EditorPeca key={editando.id} inicial={editando} lista={lista} fechar={()=>{setEditando(null);setRevisao(n=>n+1);}} salvou={p=>{setEditando(p);setLista(l=>l?{...l,itens:l.itens.map(x=>x.id===p.id?p:x)}:null);}}/>
-      :<><div className="painel-cabecalho"><div><span className="eyebrow">CATÁLOGO</span><h1>Peças e estoque</h1><p>Comece pelas fotos. Revise os dados e publique quando estiver pronta.</p></div><button className="btn btn-p" disabled={carregando||!lista} onClick={novaPeca}>+ Nova peça</button></div>
+      :<><div className="painel-cabecalho"><div><span className="eyebrow">CATÁLOGO</span><h1>Peças e estoque</h1><p>Comece pelas fotos. Revise os dados e publique quando estiver pronta.</p></div><button className="btn btn-p" disabled={carregando||!lista} onClick={()=>setCriando(true)}>+ Nova peça</button></div>
+        {criando&&<form className="painel-card" onSubmit={e=>{e.preventDefault();void novaPeca();}}><label className="field"><span>Código da peça</span><input className="input" value={novoCodigo} onChange={e=>setNovoCodigo(e.target.value.toUpperCase())} placeholder="Ex.: RM-C001 (vazio gera um código)" pattern="[A-Z0-9]+(-[A-Z0-9]+)*"/></label><label className="small"><input type="checkbox" checked={prepararReal} onChange={e=>setPrepararReal(e.target.checked)}/> Preparar dados reais: se este código era de teste ou foi arquivado, abrir rascunho vazio preservando o histórico.</label><div className="editor-acoes"><button className="btn btn-p" disabled={carregando}>Abrir rascunho</button><button className="btn btn-s" type="button" onClick={()=>setCriando(false)}>Cancelar</button></div></form>}
         <div className="painel-filtros"><label>Buscar peça<input className="input" type="search" value={busca} placeholder="Nome ou código" onChange={e=>{setBusca(e.target.value);setPagina(0);}}/></label>
           <label>Situação<select className="input" value={status} onChange={e=>{setStatus(e.target.value);setPagina(0);}}><option value="">Todas</option><option value="rascunho">Rascunhos</option><option value="publicado">Publicadas</option></select></label><span>{lista?.total??0} peça(s)</span></div>
         {carregando&&<p role="status">Carregando catálogo…</p>}

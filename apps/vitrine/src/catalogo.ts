@@ -45,6 +45,9 @@ export function selecionarProdutos(catalogo: Catalogo, filtros: Filtros) {
     if (filtros.tamanho && !variacoes.some(v => v.tamanho === filtros.tamanho && v.disponivel > 0)) return false;
     return !filtros.disponiveis || variacoes.some(v => v.disponivel > 0);
   }).sort((a, b) => {
+    const disponivel=(p:Produto)=>(saldosPorProduto.get(p.id)??[]).some(v=>v.disponivel>0);
+    const esgotadas=Number(disponivel(b))-Number(disponivel(a));
+    if(esgotadas)return esgotadas;
     const diferenca = filtros.ordem === 'menor' ? precoAtual(a) - precoAtual(b)
       : filtros.ordem === 'maior' ? precoAtual(b) - precoAtual(a)
       : (a.ordem_vitrine??0)-(b.ordem_vitrine??0) || Number(b.selo === 'novidade') - Number(a.selo === 'novidade');
@@ -53,7 +56,7 @@ export function selecionarProdutos(catalogo: Catalogo, filtros: Filtros) {
 }
 export function lerFiltros(busca: string): Filtros {
   const q = new URLSearchParams(busca), ordem = q.get('ordem');
-  return { categoria: q.get('categoria') ?? '', colecao: q.has('colecao') ? q.get('colecao')! : null,
+  return { categoria: q.get('categoria') ?? '', colecao: q.get('colecao')==='hom-lancamento'?'lancamento':q.has('colecao') ? q.get('colecao')! : null,
     tamanho: q.get('tamanho') ?? '', ordem: ordem === 'menor' || ordem === 'maior' ? ordem : 'novidades',
     disponiveis: q.get('disponiveis') === '1', ...(q.get('busca') ? { busca: q.get('busca')! } : {}) };
 }

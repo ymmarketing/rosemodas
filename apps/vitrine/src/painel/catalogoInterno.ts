@@ -13,7 +13,7 @@ export type MidiaInterna = { id: string; caminho_storage: string; tipo: 'foto'|'
 export type VariacaoInterna = { id: string; sku: string; tamanho: string; cor: string; quantidade: number|string; ativo: boolean };
 export type MedidaInterna = { id: string; tamanho: string; medida: string; rotulo: string; valor_cm: number|string; ativo: boolean };
 export type PecaInterna = {
-  id: string; codigo: string; nome: string|null; nome_sugerido?: string|null; observacoes_curadoria?: string; descricao: string; categoria_id: string|null; colecao_id: string|null;
+  dado_teste?: boolean; id: string; codigo: string; nome: string|null; nome_sugerido?: string|null; observacoes_curadoria?: string; descricao: string; categoria_id: string|null; colecao_id: string|null;
   preco: number|null; preco_promocional: number|null; modelo_veste: string|null;
   status_catalogo: 'rascunho'|'publicado'; ativo: boolean; atualizado_em: string;
   midias: MidiaInterna[]; variacoes: VariacaoInterna[]; medidas: MedidaInterna[];

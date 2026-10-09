@@ -28,7 +28,9 @@ test('telas renderizadas ocultam sacola, frete, fases futuras e exemplos fora da
    assert.ok(produto.includes('Comprar pelo WhatsApp'));
    assert.ok(!produto.includes('Adicionar à sacola'));
    assert.equal(produto.includes('Calcular frete'),homologacao);
-   assert.equal(produto.includes('5% off no Pix'),homologacao);
+   assert.equal(produto.includes('5% off no Pix'),false);
+   for(const texto of ['ou 3x de','Avise-me quando chegar','Aprovado pela Rose'])assert.ok(!produto.includes(texto));
+   assert.ok(loja.includes('Live quinta, 20h'));assert.ok(loja.includes('do P ao Plus Size'));assert.ok(!loja.includes('Todos os tamanhos'));
    globalThis.window.location.hash='#/loja/sacola';
    const rotaFutura=renderToStaticMarkup(createElement(Loja,{homologacao}));
    assert.equal(rotaFutura.includes('Próxima fase'),homologacao);

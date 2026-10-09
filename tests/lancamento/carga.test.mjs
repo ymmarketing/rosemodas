@@ -4,7 +4,7 @@ import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import sharp from 'sharp';
-import {colunas,lerCsv,validarEntrada,executarCarga} from '../../scripts/lancamento/carga-oficial.mjs';
+import {colunas,lerCsv,validarEntrada,executarCarga,fonteGoogle,lerPlanilhaGoogle,PLANILHA_OFICIAL} from '../../scripts/lancamento/carga-oficial.mjs';
 const linha=['RM-C001','Vestido oficial','Vestidos','Descrição oficial','120.50','','Azul','48','1','sim','1',''];
 const csv=rows=>[colunas,...rows].map(r=>r.map(v=>/[",\n]/.test(v)?'"'+v.replaceAll('"','""')+'"':v).join(',')).join('\r\n');
 async function fixture(fn){const p=await mkdtemp(path.join(os.tmpdir(),'rose-carga-'));try{await mkdir(path.join(p,'RM-C001'));await writeFile(path.join(p,'estoque-oficial.csv'),csv([linha]));await sharp({create:{width:300,height:500,channels:3,background:'#125789'}}).jpeg().toFile(path.join(p,'RM-C001','01.jpg'));await fn(p);}finally{await rm(p,{recursive:true,force:true});}}
@@ -25,4 +25,22 @@ test('código duplicado, capa ausente, fotos órfãs, números repetidos e image
  await writeFile(path.join(p,'estoque-oficial.csv'),csv([linha,linha]));await rm(path.join(p,'RM-C001','01.jpg'));await mkdir(path.join(p,'RM-C999'));await writeFile(path.join(p,'RM-C001','02.jpg'),'isto não é imagem');await writeFile(path.join(p,'RM-C001','02.png'),'também não');await writeFile(path.join(p,'RM-C001','03.txt'),'texto');
  const r=await validarEntrada(p,['Vestidos']);for(const texto of ['duplicado','foto 01','sem peça','corrompida','repetido','use imagens'])assert.ok(r.erros.some(e=>e.includes(texto)),texto);
 }));
-test('rascunho pode não ter foto e promoção menor é aceita',async()=>fixture(async p=>{const l=[...linha];l[9]='não';l[5]='90,00';await writeFile(path.join(p,'estoque-oficial.csv'),csv([l]));await rm(path.join(p,'RM-C001','01.jpg'));const r=await validarEntrada(p,['Vestidos']);assert.deepEqual(r.erros,[]);assert.equal(r.manifesto[0].preco_promocional,90);}));
+test('linha não publicada é ignorada sem validar campos ou fotos',async()=>fixture(async p=>{const l=[...linha];l[9]='não';l[5]='90,00';await writeFile(path.join(p,'estoque-oficial.csv'),csv([l]));await rm(path.join(p,'RM-C001','01.jpg'));const r=await validarEntrada(p,['Vestidos']);assert.deepEqual(r.erros,[]);assert.deepEqual(r.manifesto,[]);assert.deepEqual(r.arquivos,[]);assert.equal(r.ignoradas.length,1);}));
+
+test('uma peça admite três variações, mantém primeira linha e rejeita divergências',async()=>fixture(async p=>{
+ const rows=[linha,[...linha],[...linha]];rows[1][6]='Preto';rows[1][7]='M';rows[2][7]='GG';
+ await writeFile(path.join(p,'estoque-oficial.csv'),csv(rows));let r=await validarEntrada(p,['Vestidos']);assert.deepEqual(r.erros,[]);assert.equal(r.manifesto.length,1);assert.equal(r.manifesto[0].variacoes.length,3);assert.equal(r.arquivos.length,1);
+ const hash=r.manifesto[0].assinatura_carga;r=await validarEntrada(p,['Vestidos']);assert.equal(r.manifesto[0].assinatura_carga,hash,'UUID do lote não modifica a assinatura');
+ rows[1][1]='Outro nome';await writeFile(path.join(p,'estoque-oficial.csv'),csv(rows));r=await validarEntrada(p,['Vestidos']);assert.ok(r.erros.some(e=>e.includes('nome diverge da primeira linha 2')));
+}));
+test('linhas parciais com não ou vazio não alteram a peça existente',async()=>fixture(async p=>{
+ const vazia=colunas.map(()=>''),nao=[...vazia];vazia[0]='RM-C001';nao[0]='RM-C002';nao[9]='não';
+ await writeFile(path.join(p,'estoque-oficial.csv'),csv([vazia,nao]));const r=await validarEntrada(p,['Vestidos']);assert.deepEqual(r.erros,[]);assert.equal(r.manifesto.length,0);assert.equal(r.ignoradas.length,2);
+ let gravacoes=0;const resultado=await executarCarga({sb:{rpc:async()=>({data:{categorias:['Vestidos']}}),storage:{from:()=>{gravacoes++;}}},pasta:p});assert.equal(resultado.status,'concluido');assert.equal(gravacoes,0);
+}));
+test('leitor usa o ID oficial do Google, preserva colunas e ignora CSV de referência',async()=>fixture(async p=>{
+ const rows=[...linha];rows[1]='Nome lido do Google';const fonte=fonteGoogle([colunas,rows]);
+ const r=await validarEntrada(p,['Vestidos'],undefined,fonte);assert.deepEqual(r.erros,[]);assert.equal(r.manifesto[0].nome,'Nome lido do Google');assert.equal(fonte.proveniencia.spreadsheet_id,PLANILHA_OFICIAL);
+ assert.throws(()=>fonteGoogle([colunas,rows],{spreadsheet_id:'CSV-ANTIGO'}),/fonte precisa/);
+ let chamou=false;const lido=await lerPlanilhaGoogle({accessToken:'token-fixture',fetcher:async(url,op)=>{chamou=true;assert.ok(url.includes(PLANILHA_OFICIAL));assert.equal(op.headers.Authorization,'Bearer token-fixture');return{ok:true,json:async()=>({values:[colunas,rows]})};}});assert.ok(chamou);assert.equal(lido.linhas[0].dados.nome,rows[1]);
+}));
