@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buscaDosFiltros, filtrosIniciais, fotoPrincipal, lerFiltros, precoAtual,
+import { buscaDosFiltros, categoriasDisponiveis, filtrosIniciais, fotoPrincipal, lerFiltros, precoAtual,
   selecionarProdutos, tamanhosDoProduto } from '../apps/vitrine/src/catalogo.ts';
 
 const produto = (id, alteracao = {}) => ({ id, codigo: id, nome: id, slug: id, categoria_id: 'vestidos',
@@ -61,3 +61,20 @@ test('catálogo vazio é um resultado válido e filtros não alteram o catálogo
 });
 
 test('slug antigo da coleção aponta para lancamento',()=>assert.equal(lerFiltros('?colecao=hom-lancamento').colecao,'lancamento'));
+
+test('categorias contam peças uma vez, ocultam estoque zero e ignoram saldos sem peça publicada', () => {
+  const c = { ...catalogo, saldos: [...catalogo.saldos, saldo('Aurora', '52', 'Branco', 4), saldo('nao-publicada', 'M', '', 10)] };
+  assert.deepEqual(categoriasDisponiveis(c).map(c => [c.nome, c.quantidade]), [['Vestidos', 3], ['Blusas', 1]]);
+  assert.deepEqual(categoriasDisponiveis({ ...c, saldos: [] }), []);
+  assert.deepEqual(catalogo.categorias.map(c => c.nome), ['Vestidos', 'Blusas']);
+});
+test('categoria some ao zerar e volta automaticamente; empate segue ordem alfabética', () => {
+  const c = { ...catalogo, produtos: [produto('Aurora'), produto('Lis', { categoria_id: 'blusas' })],
+    saldos: [saldo('Aurora', 'M', '', 1), saldo('Lis', 'M', '', 1)] };
+  assert.deepEqual(categoriasDisponiveis(c).map(c => c.nome), ['Blusas', 'Vestidos']);
+  c.saldos[1].disponivel = 0;
+  assert.deepEqual(categoriasDisponiveis(c).map(c => c.nome), ['Vestidos']);
+  c.saldos[1].disponivel = 1;
+  assert.deepEqual(categoriasDisponiveis(c).map(c => c.nome), ['Blusas', 'Vestidos']);
+  assert.equal(c.categorias.length, 2);
+});
