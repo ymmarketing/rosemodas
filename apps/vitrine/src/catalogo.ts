@@ -22,6 +22,16 @@ export type Catalogo = {
 export type Filtros = { categoria: string; colecao: string | null; tamanho: string; ordem: 'novidades' | 'menor' | 'maior'; disponiveis: boolean; busca?: string };
 export const filtrosIniciais: Filtros = { categoria: '', colecao: null, tamanho: '', ordem: 'novidades', disponiveis: false };
 const comparador = new Intl.Collator('pt-BR', { numeric: true });
+export function categoriasDisponiveis(catalogo: Pick<Catalogo, 'categorias' | 'produtos' | 'saldos'>) {
+  const disponiveis = new Set(catalogo.saldos.filter(s => s.disponivel > 0).map(s => s.produto_id));
+  const quantidades = new Map<string, number>();
+  for (const p of catalogo.produtos) {
+    if (disponiveis.has(p.id)) quantidades.set(p.categoria_id, (quantidades.get(p.categoria_id) ?? 0) + 1);
+  }
+  return catalogo.categorias.map(c => ({ ...c, quantidade: quantidades.get(c.id) ?? 0 }))
+    .filter(c => c.quantidade > 0)
+    .sort((a, b) => b.quantidade - a.quantidade || comparador.compare(a.nome, b.nome));
+}
 export const precoAtual = (p: Produto) => p.preco_promocional ?? p.preco;
 export const colecaoSelecionada = (catalogo: Catalogo, filtros: Filtros) => filtros.colecao ?? catalogo.colecoes.find(c => c.atual)?.slug ?? '';
 
