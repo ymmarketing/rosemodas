@@ -23,6 +23,6 @@ export function Acesso({onReady,servico}:{onReady:()=>void;servico?:ServicoAcess
     {erro&&<p className="erro-acesso" role="alert">{erro}</p>}
     {etapa==='carregando'&&<p role="status">Verificando acesso…</p>}
     {etapa==='entrar'&&<FormularioSenha area="equipe" servico={acesso} entrou={()=>setRevisao(n=>n+1)}/>}
-    {etapa==='bloqueado'&&<><h1>Acesso restrito</h1><p className="erro-acesso" role="alert">Esta conta não tem permissão de admin para acessar o painel. Entre com uma conta administrativa e senha.</p><a className="btn btn-p btn-block" href="/#/cliente">Ir para a área da cliente</a><button className="btn btn-s btn-block" onClick={async()=>{try{await acesso.sair();setErro('');setEtapa('entrar');}catch(e){setErro(e instanceof Error?e.message:'Não foi possível sair.');}}}>Usar outra conta</button></>}
+    {etapa==='bloqueado'&&<><h1>Acesso restrito</h1><p className="erro-acesso" role="alert">Esta conta não tem permissão de admin para acessar o painel. Entre com uma conta administrativa e senha.</p><a className="btn btn-p btn-block" href="/#/loja">Voltar à loja</a><button className="btn btn-s btn-block" onClick={async()=>{try{await acesso.sair();setErro('');setEtapa('entrar');}catch(e){setErro(e instanceof Error?e.message:'Não foi possível sair.');}}}>Usar outra conta</button></>}
   </div></main>;
 }

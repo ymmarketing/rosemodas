@@ -46,3 +46,13 @@ test('leitor usa o ID oficial do Google, preserva colunas e ignora CSV de refer�
 }));
 
 test('planilha mínima publica sem categoria, cor, tamanho, descrição ou estoque; padrão é 1',async()=>fixture(async p=>{const l=[...linha];for(const i of [2,3,6,7,8])l[i]='';l[4]='189,90';const fonte=fonteGoogle([colunas,l]);const r=await validarEntrada(p,[],undefined,fonte);assert.deepEqual(r.erros,[]);assert.equal(r.manifesto[0].preco,189.9);assert.deepEqual(r.manifesto[0].variacoes,[{cor:'',tamanho:'',estoque:1}]);}));
+
+test('fonte FINAL usa pasta_fotos exata, aceita nomes livres e conserva rascunho e variações',async()=>fixture(async p=>{
+ await rm(path.join(p,'RM-C001'),{recursive:true});await mkdir(path.join(p,'RM001'));
+ await sharp({create:{width:500,height:1000,channels:3,background:'blue'}}).jpeg().toFile(path.join(p,'RM001','B.jpeg'));
+ await sharp({create:{width:1000,height:1500,channels:3,background:'red'}}).jpeg().toFile(path.join(p,'RM001','A.jpg'));
+ const {colunasFinal}=await import('../../scripts/lancamento/carga-oficial.mjs');
+ const a=[...linha];a[0]='RM-0001';a[4]=189.9;const b=[...a];b[7]='G';const draft=[...a];draft[0]='RM-0019';draft[9]='não';draft[8]=0;
+ const fonte=fonteGoogle([colunasFinal,[...a,'IGNORAR','RM001'],[...b,'IGNORAR','RM001'],[...draft,'IGNORAR','RM001']]);
+ const r=await validarEntrada(p,['Vestidos'],undefined,fonte);assert.deepEqual(r.erros,[]);assert.equal(r.manifesto.length,2);assert.equal(r.manifesto[0].variacoes.length,2);assert.equal(r.manifesto[1].publicar,'não');assert.equal(r.manifesto[0].preco,189.9);assert.equal(r.manifesto[0].fotos[0].arquivo,'A.jpg');assert.equal(r.baixaResolucao.length,2);assert.ok(r.manifesto.every(p=>p.dado_teste===false));
+}));

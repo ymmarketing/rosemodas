@@ -76,3 +76,9 @@ test('publicação em andamento bloqueia cliques repetidos até a confirmação'
   await clicar('Publicar na vitrine');assert.equal(botao('Publicar na vitrine').disabled,true);await clicar('Publicar na vitrine');assert.equal(chamadas.length,1);
   await ui.act(()=>concluir({...peca,ativo:true,status_catalogo:'publicado'}));assert.ok(botao('Retirar da vitrine'));
 });
+
+test('Arquivar exige confirmação na própria página e Cancelar não envia escrita',async()=>{
+ await montar();await clicar('Arquivar peça');assert.ok(dom.window.document.querySelector('[aria-label="Confirmar arquivamento"]'));assert.equal(chamadas.length,0);
+ await clicar('Cancelar');assert.equal(chamadas.length,0);assert.equal(fechou,false);
+ await clicar('Arquivar peça');await clicar('Arquivar');assert.equal(chamadas[0].acao,'arquivar');assert.equal(fechou,true);
+});

@@ -81,5 +81,14 @@ try{
  const minP=(await publico.from('produtos').select('id,categoria_id,preco').eq('codigo','RM-MINIMA')).data[0];assert.equal(minP.categoria_id,null);assert.equal(minP.preco,189.9);
  const minV=(await publico.from('v_estoque_disponivel').select('cor,tamanho,disponivel').eq('produto_id',minP.id)).data;assert.deepEqual(minV,[{cor:'',tamanho:'',disponivel:1}]);
  grupos.push('Planilha mínima depois do corte: nome preço foto, categoria opcional e variação padrão estoque 1.');
+ // Fonte FINAL: pasta_fotos exata, categoria criada na transação e rascunho preservado.
+ const {colunasFinal}=await import('./lancamento/carga-oficial.mjs');
+ const pastaFinal=path.join(dir,'final');await mkdir(pastaFinal);await mkdir(path.join(pastaFinal,'PASTA-EXATA'));
+ await writeFile(path.join(pastaFinal,'PASTA-EXATA','foto sem numero.jpeg'),bytes);
+ const finalRows=[colunasFinal,['RM-OFICIAL-CI','Nome exato FINAL','Macacões','','189.9','','','P','1','sim','','','IGNORAR','PASTA-EXATA'],['RM-RASCUNHO-CI','Rascunho FINAL','Macacões','','99','','','M','0','não','','','IGNORAR','PASTA-EXATA']];
+ const final=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(final.publicadas,1);assert.equal(final.rascunhos,1);
+ assert.deepEqual((await publico.from('produtos').select('codigo').eq('codigo','RM-RASCUNHO-CI')).data,[]);
+ const segundaFinal=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(segundaFinal.publicadas,0);assert.equal(segundaFinal.sem_alteracao.length,2);
+ grupos.push('Fonte FINAL depois do corte: fotos por pasta_fotos, categoria Macacões atômica, rascunho invisível e repetição idempotente.');
  await mkdir('test-results',{recursive:true});await writeFile('test-results/carga-api-local.json',JSON.stringify({ambiente:'supabase-local-descartavel',grupos,resultado:{publicadas:result.publicadas,rascunhos:result.rascunhos,fotos:result.fotos},credenciais:'não registradas'},null,2));console.log(`PASS: carga real local — ${grupos.length} grupos; catálogo, Auth, Storage e reversão.`);
 }finally{await sb.auth.signOut();await db.end();await rm(dir,{recursive:true,force:true});}

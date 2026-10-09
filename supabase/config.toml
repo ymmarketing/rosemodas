@@ -50,3 +50,7 @@ enabled = false
 
 [edge_runtime]
 enabled = false
+
+[functions.primeiro-acesso]
+# O corpo autentica código de primeiro acesso e operador com RPCs privadas a service_role.
+verify_jwt = false

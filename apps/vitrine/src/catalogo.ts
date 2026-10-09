@@ -16,6 +16,7 @@ export type Saldo = { variacao_id: string; produto_id: string; tamanho: string; 
 export type Catalogo = {
   categorias: Categoria[]; colecoes: Colecao[]; produtos: Produto[]; saldos: Saldo[];
   nomeLoja: string; descricaoLoja: string; logoUrl: string | null;
+  hero?:{desktop:string;mobile:string;alt:string}|null;
   cadastroClienteDisponivel?: boolean; cnpj?:string; medidas?: Medida[]; whatsappNumero?: string | null; instagramUrl?: string | null;
 };
 export type Filtros = { categoria: string; colecao: string | null; tamanho: string; ordem: 'novidades' | 'menor' | 'maior'; disponiveis: boolean; busca?: string };
@@ -99,10 +100,12 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
     const valor = configuracoes.find(c => c.chave === chave)?.valor;
     return typeof valor === 'string' && valor.trim() ? valor.trim() : padrao;
   };
+  const destaque=configuracoes.find(c=>c.chave==='hero_lancamento')?.valor as {desktop?:string;mobile?:string;alt?:string}|undefined;
+  const hero=destaque&&typeof destaque.desktop==='string'&&typeof destaque.mobile==='string'&&typeof destaque.alt==='string'&&urlDaMidia(destaque.desktop)&&urlDaMidia(destaque.mobile)?{desktop:urlDaMidia(destaque.desktop)!,mobile:urlDaMidia(destaque.mobile)!,alt:destaque.alt}:null;
   const caminhoLogo = texto('logo_caminho', '');
   return { categorias: categorias.sort((a, b) => a.ordem - b.ordem || comparador.compare(a.nome, b.nome)),
     colecoes: colecoes.sort((a, b) => Number(b.atual) - Number(a.atual) || comparador.compare(a.nome, b.nome)),
-    produtos, saldos, medidas, nomeLoja: texto('nome_loja', 'Rose Menezes'),
+    produtos, saldos, medidas, hero, nomeLoja: texto('nome_loja', 'Rose Menezes'),
     descricaoLoja: texto('descricao_loja', 'Moda feminina escolhida com carinho para vestir o seu dia.'),
     cadastroClienteDisponivel, logoUrl: caminhoLogo ? urlDaMidia(caminhoLogo) : null,
     whatsappNumero: numeroWhatsApp(texto('whatsapp_numero', '')),

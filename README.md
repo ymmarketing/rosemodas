@@ -1,3 +1,7 @@
+## Publicação autorizada em 09/10/2026
+
+Fonte vigente, evidência Claude 7.1/7.2, primeiro acesso da Rose e reversão: [registro do lançamento oficial](documentacao/lancamento-oficial-2026-10-09.md). A Yasmin autorizou expressamente carga FINAL e produção em rosemodas/main. Cadastro de cliente permanece desligado; venda pelo WhatsApp. Os registros anteriores abaixo são históricos.
+
 # Rose Modas
 
 **Construção — vitrine e curadoria do catálogo, aguardando validação da Yasmin.**

@@ -30,7 +30,7 @@ export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, relaciona
     catch (e) { aviso(e instanceof Error ? e.message : 'Não foi possível preparar a compra pelo WhatsApp.'); }
   }
   return <div className="s-wrap">
-    <div className="s-crumb"><a href="#/loja">Coleção</a> › <a href={`#/loja?categoria=${categoria?.slug ?? ''}`}>{categoria?.nome}</a> › {p.nome}</div>
+    <div className="s-crumb"><a href="#/loja">Coleção</a> › {categoria&&<><a href={`#/loja?categoria=${categoria.slug}`}>{categoria.nome}</a> › </>}{p.nome}</div>
     <div className="pdp"><div className="gal"><div className="main">
       {videoAberto && video ? <video controls src={urlDaMidia(video.caminho_storage) ?? undefined} aria-label={video.alt_texto} />
         : midia && fotoFalhou !== midia.caminho_storage ? <img src={urlDaMidia(midia.caminho_storage) ?? undefined} alt={midia.alt_texto} onError={() => setFotoFalhou(midia.caminho_storage)} /> : <Arte produto={p} cor={cor} variante={imagem} />}

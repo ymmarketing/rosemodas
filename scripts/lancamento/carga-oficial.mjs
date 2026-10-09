@@ -6,6 +6,7 @@ import {randomUUID,createHash} from 'node:crypto';
 import {createClient} from '@supabase/supabase-js';
 import sharp from 'sharp';
 export const colunas=['codigo','nome','categoria','descricao_curta','preco','preco_promocional','cor','tamanho','estoque','publicar','ordem_vitrine','observacoes'];
+export const colunasFinal=[...colunas,'codigo_planilha_original','pasta_fotos'];
 const sha=b=>createHash('sha256').update(b).digest('hex');
 export function lerCsv(texto){
  const fonte=texto.replace(/^\uFEFF/,'');const delim=fonte.split(/\r?\n/)[0].includes(';')?';':',';
@@ -25,27 +26,28 @@ export function lerCsv(texto){
 }
 function dinheiro(s){if(!/^\d+(?:[.,]\d{1,2})?$/.test(s))return null;const v=Number(s.replace(',','.'));return Number.isFinite(v)&&v<=9999999999.99?v:null;}
 export async function validarEntrada(pasta,categorias,lote=randomUUID(),fonte){
- const erros=[],manifesto=[],arquivos=[];let linhas;
+ const erros=[],manifesto=[],arquivos=[],baixaResolucao=[];let linhas;
+ const final=fonte?.formatoFinal===true;
  try{linhas=fonte?.linhas??lerCsv(await readFile(path.join(pasta,'estoque-oficial.csv'),'utf8'));}catch(e){return{erros:[e.message],manifesto,arquivos,lote};}
  if(!linhas.length)erros.push('A planilha precisa conter pelo menos uma peça.');
  const vistos=new Set(),grupos=new Map(),ignoradas=[],permitidas=new Set(categorias.map(c=>typeof c==='string'?c:c.nome));
  const pastas=await readdir(pasta,{withFileTypes:true});
  for(const entrada of pastas){
   if(entrada.isSymbolicLink())erros.push(`Arquivo ${entrada.name}: links simbólicos não são permitidos.`);
-  else if(entrada.isDirectory()&&!linhas.some(l=>l.dados.codigo===entrada.name))erros.push(`Pasta ${entrada.name}: fotos sem peça na planilha.`);
+  else if(entrada.isDirectory()&&!linhas.some(l=>(final?l.dados.pasta_fotos:l.dados.codigo)===entrada.name))erros.push(`Pasta ${entrada.name}: fotos sem peça na planilha.`);
   else if(entrada.isFile()&&entrada.name!=='estoque-oficial.csv'&&!entrada.name.startsWith('.'))erros.push(`Arquivo ${entrada.name}: coloque as fotos dentro da pasta do código da peça.`);
  }
  for(const l of linhas){
   const d=l.dados,label=`Linha ${l.numero} (${d.codigo||'sem código'})`;
   const publicar=d.publicar.toLocaleLowerCase('pt-BR');
-  if(['','não','nao'].includes(publicar)){ignoradas.push({linha:l.numero,codigo:d.codigo});continue;}
-  if(l.valores.length!==colunas.length)erros.push(`${label}: quantidade de colunas diferente do modelo.`);
+  if(publicar===''||(!final&&['não','nao'].includes(publicar))){ignoradas.push({linha:l.numero,codigo:d.codigo});continue;}
+  if(l.valores.length!==(final?colunasFinal.length:colunas.length))erros.push(`${label}: quantidade de colunas diferente do modelo.`);
   for(const k of ['codigo','nome','preco'])if(!d[k])erros.push(`${label}: preencha ${k}.`);
   if(!/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(d.codigo))erros.push(`${label}: código inválido. Use letras maiúsculas, números e hífen.`);
   const combinacao=JSON.stringify([d.codigo,d.cor,d.tamanho]);
   if(vistos.has(combinacao))erros.push(`${label}: combinação código + cor + tamanho duplicado.`);vistos.add(combinacao);
   const primeira=linhas.find(x=>x.dados.codigo===d.codigo);
-  for(const campo of ['nome','categoria','descricao_curta','preco','preco_promocional','publicar','ordem_vitrine']){
+  for(const campo of ['nome','categoria','descricao_curta','preco','preco_promocional','publicar','ordem_vitrine',...(final?['pasta_fotos']:[])]){
    const normalizar=v=>['preco','preco_promocional'].includes(campo)&&v?dinheiro(v):campo==='publicar'?v.toLocaleLowerCase('pt-BR'):v;
    if(normalizar(primeira.dados[campo])!==normalizar(d[campo]))erros.push(`${label}: ${campo} diverge da primeira linha ${primeira.numero} do código ${d.codigo}. Repita os mesmos dados da peça em todas as variações.`);
   }
@@ -55,38 +57,42 @@ export async function validarEntrada(pasta,categorias,lote=randomUUID(),fonte){
   if(d.preco_promocional&&(promocional===null||promocional>=preco))erros.push(`${label}: promoção deve ser um valor válido e menor que o preço.`);
   if(d.estoque&&(!/^\d+$/.test(d.estoque)||Number(d.estoque)>2147483647))erros.push(`${label}: estoque deve ser um inteiro de zero a 2147483647.`);
   if(d.ordem_vitrine&&(!/^\d+$/.test(d.ordem_vitrine)||Number(d.ordem_vitrine)>2147483647))erros.push(`${label}: ordem da vitrine deve ser um inteiro não negativo.`);
-  if(publicar!=='sim')erros.push(`${label}: publicar deve ser sim ou não.`);
+  if(!['sim',...(final?['não','nao']:[])].includes(publicar))erros.push(`${label}: publicar deve ser sim ou não.`);
   const variacao={cor:d.cor,tamanho:d.tamanho,estoque:d.estoque?Number(d.estoque):1};
   if(grupos.has(d.codigo)){grupos.get(d.codigo).variacoes.push(variacao);continue;}
-  const fotos=[],ordens=new Set(),dir=path.join(pasta,d.codigo);
-  if(/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(d.codigo)&&pastas.some(p=>p.name===d.codigo&&p.isDirectory())){
-   for(const f of await readdir(dir,{withFileTypes:true})){
+  const pastaFotos=final?d.pasta_fotos:d.codigo;
+  if(final&&!/^[A-Za-z0-9_-]+$/.test(pastaFotos))erros.push(`${label}: pasta_fotos precisa identificar uma subpasta válida e exata.`);
+  const fotos=[],ordens=new Set(),dir=path.join(pasta,pastaFotos||'__invalida__');
+  if(/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(d.codigo)&&pastas.some(p=>p.name===pastaFotos&&p.isDirectory())){
+   let indice=0;
+   for(const f of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'))){
     if(f.name.startsWith('.'))continue;
-    const nome=`${d.codigo}/${f.name}`,m=/^(\d{2,})\.(jpe?g|png|webp)$/i.exec(f.name);
-    if(!f.isFile()||!m){erros.push(`Arquivo ${nome}: use imagens JPG, PNG ou WebP numeradas como 01.jpg.`);continue;}
-    const ordem=Number(m[1]);if(ordem<1||ordens.has(ordem)){erros.push(`Arquivo ${nome}: número repetido ou inválido.`);continue;}ordens.add(ordem);
+    const nome=`${d.codigo}/${f.name}`,m=(final?/^(.+)\.(jpe?g)$/i:/^(\d{2,})\.(jpe?g|png|webp)$/i).exec(f.name);
+    if(!f.isFile()||!m){erros.push(`Arquivo ${nome}: ${final?'use imagens JPG/JPEG; a ordem será pelo nome do arquivo.':'use imagens JPG, PNG ou WebP numeradas como 01.jpg.'}`);continue;}
+    const ordem=final?++indice:Number(m[1]);if(ordem<1||ordens.has(ordem)){erros.push(`Arquivo ${nome}: número repetido ou inválido.`);continue;}ordens.add(ordem);
     try{
      const s=await stat(path.join(dir,f.name));if(s.size>50*1024*1024||s.size===0)throw new Error('imagem vazia ou maior que 50 MB');
-     const original=await readFile(path.join(dir,f.name));const meta=await sharp(original,{limitInputPixels:30000000,failOn:'warning'}).metadata();
+     const original=await readFile(path.join(dir,f.name));const meta=await sharp(original,{limitInputPixels:final?false:30000000,failOn:'warning'}).metadata();
      if(!['jpeg','png','webp'].includes(meta.format)||meta.pages>1)throw new Error('formato de imagem não suportado');
      // Sem recorte. Ajusta EXIF e mantém a proporção, sem ampliar.
-     const bytes=await sharp(original,{limitInputPixels:30000000,failOn:'warning'}).rotate().resize({width:1600,height:1600,fit:'inside',withoutEnlargement:true}).webp({quality:82}).toBuffer();
+     const bytes=await sharp(original,{limitInputPixels:final?false:30000000,failOn:'warning'}).rotate().resize({width:1600,height:1600,fit:'inside',withoutEnlargement:true}).webp({quality:82}).toBuffer();
      const caminho=`lancamento/${lote}/${d.codigo}/${String(ordem).padStart(2,'0')}.webp`;
-     arquivos.push({caminho,bytes,sha256:sha(bytes),origem:nome});fotos.push({caminho,ordem,sha256:sha(bytes)});
+     arquivos.push({caminho,bytes,sha256:sha(bytes),origem:nome});fotos.push({caminho,ordem,sha256:sha(bytes),...(final?{arquivo:f.name,largura:meta.width,altura:meta.height}: {})});
+     if(final&&Math.min(meta.width,meta.height)<800)baixaResolucao.push({codigo:d.codigo,arquivo:f.name,largura:meta.width,altura:meta.height});
     }catch{erros.push(`Arquivo ${nome}: imagem corrompida, vazia, grande demais ou que não é imagem.`);}
    }
   }
   if(publicar==='sim'&&!fotos.some(f=>f.ordem===1))erros.push(`${label}: peça publicada precisa da foto 01 (capa).`);
   fotos.sort((a,b)=>a.ordem-b.ordem);
-  const item={...d,preco,preco_promocional:promocional,publicar:'sim',ordem_vitrine:d.ordem_vitrine?Number(d.ordem_vitrine):0,fotos,variacoes:[variacao]};
-  delete item.cor;delete item.tamanho;delete item.estoque;
+  const item={...d,preco,preco_promocional:promocional,publicar:publicar==='sim'?'sim':'não',dado_teste:false,ordem_vitrine:d.ordem_vitrine?Number(d.ordem_vitrine):0,fotos,variacoes:[variacao]};
+  delete item.cor;delete item.tamanho;delete item.estoque;delete item.codigo_planilha_original;
   grupos.set(d.codigo,item);manifesto.push(item);
  }
  for(const item of manifesto){
   const dados={...item,fotos:item.fotos.map(({ordem,sha256})=>({ordem,sha256})),variacoes:[...item.variacoes].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))};
   item.assinatura_carga=sha(JSON.stringify(dados));
  }
- return{erros,manifesto,arquivos,lote,ignoradas};
+ return{erros,manifesto,arquivos,lote,ignoradas,baixaResolucao};
 }
 async function rpc(sb,nome,args={}){const r=await sb.rpc(nome,args);if(r.error)throw new Error(r.error.message);return r.data;}
 const conferir=r=>{if(r.error)throw new Error(r.error.message);return r.data;};
@@ -94,7 +100,7 @@ export async function executarCarga({sb,pasta,backupDir,lote=randomUUID(),apenas
  const contexto=await rpc(sb,'contexto_carga_oficial');
  const entrada=await validarEntrada(pasta,contexto.categorias??[],lote,fonte);
  if(entrada.erros.length||apenasValidar)return{status:entrada.erros.length?'erros_validacao':'validado',erros:entrada.erros,pecas:entrada.manifesto.length,ignoradas:entrada.ignoradas};
- const semAlteracao=entrada.manifesto.filter(item=>contexto.produtos?.some(p=>p.codigo===item.codigo&&p.assinatura_carga===item.assinatura_carga&&!p.dado_teste&&p.arquivado_em===null&&p.ativo&&p.status_catalogo==='publicado'));
+ const semAlteracao=entrada.manifesto.filter(item=>contexto.produtos?.some(p=>p.codigo===item.codigo&&p.assinatura_carga===item.assinatura_carga&&!p.dado_teste&&p.arquivado_em===null&&p.ativo===(item.publicar==='sim')&&p.status_catalogo===(item.publicar==='sim'?'publicado':'rascunho')));
  entrada.manifesto=entrada.manifesto.filter(item=>!semAlteracao.includes(item));
  const codigos=new Set(entrada.manifesto.map(item=>item.codigo));
  entrada.arquivos=entrada.arquivos.filter(f=>codigos.has(f.origem.split('/')[0]));
@@ -161,16 +167,21 @@ export async function finalizarCarga({sb,backupDir,lote}){
  const resultado=await rpc(sb,'aplicar_carga_oficial',{p_lote:lote,p_manifesto:manifesto,p_assinatura:'',p_backup:dir});
  return await retirarFotosAntigas({sb,dir,lote,hashes,resultado});
 }
-export const PLANILHA_OFICIAL='1a1dVvVNQvQNHQ_lOh0XyZZfmvvfipa_ZzHsFm2JohGg';
+export const PLANILHA_OFICIAL='15NtSTLEJGdYdzdXYnfvrfFQ-GNnY0TSdjF8fpq39IEI';
 export function fonteGoogle(valores,{spreadsheet_id=PLANILHA_OFICIAL,obtido_em=new Date().toISOString()}={}){
  if(spreadsheet_id!==PLANILHA_OFICIAL)throw new Error('A fonte precisa ser a planilha Google oficial; o CSV de referência não é usado.');
  if(!Array.isArray(valores)||valores.length>20000)throw new Error('Exportação da planilha inválida.');
+ const formatoFinal=JSON.stringify(valores[0]?.slice(0,14))===JSON.stringify(colunasFinal);
+ if(formatoFinal){
+  const csv=valores.map(l=>colunasFinal.map((_,i)=>'"'+String(l[i]??'').replaceAll('"','""')+'"').join(',')).join('\n');
+  return{formatoFinal:true,linhas:valores.slice(1).filter(l=>l.some(v=>String(v??'').trim())).map((l,i)=>({numero:i+2,valores:colunasFinal.map((_,j)=>String(l[j]??'')),dados:Object.fromEntries(colunasFinal.map((c,j)=>[c,String(l[j]??'').trim()]))})),proveniencia:{tipo:'google-sheets-api',spreadsheet_id,obtido_em,sha256:sha(csv),intervalo:'A:N'}};
+ }
  const csv=valores.map(l=>colunas.map((_,i)=>'"'+String(l[i]??'').replaceAll('"','""')+'"').join(',')).join('\n');
  return{linhas:lerCsv(csv),proveniencia:{tipo:'google-sheets-api',spreadsheet_id,obtido_em,sha256:sha(csv)}};
 }
 export async function lerPlanilhaGoogle({accessToken,fetcher=fetch}){
  if(!accessToken)throw new Error('Informe a autorização de leitura do Google em arquivo privado. Não torne a planilha pública.');
- const url=`https://sheets.googleapis.com/v4/spreadsheets/${PLANILHA_OFICIAL}/values/${encodeURIComponent("'Untitled'!A:L")}?valueRenderOption=FORMATTED_VALUE`;
+ const url=`https://sheets.googleapis.com/v4/spreadsheets/${PLANILHA_OFICIAL}/values/${encodeURIComponent("'Untitled'!A:N")}?valueRenderOption=UNFORMATTED_VALUE`;
  const r=await fetcher(url,{headers:{Authorization:`Bearer ${accessToken}`},signal:AbortSignal.timeout(30000)});
  if(!r.ok)throw new Error(`Não foi possível ler a planilha oficial do Google (HTTP ${r.status}). Nenhum dado foi gravado.`);
  return fonteGoogle((await r.json()).values??[]);

@@ -25,6 +25,7 @@ export function mensagemErroSenha(erro:{code?:string;status?:number}) {
 }
 export type ServicoAcesso = {
   entrar:(email:string,senha:string)=>Promise<void>;
+  primeiroAcesso?:(email:string,codigo:string,senha:string)=>Promise<void>;
   cadastrar:(email:string,senha:string,dados?:{nome:string;whatsapp:string;aceite_privacidade:boolean})=>Promise<void>;
   perfil:()=>Promise<PerfilAcesso|null>;
   sair:()=>Promise<void>;
@@ -49,6 +50,13 @@ export function servicoAcesso(area:'equipe'|'cliente'):ServicoAcesso {
     async entrar(email,senha) {
       const {error}=await sb.auth.signInWithPassword({email:email.trim().toLowerCase(),password:senha});
       if(error)throw new Error(mensagemErroSenha(error));
+    },
+    async primeiroAcesso(email,codigo,senha) {
+      if(area!=='equipe')throw new Error('Primeiro acesso disponível somente para a equipe.');
+      const {data,error}=await sb.functions.invoke('primeiro-acesso',{body:{email:email.trim().toLowerCase(),codigo,senha}});
+      if(error||!data?.ok)throw new Error(data?.erro??'Código inválido, já utilizado ou expirado. Confira os dados ou fale com a Yasmin.');
+      const login=await sb.auth.signInWithPassword({email:email.trim().toLowerCase(),password:senha});
+      if(login.error)throw new Error(mensagemErroSenha(login.error));
     },
     async cadastrar(email,senha,dados) {
       if(area!=='cliente')throw new Error('O painel interno não permite cadastro público.');
