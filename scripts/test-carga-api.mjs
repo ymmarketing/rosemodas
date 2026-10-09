@@ -86,7 +86,7 @@ try{
  const pastaFinal=path.join(dir,'final');await mkdir(pastaFinal);await mkdir(path.join(pastaFinal,'PASTA-EXATA'));
  await writeFile(path.join(pastaFinal,'PASTA-EXATA','foto sem numero.jpeg'),bytes);
  const finalRows=[colunasFinal,['RM-OFICIAL-CI','Nome exato FINAL','Macacões','','189.9','','','P','1','sim','','','IGNORAR','PASTA-EXATA'],['RM-RASCUNHO-CI','Rascunho FINAL','Macacões','','99','','','M','0','não','','','IGNORAR','PASTA-EXATA']];
- const final=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(final.publicadas,1);assert.equal(final.rascunhos,1);
+ const final=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(final.status,'concluido',JSON.stringify(final.erros??final.pendencias));assert.equal(final.publicadas,1);assert.equal(final.rascunhos,1);
  assert.deepEqual((await publico.from('produtos').select('codigo').eq('codigo','RM-RASCUNHO-CI')).data,[]);
  const segundaFinal=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(segundaFinal.publicadas,0);assert.equal(segundaFinal.sem_alteracao.length,2);
  grupos.push('Fonte FINAL depois do corte: fotos por pasta_fotos, categoria Macacões atômica, rascunho invisível e repetição idempotente.');

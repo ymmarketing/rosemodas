@@ -40,7 +40,7 @@ export async function validarEntrada(pasta,categorias,lote=randomUUID(),fonte){
  for(const l of linhas){
   const d=l.dados,label=`Linha ${l.numero} (${d.codigo||'sem código'})`;
   const publicar=d.publicar.toLocaleLowerCase('pt-BR');
-  if(publicar===''||(!final&&['não','nao'].includes(publicar))){ignoradas.push({linha:l.numero,codigo:d.codigo});continue;}
+  if(publicar===''||(['não','nao'].includes(publicar)&&(!final||!d.nome||!d.preco))){ignoradas.push({linha:l.numero,codigo:d.codigo});continue;}
   if(l.valores.length!==(final?colunasFinal.length:colunas.length))erros.push(`${label}: quantidade de colunas diferente do modelo.`);
   for(const k of ['codigo','nome','preco'])if(!d[k])erros.push(`${label}: preencha ${k}.`);
   if(!/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(d.codigo))erros.push(`${label}: código inválido. Use letras maiúsculas, números e hífen.`);
@@ -51,7 +51,7 @@ export async function validarEntrada(pasta,categorias,lote=randomUUID(),fonte){
    const normalizar=v=>['preco','preco_promocional'].includes(campo)&&v?dinheiro(v):campo==='publicar'?v.toLocaleLowerCase('pt-BR'):v;
    if(normalizar(primeira.dados[campo])!==normalizar(d[campo]))erros.push(`${label}: ${campo} diverge da primeira linha ${primeira.numero} do código ${d.codigo}. Repita os mesmos dados da peça em todas as variações.`);
   }
-  if(d.categoria&&!permitidas.has(d.categoria))erros.push(`${label}: categoria “${d.categoria}” não cadastrada. Uma categoria nova precisa ser cadastrada antes da carga.`);
+  if(d.categoria&&!(final&&d.categoria==='Macacões')&&!permitidas.has(d.categoria))erros.push(`${label}: categoria “${d.categoria}” não cadastrada. Uma categoria nova precisa ser cadastrada antes da carga.`);
   const preco=dinheiro(d.preco),promocional=d.preco_promocional?dinheiro(d.preco_promocional):null;
   if(preco===null||preco<=0)erros.push(`${label}: preço deve ser maior que zero, com até duas casas decimais.`);
   if(d.preco_promocional&&(promocional===null||promocional>=preco))erros.push(`${label}: promoção deve ser um valor válido e menor que o preço.`);
@@ -172,6 +172,7 @@ export function fonteGoogle(valores,{spreadsheet_id=PLANILHA_OFICIAL,obtido_em=n
  if(spreadsheet_id!==PLANILHA_OFICIAL)throw new Error('A fonte precisa ser a planilha Google oficial; o CSV de referência não é usado.');
  if(!Array.isArray(valores)||valores.length>20000)throw new Error('Exportação da planilha inválida.');
  const formatoFinal=JSON.stringify(valores[0]?.slice(0,14))===JSON.stringify(colunasFinal);
+ if(valores[0]?.length>colunas.length&&!formatoFinal)throw new Error('A fonte FINAL precisa das 14 colunas A:N, incluindo pasta_fotos; a coluna M é apenas referência.');
  if(formatoFinal){
   const csv=valores.map(l=>colunasFinal.map((_,i)=>'"'+String(l[i]??'').replaceAll('"','""')+'"').join(',')).join('\n');
   return{formatoFinal:true,linhas:valores.slice(1).filter(l=>l.some(v=>String(v??'').trim())).map((l,i)=>({numero:i+2,valores:colunasFinal.map((_,j)=>String(l[j]??'')),dados:Object.fromEntries(colunasFinal.map((c,j)=>[c,String(l[j]??'').trim()]))})),proveniencia:{tipo:'google-sheets-api',spreadsheet_id,obtido_em,sha256:sha(csv),intervalo:'A:N'}};
