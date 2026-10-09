@@ -90,5 +90,12 @@ try{
  assert.deepEqual((await publico.from('produtos').select('codigo').eq('codigo','RM-RASCUNHO-CI')).data,[]);
  const segundaFinal=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(segundaFinal.publicadas,0);assert.equal(segundaFinal.sem_alteracao.length,2);
  grupos.push('Fonte FINAL depois do corte: fotos por pasta_fotos, categoria Macacões atômica, rascunho invisível e repetição idempotente.');
+ // Operador SQL proprietário é distinto de uma sessão Auth; a autoria não pode ser inventada.
+ const ownerLote=randomUUID(),ownerManifest=JSON.parse(await readFile(path.join(final.backup,'manifesto.json'),'utf8'));
+ for(const item of ownerManifest)for(const foto of item.fotos){const old=foto.caminho;foto.caminho=old.replace(final.lote,ownerLote);assert.ifError((await sb.storage.from('produtos-publico').copy(old,foto.caminho)).error);}
+ const owner=await db.query('select public.aplicar_carga_oficial($1,$2,private.assinatura_catalogo(),$3) as resultado',[ownerLote,JSON.stringify(ownerManifest),'Backup local descartável, CI operador']);assert.equal(owner.rows[0].resultado.sem_alteracao_servidor,2);
+ const autoria=(await db.query('select criado_por,operador_banco from private.lotes_catalogo where id=$1',[ownerLote])).rows[0];assert.equal(autoria.criado_por,null);assert.equal(autoria.operador_banco,'postgres');
+ grupos.push('Operador SQL proprietário aplica lote com autoria administrativa explícita, sem simular UUID/claims de admin.');
+
  await mkdir('test-results',{recursive:true});await writeFile('test-results/carga-api-local.json',JSON.stringify({ambiente:'supabase-local-descartavel',grupos,resultado:{publicadas:result.publicadas,rascunhos:result.rascunhos,fotos:result.fotos},credenciais:'não registradas'},null,2));console.log(`PASS: carga real local — ${grupos.length} grupos; catálogo, Auth, Storage e reversão.`);
 }finally{await sb.auth.signOut();await db.end();await rm(dir,{recursive:true,force:true});}
