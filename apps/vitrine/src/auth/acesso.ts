@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { cadastroLiberadoNoPrazo } from './corte.ts';
 import { validarAmbiente } from '../ambiente.ts';
 
 export type PerfilAcesso = { role: 'admin'|'cliente'; ativo: boolean; admin_autorizado: boolean };
@@ -32,13 +33,18 @@ export type ServicoAcesso = {
 };
 export function servicoAcesso(area:'equipe'|'cliente'):ServicoAcesso {
   const sb=clienteAutenticado(area);
+  async function liberado(){
+    if(cadastroLiberadoNoPrazo(false))return true;
+    const {data,error}=await sb.from('configuracoes').select('valor').eq('chave','cadastro_cliente_liberado').maybeSingle();
+    return !error&&cadastroLiberadoNoPrazo(data?.valor);
+  }
   return {
     async cadastroDisponivel() {
       if(area!=='cliente')return false;
       const ambiente=validarAmbiente(import.meta.env,true)!;
       const r=await fetch(`${ambiente.url}/auth/v1/settings`,{headers:{apikey:ambiente.chave}});
       if(!r.ok)return false;
-      const c=await r.json();return c.mailer_autoconfirm===true&&c.disable_signup!==true;
+      const c=await r.json();return c.mailer_autoconfirm===true&&c.disable_signup!==true&&await liberado();
     },
     async entrar(email,senha) {
       const {error}=await sb.auth.signInWithPassword({email:email.trim().toLowerCase(),password:senha});
@@ -50,7 +56,7 @@ export function servicoAcesso(area:'equipe'|'cliente'):ServicoAcesso {
       const resposta=await fetch(`${ambiente.url}/auth/v1/settings`,{headers:{apikey:ambiente.chave}});
       if(!resposta.ok)throw new Error('Não foi possível verificar o cadastro. Tente novamente.');
       const configuracao=await resposta.json();
-      if(configuracao.mailer_autoconfirm!==true||configuracao.disable_signup===true)
+      if(configuracao.mailer_autoconfirm!==true||configuracao.disable_signup===true||!await liberado())
         throw new Error('O cadastro está temporariamente indisponível. Fale com a loja pelo WhatsApp.');
       if(!dados?.nome.trim()||!/^\+55[0-9]{10,11}$/.test(dados.whatsapp)||!dados.aceite_privacidade)throw new Error('Informe nome, WhatsApp e aceite a política de privacidade.');
       const {data,error}=await sb.auth.signUp({email:email.trim().toLowerCase(),password:senha,options:{data:dados}});

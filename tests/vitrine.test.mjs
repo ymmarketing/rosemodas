@@ -36,6 +36,7 @@ test('telas renderizadas ocultam sacola, frete, fases futuras e exemplos fora da
    assert.equal(rotaFutura.includes('Próxima fase'),homologacao);
    globalThis.window.location.hash='#/loja';
   }
+  const agora=Date.now;try{Date.now=()=>Date.parse('2026-10-09T21:00:00Z');const fechada=renderToStaticMarkup(createElement(Loja,{homologacao:true}));for(const texto of ['CNPJ 00.000','Frete grátis','aria-label="Sacola"'])assert.ok(!fechada.includes(texto));}finally{Date.now=agora;}
  }finally{globalThis.window=anteriorWindow;globalThis.localStorage=anteriorStorage;await server.close();}
 });
 test('compra pelo WhatsApp exige a combinação disponível e leva peça, código e link sem filtros',()=>{
@@ -79,7 +80,7 @@ test('catálogo fiel ao mockup tem 12 modelos, cores, medidas e seed idempotente
  await db.exec(seed);assert.deepEqual(await resumo(),antes,'Reaplicação não deve recriar movimentos nem alterar cadastros');
  assert.equal((await db.query(`select count(*)::int n from public.variacoes where cor='Demonstrativa'`)).rows[0].n,0);
  await db.exec(`insert into public.configuracoes(chave,valor) values('whatsapp_numero','"5531999999999"'),('instagram_url','"https://instagram.com/rose/"'),('segredo_interno','"não publicar"');set role anon;`);
- assert.deepEqual((await db.query('select chave from public.configuracoes order by chave')).rows.map(r=>r.chave),['instagram_url','whatsapp_numero']);
+ assert.deepEqual((await db.query('select chave from public.configuracoes order by chave')).rows.map(r=>r.chave),['cadastro_cliente_liberado','instagram_url','whatsapp_numero']);
  assert.equal((await db.query('select produto_id,tamanho,rotulo,valor_cm from public.medidas_tamanho')).rows.length,216);
  assert.equal((await db.query('select produto_id,tamanho,cor,disponivel from public.v_estoque_disponivel')).rows.length,96);
  await assert.rejects(db.query('select custo_medio from public.variacoes'),e=>e.code==='42501');

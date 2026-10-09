@@ -1,3 +1,4 @@
+import { cadastroLiberadoNoPrazo } from './auth/corte.ts';
 import { criarClientePublico } from './supabase.ts';
 
 export type Categoria = { id: string; nome: string; slug: string; ordem: number };
@@ -93,7 +94,7 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
   ]);
   const ambiente=await import('./ambiente.ts').then(m=>m.validarAmbiente(import.meta.env,true));
   let cadastroClienteDisponivel=false;
-  if(ambiente){try{const r=await fetch(`${ambiente.url}/auth/v1/settings`,{headers:{apikey:ambiente.chave},signal});if(r.ok){const c=await r.json();cadastroClienteDisponivel=c.mailer_autoconfirm===true&&c.disable_signup!==true;}}catch{}}
+  if(ambiente){try{const r=await fetch(`${ambiente.url}/auth/v1/settings`,{headers:{apikey:ambiente.chave},signal});if(r.ok){const c=await r.json();cadastroClienteDisponivel=c.mailer_autoconfirm===true&&c.disable_signup!==true&&cadastroLiberadoNoPrazo(configuracoes.find(c=>c.chave==='cadastro_cliente_liberado')?.valor);}}catch{}}
   const texto = (chave: string, padrao: string) => {
     const valor = configuracoes.find(c => c.chave === chave)?.valor;
     return typeof valor === 'string' && valor.trim() ? valor.trim() : padrao;
