@@ -1,0 +1,48 @@
+{
+  "name": "rosemodas",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "vite --config apps/vitrine/vite.config.ts",
+    "build": "npm run typecheck && vite build --config apps/vitrine/vite.config.ts",
+    "build:homologation": "npm run typecheck && vite build --mode homologation --config apps/vitrine/vite.config.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test:db": "node scripts/test-database.mjs",
+    "test:db:supabase": "node scripts/test-database.mjs --supabase",
+    "test:environment": "node --test tests/environment.test.mjs",
+    "test:catalogo": "node --test tests/catalogo.test.mjs tests/vitrine.test.mjs tests/curadoria.test.mjs tests/editor.test.mjs tests/auth.test.mjs tests/navegacao.test.mjs",
+    "test:public-build": "node scripts/check-public-build.mjs",
+    "test": "npm run test:environment && npm run test:catalogo && npm run test:db",
+    "db:start": "supabase start",
+    "db:reset:dev": "supabase db reset --local --no-seed",
+    "db:stop": "supabase stop",
+    "test:auth": "node --test tests/auth.test.mjs",
+    "test:auth:api": "node scripts/test-auth-api.mjs",
+    "test:carga": "node --test tests/lancamento/carga.test.mjs",
+    "test:carga:api": "node scripts/test-carga-api.mjs",
+    "test:primeiro-acesso": "node --test tests/primeiro-acesso.test.mjs",
+    "test:primeiro-acesso:api": "node scripts/test-primeiro-acesso-api.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@types/node": "26.6.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "jsdom": "30.1.2",
+    "pg": "8.23.1",
+    "sharp": "0.35.5",
+    "supabase": "2.119.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.2"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  }
+}

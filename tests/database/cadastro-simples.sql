@@ -1,0 +1,46 @@
+begin;
+create function pg_temp.assert_simples(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'FAIL simples: %',msg;end if;end$$;
+insert into auth.users(id,email) values('16000000-0000-4000-8000-000000000001','simples-admin@example.test');
+insert into public.usuarios_internos(user_id,nome,email,papel) values('16000000-0000-4000-8000-000000000001','Admin CI','simples-admin@example.test','admin');
+select set_config('request.jwt.claims','{"sub":"16000000-0000-4000-8000-000000000001","amr":[{"method":"password"}]}',true);
+set local role authenticated;
+select public.operar_catalogo('criar','46000000-0000-4000-8000-000000000001','{}','96000000-0000-4000-8000-000000000001');
+select public.operar_catalogo('salvar','46000000-0000-4000-8000-000000000001','{"nome":"","preco":null,"preco_promocional":80,"variacoes":[]}','96000000-0000-4000-8000-000000000001');
+reset role;
+do $$begin
+ perform pg_temp.assert_simples((select nome is null and preco is null and preco_promocional=80 and categoria_id is null from public.produtos where id='46000000-0000-4000-8000-000000000001'),'rascunho incompleto');
+ perform pg_temp.assert_simples((select count(*)=1 and min(estoque_fisico)=1 and min(tamanho)='' and min(cor)='' from public.variacoes where produto_id='46000000-0000-4000-8000-000000000001'),'padrão estoque 1');
+ raise notice 'PASS: simples 1 rascunho vazio, categoria opcional e variação padrão automática';
+end$$;
+insert into storage.objects(bucket_id,name) values('produtos-publico','46000000-0000-4000-8000-000000000001/66000000-0000-4000-8000-000000000001.webp');
+set local role authenticated;
+select public.operar_catalogo('midia_adicionar','46000000-0000-4000-8000-000000000001','{"id":"66000000-0000-4000-8000-000000000001","caminho_storage":"46000000-0000-4000-8000-000000000001/66000000-0000-4000-8000-000000000001.webp","tipo":"foto"}','96000000-0000-4000-8000-000000000001');
+select public.operar_catalogo('salvar','46000000-0000-4000-8000-000000000001','{"nome":"Peça mínima","preco":189.90,"variacoes":[]}','96000000-0000-4000-8000-000000000001');
+select public.operar_catalogo('publicar','46000000-0000-4000-8000-000000000001','{}','96000000-0000-4000-8000-000000000001');
+reset role;
+set local role anon;
+do $$begin perform pg_temp.assert_simples((select count(*)=1 from public.produtos where id='46000000-0000-4000-8000-000000000001'),'publicação mínima visível');perform pg_temp.assert_simples((select disponivel=1 from public.v_estoque_disponivel where produto_id='46000000-0000-4000-8000-000000000001'),'saldo sem categoria');end$$;
+reset role;
+do $$begin raise notice 'PASS: simples 2 nome preço foto publicam sem categoria cor ou tamanho';end$$;
+set local role authenticated;
+select public.operar_catalogo('salvar','46000000-0000-4000-8000-000000000001',jsonb_build_object('nome','Peça mínima','preco',189.9,'variacoes',jsonb_build_array(jsonb_build_object('id',(select id from public.variacoes where produto_id='46000000-0000-4000-8000-000000000001'),'cor','','tamanho','','quantidade',0))),'96000000-0000-4000-8000-000000000001');
+select public.operar_catalogo('salvar','46000000-0000-4000-8000-000000000001','{"nome":"Peça mínima","preco":189.90,"variacoes":[]}','96000000-0000-4000-8000-000000000001');
+reset role;
+do $$begin perform pg_temp.assert_simples((select count(*)=1 and min(estoque_fisico)=0 from public.variacoes where produto_id='46000000-0000-4000-8000-000000000001'),'salvar não repõe vendido nem duplica');raise notice 'PASS: simples 3 padrão vendido permanece zero e sem duplicação';end$$;
+set local role authenticated;
+do $$declare cat jsonb;begin
+ cat:=public.operar_catalogo('categoria_criar',null,'{"nome":"Categoria livre"}','96000000-0000-4000-8000-000000000001');
+ cat:=public.operar_catalogo('categoria_embalagem',(cat->>'id')::uuid,'{"embalagem":{"peso_g":"300","largura_cm":"20","altura_cm":"","comprimento_cm":"30"}}','96000000-0000-4000-8000-000000000001');
+ perform pg_temp.assert_simples(cat->'embalagem_padrao'->>'peso_g'='300','padrão editável');
+end$$;
+reset role;
+do $$begin raise notice 'PASS: simples 4 categoria livre e padrão opcional de embalagem';end$$;
+set local role authenticated;
+select public.operar_catalogo('arquivar','46000000-0000-4000-8000-000000000001','{}','96000000-0000-4000-8000-000000000001');
+reset role;
+do $$begin
+ perform pg_temp.assert_simples((select count(*)=0 from public.variacoes where produto_id='46000000-0000-4000-8000-000000000001' and ativo and arquivado_em is null),'arquivamento inclui variações');
+ perform pg_temp.assert_simples((select count(*)=0 from public.midias where produto_id='46000000-0000-4000-8000-000000000001' and ativo and arquivado_em is null),'arquivamento inclui fotos');
+ perform pg_temp.assert_simples((select count(*)>=2 from public.movimentos_estoque where variacao_id in(select id from public.variacoes where produto_id='46000000-0000-4000-8000-000000000001')),'ledger preservado');
+end$$;
+rollback;

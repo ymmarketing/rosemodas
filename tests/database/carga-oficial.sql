@@ -1,0 +1,71 @@
+begin;
+create function pg_temp.assert_carga(ok boolean,msg text) returns void language plpgsql as $$begin if ok is distinct from true then raise exception 'FAIL carga: %',msg;end if;end$$;
+insert into auth.users(id,email) values('14000000-0000-4000-8000-000000000001','carga-admin@example.test'),('14000000-0000-4000-8000-000000000002','carga-cliente@example.test');
+insert into public.usuarios_internos(user_id,nome,email,papel) values('14000000-0000-4000-8000-000000000001','Admin CI','carga-admin@example.test','admin');
+insert into public.categorias(id,nome,slug) values('24000000-0000-4000-8000-000000000001','Vestidos carga','vestidos-carga');
+insert into public.produtos(id,codigo,nome,slug,categoria_id,preco,ativo,dado_teste) values('44000000-0000-4000-8000-000000000001','RM-C001','TESTE antigo','teste-antigo','24000000-0000-4000-8000-000000000001',10,false,true),('44000000-0000-4000-8000-000000000002','HOM-RM-OUTRO','Teste ausente','teste-ausente','24000000-0000-4000-8000-000000000001',10,false,true);
+insert into storage.objects(bucket_id,name) values('produtos-publico','lancamento/94000000-0000-4000-8000-000000000001/RM-C001/01.webp');
+create temporary table carga_input as select jsonb_build_array(jsonb_build_object('codigo','RM-C001','nome','Vestido oficial','categoria','Vestidos carga','descricao_curta','Descrição oficial','preco',123.45,'preco_promocional',null,'cor','Azul','tamanho','48','estoque',1,'publicar','sim','ordem_vitrine',1,'fotos',jsonb_build_array(jsonb_build_object('caminho','lancamento/94000000-0000-4000-8000-000000000001/RM-C001/01.webp','ordem',1)))) as manifesto,private.assinatura_catalogo() as assinatura;
+grant select on carga_input to authenticated;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"14000000-0000-4000-8000-000000000002","amr":[{"method":"password"}]}',true);
+do $$begin begin perform public.contexto_carga_oficial();raise exception 'FAIL cliente leu backup';exception when insufficient_privilege then null;end;begin perform public.aplicar_carga_oficial('94000000-0000-4000-8000-000000000001',(select manifesto from carga_input),(select assinatura from carga_input),'backup-ci');raise exception 'FAIL cliente importou';exception when insufficient_privilege then null;end;end$$;
+reset role;
+do $$begin raise notice 'PASS: carga 1 backup e importação restritos a admin por senha';end$$;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"14000000-0000-4000-8000-000000000001","amr":[{"method":"password"}]}',true);
+do $$declare antes jsonb;begin
+ antes:=(public.contexto_carga_oficial())->'snapshot';
+ begin perform public.aplicar_carga_oficial('94000000-0000-4000-8000-000000000001',jsonb_set((select manifesto from carga_input),'{0,preco_promocional}','123.45'),(select assinatura from carga_input),'backup-ci');raise exception 'FAIL promoção passou';exception when invalid_parameter_value then null;end;
+ perform pg_temp.assert_carga(antes=(public.contexto_carga_oficial())->'snapshot','promoção inválida não gravou nada');
+ begin perform public.aplicar_carga_oficial('94000000-0000-4000-8000-000000000001',(select manifesto||manifesto from carga_input),(select assinatura from carga_input),'backup-ci');raise exception 'FAIL duplicado passou';exception when invalid_parameter_value then null;end;
+ perform pg_temp.assert_carga(antes=(public.contexto_carga_oficial())->'snapshot','duplicado não gravou nada');
+ begin perform public.aplicar_carga_oficial('94000000-0000-4000-8000-000000000001',jsonb_set((select manifesto from carga_input),'{0,estoque}','-1'),(select assinatura from carga_input),'backup-ci');raise exception 'FAIL estoque negativo passou';exception when invalid_parameter_value then null;end;
+ perform pg_temp.assert_carga(antes=(public.contexto_carga_oficial())->'snapshot','estoque negativo não gravou nada');
+end$$;
+reset role;
+do $$begin raise notice 'PASS: carga 2 servidor revalida promoção, estoque e duplicados sem escrita';end$$;
+-- Falha APÓS vários updates: a subtransação deve desfazer catálogo, estoque, mídia e auditoria.
+create function pg_temp.falhar_lote() returns trigger language plpgsql as $$begin raise exception 'Falha simulada CI' using errcode='P0002';end$$;
+create trigger falha_simulada before insert on private.lotes_catalogo for each row execute function pg_temp.falhar_lote();
+set local role authenticated;
+do $$declare antes jsonb;begin
+ antes:=(public.contexto_carga_oficial())->'snapshot';
+ begin perform public.aplicar_carga_oficial('94000000-0000-4000-8000-000000000001',(select manifesto from carga_input),(select assinatura from carga_input),'backup-ci');raise exception 'FAIL falha não executou';exception when no_data_found then null;end;
+ perform pg_temp.assert_carga(antes=(public.contexto_carga_oficial())->'snapshot','tudo ou nada após falha no final');
+end$$;
+reset role;
+drop trigger falha_simulada on private.lotes_catalogo;
+do $$begin raise notice 'PASS: carga 3 falha após updates desfaz também ledger, mídia, auditoria e arquivamento';end$$;
+set local role authenticated;
+do $$declare r jsonb;begin
+ r:=public.aplicar_carga_oficial('94000000-0000-4000-8000-000000000001',(select manifesto from carga_input),(select assinatura from carga_input),'backup-ci');
+ perform pg_temp.assert_carga((r->>'publicadas')::integer=1,'contagem publicada');
+ perform pg_temp.assert_carga(r=public.aplicar_carga_oficial('94000000-0000-4000-8000-000000000001',(select manifesto from carga_input),'assinatura-original','backup-ci'),'retry idempotente');
+end$$;
+reset role;
+do $$begin
+ perform pg_temp.assert_carga((select nome='Vestido oficial' and not dado_teste and preco=123.45 and ativo from public.produtos where codigo='RM-C001'),'dados oficiais substituem fictícios');
+ perform pg_temp.assert_carga((select estoque_fisico=1 from public.variacoes where produto_id='44000000-0000-4000-8000-000000000001'),'estoque pelo ledger');
+ perform pg_temp.assert_carga((select arquivado_em is not null and not ativo from public.produtos where codigo='HOM-RM-OUTRO'),'peça ausente arquivada');
+ perform pg_temp.assert_carga((select count(*)=1 from public.midias where produto_id='44000000-0000-4000-8000-000000000001' and principal and alt_texto='Vestido oficial'),'capa e alt');
+ raise notice 'PASS: carga 4 substitui existentes, arquiva ausentes, mantém IDs, estoque e auditoria';
+end$$;
+set local role anon;
+do $$begin perform pg_temp.assert_carga((select count(id)=1 from public.produtos where codigo in('RM-C001','HOM-RM-OUTRO')),'só oficial público');end$$;
+reset role;
+set local role authenticated;
+do $$begin perform pg_temp.assert_carga(public.despublicar_carga_oficial('94000000-0000-4000-8000-000000000001')=1,'reversão conta peças');end$$;
+reset role;
+set local role anon;
+do $$begin perform pg_temp.assert_carga((select count(id)=0 from public.produtos where codigo='RM-C001'),'reversão invisível na vitrine');end$$;
+reset role;
+do $$begin raise notice 'PASS: carga 5 reversão despublica o lote inteiro sem apagar dados';end$$;
+-- Simula a passagem do prazo apenas dentro desta transação descartável.
+create or replace function private.teste_visivel() returns boolean language sql stable set search_path='' as $$select false$$;
+update public.produtos set ativo=true,status_catalogo='publicado',arquivado_em=null,dado_teste=true where codigo='HOM-RM-OUTRO';
+set local role anon;
+do $$begin perform pg_temp.assert_carga((select count(id)=0 from public.produtos where codigo='HOM-RM-OUTRO'),'RLS prazo fechado');end$$;
+reset role;
+do $$begin raise notice 'PASS: carga 6 corte de prazo impede consulta pública de dados fictícios';end$$;
+rollback;

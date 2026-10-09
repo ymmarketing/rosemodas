@@ -1,0 +1,56 @@
+project_id = "rosemodas-dev"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+auto_expose_new_tables = false
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+[db.seed]
+enabled = false
+sql_paths = []
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = false
+
+[local_smtp]
+enabled = false
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:5173"
+enable_signup = true
+minimum_password_length = 8
+additional_redirect_urls = ["http://127.0.0.1:5173/cliente", "http://127.0.0.1:5173/painel"]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[analytics]
+enabled = false
+
+[edge_runtime]
+enabled = false
+
+[functions.primeiro-acesso]
+# O corpo autentica código de primeiro acesso e operador com RPCs privadas a service_role.
+verify_jwt = false

@@ -1,0 +1,101 @@
+// Processo real de carga, Auth e Storage. Este runner recusa qualquer projeto hospedado.
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {randomBytes,randomUUID} from 'node:crypto';
+import {mkdtemp,mkdir,writeFile,readFile,rm} from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import {createClient} from '@supabase/supabase-js';
+import pg from 'pg';
+import sharp from 'sharp';
+import {executarCarga,finalizarCarga,colunas,fonteGoogle} from './lancamento/carga-oficial.mjs';
+const status=JSON.parse(execFileSync('node_modules/.bin/supabase',['status','-o','json'],{encoding:'utf8',stdio:['ignore','pipe','ignore']}));
+assert.ok(['127.0.0.1','localhost'].includes(new URL(status.API_URL).hostname));
+const dbUrl=process.env.SUPABASE_TEST_DATABASE_URL;assert.ok(dbUrl&&['127.0.0.1','localhost'].includes(new URL(dbUrl).hostname));
+const db=new pg.Client({connectionString:dbUrl});await db.connect();
+const sb=createClient(status.API_URL,status.PUBLISHABLE_KEY??status.ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+const dir=await mkdtemp(path.join(os.tmpdir(),'rose-import-api-'));
+const pasta=path.join(dir,'entrada'),backups=path.join(dir,'backups');await mkdir(pasta);await mkdir(backups);
+const email=`teste-carga-${randomUUID()}@example.test`,password=randomBytes(28).toString('base64url');
+const grupos=[];
+try{
+ const s=await fetch(status.API_URL+'/auth/v1/settings',{headers:{apikey:status.PUBLISHABLE_KEY??status.ANON_KEY}}).then(r=>r.json());assert.equal(s.mailer_autoconfirm,true);
+ const auth=await sb.auth.signUp({email,password});assert.ifError(auth.error);await db.query('insert into public.usuarios_internos(user_id,nome,email,papel) values($1,$2,$3,$4)',[auth.data.user.id,'Admin CI carga',email,'admin']);
+ const produto=randomUUID(),categoria=randomUUID(),foto=randomUUID();
+ await db.query('insert into public.categorias(id,nome,slug) values($1,$2,$3)',[categoria,'Vestidos CI carga',`vestidos-${categoria}`]);
+ await db.query('insert into public.produtos(id,codigo,nome,slug,categoria_id,preco,ativo,dado_teste) values($1,$2,$3,$4,$5,10,false,true)',[produto,'RM-C001','TESTE CI anterior',`rm-${produto}`,categoria]);
+ const antigo=`${produto}/${foto}.jpg`,bytes=await sharp({create:{width:375,height:600,channels:3,background:'blue'}}).jpeg().toBuffer();
+ const upload=await sb.storage.from('produtos-publico').upload(antigo,bytes,{contentType:'image/jpeg'});assert.ifError(upload.error);
+ await db.query('insert into public.midias(produto_id,caminho_storage,tipo,alt_texto,principal) values($1,$2,$3,$4,true)',[produto,antigo,'foto','Foto de teste anterior']);
+ await mkdir(path.join(pasta,'RM-C001'));await mkdir(path.join(pasta,'RM-NOVO'));
+ await writeFile(path.join(pasta,'RM-C001','01.jpg'),bytes);await writeFile(path.join(pasta,'RM-NOVO','01.jpg'),bytes);
+ const linhas=[['RM-C001','Peça oficial CI','Vestidos CI carga','Descrição oficial CI','100.50','80.50','Azul','48','1','sim','1',''],['RM-NOVO','Nova peça CI','Vestidos CI carga','Descrição da nova peça','110','','Branco','50','2','não','2','']];
+ const csv=rows=>[colunas,...rows].map(r=>r.join(',')).join('\n');
+ const errado=linhas.map(l=>[...l]);errado[0][4]='0';await writeFile(path.join(pasta,'estoque-oficial.csv'),csv(errado));
+ const antes=(await db.query('select count(*)::int as n from public.audit_log')).rows[0].n;
+ const invalido=await executarCarga({sb,pasta,backupDir:backups});assert.equal(invalido.status,'erros_validacao');assert.equal((await db.query('select count(*)::int as n from public.audit_log')).rows[0].n,antes);assert.ok(!(await sb.storage.from('produtos-publico').download(antigo)).error);grupos.push('Planilha inválida: nenhuma escrita em banco ou Storage; foto antiga preservada.');
+ await writeFile(path.join(pasta,'estoque-oficial.csv'),csv(linhas));
+ const falhaSb={rpc:(...args)=>sb.rpc(...args),storage:{from:bucket=>{
+  const storage=sb.storage.from(bucket);if(bucket!=='catalogo-privado')return storage;
+  return new Proxy(storage,{get(target,p){if(p==='upload')return (nome,...args)=>nome.startsWith('backup/')?Promise.resolve({error:{message:'Falha simulada de cópia privada'}}):target.upload(nome,...args);const v=target[p];return typeof v==='function'?v.bind(target):v;}});
+ }}};
+ const lote=randomUUID();const parcial=await executarCarga({sb:falhaSb,pasta,backupDir:backups,lote});
+ assert.equal(parcial.status,'catalogo_aplicado_retirada_fotos_pendente');assert.ok(!(await sb.storage.from('produtos-publico').download(antigo)).error);
+ const movimentos=(await db.query('select count(*)::int as n from public.movimentos_estoque')).rows[0].n;
+ const result=await finalizarCarga({sb,backupDir:backups,lote});
+ assert.equal((await db.query('select count(*)::int as n from public.movimentos_estoque')).rows[0].n,movimentos);grupos.push('Falha após commit: foto anterior preservada; retomada completa sem reaplicar estoque.');
+ assert.equal(result.status,'concluido',JSON.stringify(result.pendencias));assert.equal(result.publicadas,1);assert.equal(result.rascunhos,0);assert.equal(result.fotos,1);
+ assert.deepEqual(await readFile(path.join(result.backup,'fotos',antigo)),bytes);assert.ok((await sb.storage.from('produtos-publico').download(antigo)).error);
+ assert.ok(!(await sb.storage.from('catalogo-privado').download(`backup/${lote}/${antigo}`)).error);
+ const publico=createClient(status.API_URL,status.PUBLISHABLE_KEY??status.ANON_KEY,{auth:{persistSession:false}});
+ const vitrine=await publico.from('produtos').select('id,codigo,nome,preco');assert.ifError(vitrine.error);assert.equal(vitrine.data.filter(p=>p.codigo==='RM-C001').length,1);assert.equal(vitrine.data.find(p=>p.codigo==='RM-C001').preco,100.50);assert.ok(!vitrine.data.some(p=>p.codigo==='RM-NOVO'));
+ const capa=`lancamento/${lote}/RM-C001/01.webp`;assert.ok(!(await publico.storage.from('produtos-publico').download(capa)).error);
+ assert.ok((await publico.storage.from('catalogo-privado').download(`backup/${lote}/${antigo}`)).error);grupos.push('Carga real: existente atualizado, linha não publicada ignorada, capa pública e backup privado seletivo.');
+ // Idempotência de uma nova execução (novo UUID): nunca recompõe estoque vendido com a mesma planilha.
+ const saldoId=(await db.query('select id from public.variacoes where produto_id=$1 and ativo',[produto])).rows[0].id;
+ const ajuste=await sb.rpc('operar_catalogo',{p_acao:'salvar',p_id:produto,p_dados:{nome:linhas[0][1],descricao:linhas[0][3],categoria_id:categoria,colecao_id:(await db.query('select colecao_id from public.produtos where id=$1',[produto])).rows[0].colecao_id,preco:100.50,preco_promocional:80.50,variacoes:[{id:saldoId,cor:'Azul',tamanho:'48',quantidade:0}],motivo_estoque:'Venda WhatsApp CI'},p_correlation_id:randomUUID()});assert.ifError(ajuste.error);
+ const contagemAntes=(await db.query('select count(*)::int n from public.movimentos_estoque')).rows[0].n;
+ const identico=await executarCarga({sb,pasta,backupDir:backups,fonte:fonteGoogle([colunas,...linhas])});assert.equal(identico.publicadas,0);assert.deepEqual(identico.sem_alteracao,['RM-C001']);
+ assert.equal((await db.query('select estoque_fisico from public.variacoes where id=$1',[saldoId])).rows[0].estoque_fisico,0);assert.equal((await db.query('select count(*)::int n from public.movimentos_estoque')).rows[0].n,contagemAntes);grupos.push('Segunda execução idêntica não duplica nem repõe a unidade já vendida pelo WhatsApp.');
+ // Simula corte em instalação LOCAL: novos dados reais continuam editáveis, publicáveis e importáveis.
+ await db.query("create or replace function private.teste_visivel() returns boolean language sql stable set search_path='' as $$select false$$");
+ linhas[1][9]='sim';const tres=[...linhas[1]],quarta=[...linhas[1]];tres[6]='Azul';tres[7]='M';quarta[6]='Preto';quarta[7]='GG';
+ const lote2=randomUUID();const incremental=await executarCarga({sb,pasta,backupDir:backups,lote:lote2,fonte:fonteGoogle([colunas,...linhas,tres,quarta])});assert.equal(incremental.publicadas,1);assert.deepEqual(incremental.sem_alteracao,['RM-C001']);
+ assert.equal((await db.query("select count(*)::int n from public.variacoes v join public.produtos p on p.id=v.produto_id where p.codigo='RM-NOVO' and v.ativo")).rows[0].n,3);
+ assert.ok(!(await publico.storage.from('produtos-publico').download(capa)).error,'Foto da peça não carregada continua pública');
+ const depois=await publico.from('produtos').select('codigo');assert.ifError(depois.error);assert.equal(depois.data.filter(p=>p.codigo==='RM-NOVO').length,1);assert.equal(depois.data.filter(p=>p.codigo==='RM-C001').length,1);grupos.push('Incremental após o corte: nova peça com três variações, anterior preservada com estoque zerado e fotos próprias intactas.');
+ const manual=await sb.rpc('operar_catalogo',{p_acao:'criar',p_id:randomUUID(),p_dados:{codigo:'RM-MANUAL'},p_correlation_id:randomUUID()});assert.ifError(manual.error);const mp=manual.data;
+ let saved=await sb.rpc('operar_catalogo',{p_acao:'salvar',p_id:mp.id,p_dados:{nome:'Manual real após corte',categoria_id:categoria,colecao_id:mp.colecao_id,preco:80,variacoes:[{id:randomUUID(),cor:'Verde',tamanho:'P',quantidade:2}],motivo_estoque:'Estoque real manual'},p_correlation_id:randomUUID()});assert.ifError(saved.error);
+ const fotoManual=randomUUID(),caminhoManual=`${mp.id}/${fotoManual}.jpg`;assert.ifError((await sb.storage.from('produtos-publico').upload(caminhoManual,bytes,{contentType:'image/jpeg'})).error);
+ assert.ifError((await sb.rpc('operar_catalogo',{p_acao:'midia_adicionar',p_id:mp.id,p_dados:{id:fotoManual,caminho_storage:caminhoManual,tipo:'foto'},p_correlation_id:randomUUID()})).error);
+ assert.ifError((await sb.rpc('operar_catalogo',{p_acao:'publicar',p_id:mp.id,p_dados:{},p_correlation_id:randomUUID()})).error);
+ assert.ok((await publico.from('produtos').select('codigo')).data.some(p=>p.codigo==='RM-MANUAL'));grupos.push('Caminho manual após o corte: criar, editar, enviar foto e publicar peça real funciona.');
+ const outra=await executarCarga({sb,pasta,backupDir:backups,fonte:fonteGoogle([colunas,...linhas,tres,quarta])});assert.equal(outra.publicadas,0);assert.ok((await publico.from('produtos').select('codigo')).data.some(p=>p.codigo==='RM-MANUAL'),'Carga posterior preserva peça manual ausente');
+ linhas.push(['RM-MANUAL','Manual pela planilha','Vestidos CI carga','','85','','Verde','P','3','sim','3','']);await mkdir(path.join(pasta,'RM-MANUAL'));await writeFile(path.join(pasta,'RM-MANUAL','01.jpg'),bytes);
+ const reconciliada=await executarCarga({sb,pasta,backupDir:backups,fonte:fonteGoogle([colunas,...linhas,tres,quarta])});assert.equal(reconciliada.publicadas,1);
+ const manualDepois=(await db.query("select id from public.produtos where codigo='RM-MANUAL'")).rows;assert.equal(manualDepois.length,1);assert.equal(manualDepois[0].id,mp.id);assert.equal((await db.query('select count(*)::int n from public.variacoes where produto_id=$1 and ativo',[mp.id])).rows[0].n,1);grupos.push('Planilha atualiza o mesmo UUID da peça manual, sem duplicar variação ou apagar outras peças.');
+ const reversao=await sb.rpc('despublicar_carga_oficial',{p_lote:lote});assert.ifError(reversao.error);assert.equal(reversao.data,1);
+ assert.deepEqual((await publico.from('produtos').select('id').eq('codigo','RM-C001')).data,[]);grupos.push('Reversão real: todo o lote despublicado; IDs e históricos preservados.');
+ await mkdir(path.join(pasta,'RM-MINIMA'));await writeFile(path.join(pasta,'RM-MINIMA','01.jpg'),bytes);
+ const minimo=await executarCarga({sb,pasta,backupDir:backups,fonte:fonteGoogle([colunas,...['RM-C001','RM-NOVO','RM-MANUAL'].map(c=>[c,'','','','','','','','','não','','']),['RM-MINIMA','Peça mínima','','','189,90','','','','','sim','','']])});assert.equal(minimo.publicadas,1);
+ const minP=(await publico.from('produtos').select('id,categoria_id,preco').eq('codigo','RM-MINIMA')).data[0];assert.equal(minP.categoria_id,null);assert.equal(minP.preco,189.9);
+ const minV=(await publico.from('v_estoque_disponivel').select('cor,tamanho,disponivel').eq('produto_id',minP.id)).data;assert.deepEqual(minV,[{cor:'',tamanho:'',disponivel:1}]);
+ grupos.push('Planilha mínima depois do corte: nome preço foto, categoria opcional e variação padrão estoque 1.');
+ // Fonte FINAL: pasta_fotos exata, categoria criada na transação e rascunho preservado.
+ const {colunasFinal}=await import('./lancamento/carga-oficial.mjs');
+ const pastaFinal=path.join(dir,'final');await mkdir(pastaFinal);await mkdir(path.join(pastaFinal,'PASTA-EXATA'));
+ await writeFile(path.join(pastaFinal,'PASTA-EXATA','foto sem numero.jpeg'),bytes);
+ const finalRows=[colunasFinal,['RM-OFICIAL-CI','Nome exato FINAL','Macacões','','189.9','','','P','1','sim','','','IGNORAR','PASTA-EXATA'],['RM-RASCUNHO-CI','Rascunho FINAL','Macacões','','99','','','M','0','não','','','IGNORAR','PASTA-EXATA']];
+ const final=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(final.status,'concluido',JSON.stringify(final.erros??final.pendencias));assert.equal(final.publicadas,1);assert.equal(final.rascunhos,1);
+ assert.deepEqual((await publico.from('produtos').select('codigo').eq('codigo','RM-RASCUNHO-CI')).data,[]);
+ const segundaFinal=await executarCarga({sb,pasta:pastaFinal,backupDir:backups,fonte:fonteGoogle(finalRows)});assert.equal(segundaFinal.publicadas,0);assert.equal(segundaFinal.sem_alteracao.length,2);
+ grupos.push('Fonte FINAL depois do corte: fotos por pasta_fotos, categoria Macacões atômica, rascunho invisível e repetição idempotente.');
+ // Operador SQL proprietário é distinto de uma sessão Auth; a autoria não pode ser inventada.
+ const ownerLote=randomUUID(),ownerManifest=JSON.parse(await readFile(path.join(final.backup,'manifesto.json'),'utf8'));
+ for(const item of ownerManifest)for(const foto of item.fotos){const old=foto.caminho;foto.caminho=old.replace(final.lote,ownerLote);assert.ifError((await sb.storage.from('produtos-publico').copy(old,foto.caminho)).error);}
+ const owner=await db.query('select public.aplicar_carga_oficial($1,$2,private.assinatura_catalogo(),$3) as resultado',[ownerLote,JSON.stringify(ownerManifest),'Backup local descartável, CI operador']);assert.equal(owner.rows[0].resultado.sem_alteracao_servidor,2);
+ const autoria=(await db.query('select criado_por,operador_banco from private.lotes_catalogo where id=$1',[ownerLote])).rows[0];assert.equal(autoria.criado_por,null);assert.equal(autoria.operador_banco,'postgres');
+ grupos.push('Operador SQL proprietário aplica lote com autoria administrativa explícita, sem simular UUID/claims de admin.');
+
+ await mkdir('test-results',{recursive:true});await writeFile('test-results/carga-api-local.json',JSON.stringify({ambiente:'supabase-local-descartavel',grupos,resultado:{publicadas:result.publicadas,rascunhos:result.rascunhos,fotos:result.fotos},credenciais:'não registradas'},null,2));console.log(`PASS: carga real local — ${grupos.length} grupos; catálogo, Auth, Storage e reversão.`);
+}finally{await sb.auth.signOut();await db.end();await rm(dir,{recursive:true,force:true});}
