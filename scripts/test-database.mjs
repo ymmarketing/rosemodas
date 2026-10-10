@@ -31,6 +31,7 @@ async function validate(db, name, apply) {
   await db.exec(await readFile('tests/database/demo-lancamento.sql','utf8'));
   await db.exec(await readFile('tests/database/incremental-painel.sql','utf8'));
   await db.exec(await readFile('tests/database/cadastro-simples.sql','utf8'));
+  await db.exec(await readFile('tests/database/frete.sql','utf8'));
   const metadata = await db.query(`
     select 'table' as kind, c.relname as name, c.relrowsecurity::text as detail
       from pg_class c join pg_namespace n on n.oid=c.relnamespace
@@ -47,7 +48,7 @@ async function validate(db, name, apply) {
   const fingerprint = createHash('sha256').update(JSON.stringify(metadata.rows)).digest('hex');
   const version = (await db.query('select version() as version')).rows[0].version;
   const passed = notices.filter(message => message.includes('PASS:')).map(message => message.slice(message.indexOf('PASS:')));
-  assert.equal(passed.length,apply?47:27,`Grupos esperados: ${apply?47:27}; encontrados ${passed.length}`);
+  assert.equal(passed.length,apply?50:30,`Grupos esperados: ${apply?50:30}; encontrados ${passed.length}`);
   console.log(`${name}: ${passed.length} grupos aprovados; schema ${fingerprint.slice(0,12)}`);
   report.runs.push({ name, version, fingerprint, passed });
   return fingerprint;
