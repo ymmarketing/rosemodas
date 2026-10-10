@@ -1,0 +1,32 @@
+import {useEffect,useState} from 'react';
+import {clienteInterno} from './catalogoInterno';
+import {cotarFrete,chamarFrete,cepLimpo,mascaraCep} from '../frete';
+import type {CotacaoFrete} from '../frete';
+import {moeda} from '../Visual';
+type Embalagem={peso_g:number;comprimento_cm:number;largura_cm:number;altura_cm:number};
+type Configuracao={cep_origem:string;dias_postagem:number;sem_categoria:Embalagem;categorias:{id:string;nome:string;embalagem_padrao:Partial<Embalagem>}[];pecas:{codigo:string;nome:string;categoria_id:string|null}[]};
+type TokenStatus={configurado:boolean;expira_em:string|null};
+const campos=[['peso_g','Peso (g)'],['comprimento_cm','Comprimento (cm)'],['largura_cm','Largura (cm)'],['altura_cm','Altura (cm)']] as const;
+async function configuracao(acao='ler',dados:object={}):Promise<Configuracao>{const r=await clienteInterno().rpc('configurar_frete',{p_acao:acao,p_dados:dados,p_correlation_id:crypto.randomUUID()});if(r.error)throw new Error(r.error.message);return r.data;}
+async function jwt(){const r=await clienteInterno().auth.getSession();if(!r.data.session)throw new Error('Entre novamente no painel.');return r.data.session.access_token;}
+export function ConfiguracoesFrete(){
+ const [cfg,setCfg]=useState<Configuracao|null>(null),[ocupado,setOcupado]=useState(false),[erro,setErro]=useState(''),[mensagem,setMensagem]=useState(''),[status,setStatus]=useState<TokenStatus|null>(null),[statusErro,setStatusErro]=useState('');
+ const [cepTeste,setCepTeste]=useState('30140-071'),[codigo,setCodigo]=useState(''),[cotacao,setCotacao]=useState<CotacaoFrete|null>(null),[testeErro,setTesteErro]=useState('');
+ async function atualizarToken(){try{setStatus(await chamarFrete(null,await jwt()));setStatusErro('');}catch(e){setStatusErro(e instanceof Error?e.message:'Não foi possível consultar o token.');}}
+ useEffect(()=>{let vivo=true;configuracao().then(c=>{if(vivo){setCfg(c);setCodigo(c.pecas[0]?.codigo??'');}}).catch(e=>{if(vivo)setErro(e.message);});void atualizarToken();return()=>{vivo=false;};},[]);
+ async function salvar(){if(!cfg)return;setOcupado(true);setErro('');setMensagem('');setCotacao(null);try{setCfg(await configuracao('salvar',{...cfg,cep_origem:cepLimpo(cfg.cep_origem),categorias:cfg.categorias.map(c=>({...c,embalagem_padrao:{...cfg.sem_categoria,...c.embalagem_padrao}}))}));setMensagem('Configurações de frete salvas.');}catch(e){setErro(e instanceof Error?e.message:'Não foi possível salvar.');}finally{setOcupado(false);}}
+ async function testar(){setOcupado(true);setTesteErro('');setCotacao(null);try{if(cepLimpo(cepTeste).length!==8)throw new Error('Confira o CEP');setCotacao(await cotarFrete(cepTeste,codigo,null,await jwt()));}catch(e){setTesteErro(e instanceof Error?e.message:'Não foi possível calcular.');}finally{setOcupado(false);void atualizarToken();}}
+ function embalagem(nome:string,valor:Partial<Embalagem>,alterar:(v:Partial<Embalagem>)=>void){return <fieldset className="frete-padrao"><legend>{nome}</legend><div className="campos-duplos">{campos.map(([k,n])=><label className="field" key={k}><span>{n}</span><input className="input" type="number" inputMode="decimal" min="0.1" step={k==='peso_g'?'1':'0.1'} value={valor[k]??''} onChange={e=>alterar({...valor,[k]:e.target.value===''?undefined:Number(e.target.value)})}/></label>)}</div></fieldset>;}
+ return <section className="config-frete"><div className="painel-cabecalho"><div><span className="eyebrow">POSTAGEM</span><h1>Configurações de frete</h1><p>Cotação informativa de uma peça, com PAC e SEDEX. A venda continua pelo WhatsApp.</p></div></div>
+  {erro&&<p className="painel-erro" role="alert">{erro}</p>}{mensagem&&<p role="status">{mensagem}</p>}
+  <div className="frete-token"><h2>Token do Melhor Envio</h2>{status?<p>{status.configurado?(status.expira_em?`Validade informada pelo token: ${new Date(status.expira_em).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})} (Brasília).`:'Token configurado. A validade não foi informada pelo provedor.'):'Token não configurado.'}</p>:<p>{statusErro||'Consultando configuração do token…'}</p>}
+   {status?.expira_em&&Date.parse(status.expira_em)-Date.now()<7*86400000&&<p role="alert">{Date.parse(status.expira_em)<=Date.now()?'Token expirado. Renove para calcular fretes.':'O token vence em menos de 7 dias. Renove antes do vencimento.'}</p>}
+   <p className="small">Para cadastrar ou renovar: Supabase → Edge Functions → Secrets → MELHOR_ENVIO_TOKEN. O token é usado somente no servidor.</p><button className="btn btn-s" onClick={()=>void atualizarToken()}>Atualizar status do token</button></div>
+  {!cfg?<p role="status">Carregando configurações…</p>:<><div className="campos-duplos"><label className="field"><span>CEP de origem</span><input className="input" inputMode="numeric" maxLength={9} value={mascaraCep(cfg.cep_origem)} onChange={e=>setCfg({...cfg,cep_origem:cepLimpo(e.target.value)})}/></label><label className="field"><span>Dias úteis de postagem</span><input className="input" type="number" min="0" max="30" value={cfg.dias_postagem} onChange={e=>setCfg({...cfg,dias_postagem:Number(e.target.value)})}/></label></div>
+   {embalagem('Sem categoria / padrão geral',cfg.sem_categoria,v=>setCfg({...cfg,sem_categoria:v as Embalagem}))}
+   {cfg.categorias.map(c=><div key={c.id}>{embalagem(c.nome,c.embalagem_padrao,v=>setCfg({...cfg,categorias:cfg.categorias.map(x=>x.id===c.id?{...x,embalagem_padrao:v}:x)}))}</div>)}
+   <button className="btn btn-p" disabled={ocupado} onClick={()=>void salvar()}>Salvar configurações</button>
+   <div className="frete-teste"><h2>Testar cotação</h2><p className="small">O teste usa as configurações salvas. Salve suas alterações antes de testar.</p><div className="campos-duplos"><label className="field"><span>CEP de exemplo</span><input className="input" inputMode="numeric" maxLength={9} value={cepTeste} onChange={e=>setCepTeste(mascaraCep(e.target.value))}/></label><label className="field"><span>Peça</span><select className="input" value={codigo} onChange={e=>setCodigo(e.target.value)}>{cfg.pecas.map(p=><option key={p.codigo} value={p.codigo}>{p.codigo} · {p.nome}</option>)}</select></label></div><button className="btn btn-s" disabled={ocupado||!codigo} onClick={()=>void testar()}>{ocupado?'Aguarde…':'Testar cotação'}</button>
+    {testeErro&&<p className="painel-erro" role="alert">{testeErro}</p>}{cotacao&&<ul>{cotacao.opcoes.map(o=><li key={o.id}>{o.servico} · {moeda(o.valor)} · até {o.prazo_dias} dias úteis</li>)}</ul>}</div></>}
+ </section>;
+}

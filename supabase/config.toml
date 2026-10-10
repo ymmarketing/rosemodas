@@ -54,3 +54,7 @@ enabled = false
 [functions.primeiro-acesso]
 # O corpo autentica código de primeiro acesso e operador com RPCs privadas a service_role.
 verify_jwt = false
+
+[functions.cotar-frete]
+# O corpo valida a chave pública do projeto e o JWT/admin quando houver; cliente da vitrine não precisa login.
+verify_jwt = false

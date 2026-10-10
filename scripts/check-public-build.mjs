@@ -9,11 +9,12 @@ async function verificar(pasta) {
     if (arquivo.isDirectory()) { total += await verificar(caminho); continue; }
     if (!/\.(js|css|html|map|json)$/.test(arquivo.name)) continue;
     const texto = await readFile(caminho, 'utf8');
+    assert.ok(!/api\/v2\/me\/shipment\/calculate/.test(texto), 'Chamada direta ao provedor encontrada no artefato público.');
     assert.ok(!/sb_secret_[A-Za-z0-9_-]{12,}/.test(texto), 'Credencial secret encontrada no artefato público.');
     assert.ok(!/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(texto), 'Chave privada encontrada no artefato público.');
     for (const jwt of texto.matchAll(/eyJ[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+)\.[A-Za-z0-9_-]+/g)) {
       let papel;
-      try { papel = JSON.parse(Buffer.from(jwt[1], 'base64url').toString()).role; } catch { continue; }
+      try { const payload=JSON.parse(Buffer.from(jwt[1], 'base64url').toString());papel=payload.role;assert.ok(!payload.scopes?.includes?.('shipping-calculate'),'Token Melhor Envio encontrado no build público.'); } catch (e) { if(e instanceof assert.AssertionError)throw e;continue; }
       assert.notEqual(papel, 'service_role', 'JWT service_role encontrado no artefato público.');
     }
     total++;

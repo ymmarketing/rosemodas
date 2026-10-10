@@ -9,7 +9,7 @@ import { recursosDeHomologacao } from '../apps/vitrine/src/ambiente.ts';
 import { createServer } from 'vite';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-test('telas renderizadas ocultam sacola, frete, fases futuras e exemplos fora da homologação',async()=>{
+test('telas renderizadas permitem cotação informativa e ocultam sacola, fases futuras e promessas',async()=>{
  const server=await createServer({configFile:'apps/vitrine/vite.config.ts',mode:'homologation',server:{middlewareMode:true},appType:'custom'});
  const anteriorWindow=globalThis.window, anteriorStorage=globalThis.localStorage;
  try {
@@ -27,12 +27,12 @@ test('telas renderizadas ocultam sacola, frete, fases futuras e exemplos fora da
    const produto=renderToStaticMarkup(createElement(PaginaProduto,{produto:p,catalogo,aviso:()=>{},whatsapp:()=>{},aviseMe:()=>{},relacionados:null,homologacao}));
    assert.ok(produto.includes('Comprar pelo WhatsApp'));
    assert.ok(!produto.includes('Adicionar à sacola'));
-   assert.equal(produto.includes('Calcular frete'),false);
+   assert.equal(produto.includes('Calcular frete'),true);
    assert.equal(produto.includes('5% off no Pix'),false);
    for(const texto of ['ou 3x de','Avise-me quando chegar','Aprovado pela Rose'])assert.ok(!produto.includes(texto));
    assert.ok(loja.includes('Live quinta, 20h'));assert.ok(loja.includes('do P ao Plus Size'));assert.ok(!loja.includes('Todos os tamanhos'));
    const sem={...p,variacoes:[{sku:'SEM',cor:'',tamanho:''}]};const semCat={...catalogo,saldos:[{produto_id:p.id,cor:'',tamanho:'',disponivel:1}]};
-   const minimo=renderToStaticMarkup(createElement(PaginaProduto,{produto:sem,catalogo:semCat,aviso:()=>{},whatsapp:()=>{},relacionados:null,homologacao}));for(const txt of ['<h5>Cor','<h5>Tamanho','Medidas ainda','Calcular frete','4,9','12 avaliações'])assert.ok(!minimo.includes(txt));assert.ok(minimo.includes('Frete e prazo: consulte pelo WhatsApp'));
+   const minimo=renderToStaticMarkup(createElement(PaginaProduto,{produto:sem,catalogo:semCat,aviso:()=>{},whatsapp:()=>{},relacionados:null,homologacao}));for(const txt of ['<h5>Cor','<h5>Tamanho','Medidas ainda','4,9','12 avaliações'])assert.ok(!minimo.includes(txt));assert.ok(minimo.includes('Frete e prazo: consulte pelo WhatsApp'));
    globalThis.window.location.hash='#/loja/sacola';
    const rotaFutura=renderToStaticMarkup(createElement(Loja,{homologacao}));
    assert.equal(rotaFutura.includes('Próxima fase'),false);
