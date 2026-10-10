@@ -33,5 +33,8 @@ test('histórico restaura filtros e posição; voltar fecha foto; tamanho zerado
     await voltar();assert.equal(d.querySelector('.foto-tela'),null);assert.match(dom.window.location.hash,/produto/);
     await voltar();assert.equal(d.querySelector('.s-cats button[aria-pressed=true]').textContent,'Conjuntos');assert.equal(d.querySelector('#ordem').value,'maior');assert.equal(d.querySelector('.s-bar input').checked,true);assert.equal(dom.window.scrollY,730);
     await ui.act(async()=>{dom.window.history.forward();await new Promise(r=>setTimeout(r,30));});assert.match(dom.window.location.hash,/produto/);
+    c.saldos[0].disponivel=0;
+    await ui.act(async()=>{dom.window.dispatchEvent(new dom.window.Event('focus'));await new Promise(r=>setTimeout(r,20));});
+    await clicar('.s-crumb a');assert.equal(d.querySelector('[data-produto] .esg').textContent,'Esgotado · Encomende');
   }finally{await ui.act(()=>sair?.());dom.window.close();}
 });

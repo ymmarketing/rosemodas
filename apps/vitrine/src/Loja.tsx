@@ -59,7 +59,7 @@ export function Loja({homologacao=recursosDeHomologacao(import.meta.env?.VITE_AP
  const pRota=rota.startsWith('loja/produto/')?catalogoVisivel?.produtos.find(p=>p.slug===rota.split('/')[2]||p.codigo===rota.split('/')[2]):undefined;
  function cartao(p:Produto){if(!catalogo)return null;const tamanhos=tamanhosDoProduto(catalogo.saldos,p.id),esg=!tamanhos.some(t=>t.disponivel>0);return <div className="card" key={p.id} data-produto={p.codigo}>
  <a href={`#/loja/produto/${p.slug}`} className={`im ${esg?'foto-esgotada':''}`} aria-label={`Ver ${p.nome}`}><Arte produto={p}/>{p.selo&&p.selo!=='aprovado_rose'&&!esg&&<span className={`pill ${classeSelo(p)} sel`}>{selos[p.selo]}</span>}
- {esg&&<div className="esg"><span className="pill t-neu">Esgotado</span></div>}</a>
+ {esg&&<div className="esg"><span className="pill t-neu">Esgotado · Encomende</span></div>}</a>
  <button className={`fav ${favoritos.has(p.codigo)?'on':''}`} onClick={()=>favoritar(p)} title="Favoritar" aria-label={`Favoritar ${p.nome}`} aria-pressed={favoritos.has(p.codigo)}><Icone nome="heart"/></button>
  <a href={`#/loja/produto/${p.slug}`}><div className="nm">{p.nome}</div><div className="pr">{p.preco_promocional!==null&&<s>{moeda(p.preco)}</s>}{moeda(precoAtual(p))}</div></a></div>;}
  const carregando=<div className="estado" role={estado==='erro'?'alert':'status'}>{estado==='erro'?<><h2>Não conseguimos carregar a coleção</h2><p className="muted">Confira sua conexão e tente novamente.</p><button className="btn btn-p" onClick={()=>setTentativa(t=>t+1)}>Tentar novamente</button></>:<p className="muted">Carregando a coleção…</p>}</div>;
