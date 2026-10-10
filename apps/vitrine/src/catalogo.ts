@@ -25,11 +25,12 @@ const comparador = new Intl.Collator('pt-BR', { numeric: true });
 export function categoriasDisponiveis(catalogo: Pick<Catalogo, 'categorias' | 'produtos' | 'saldos'>) {
   const disponiveis = new Set(catalogo.saldos.filter(s => s.disponivel > 0).map(s => s.produto_id));
   const quantidades = new Map<string, number>();
+  const publicadas = new Set(catalogo.produtos.map(p => p.categoria_id));
   for (const p of catalogo.produtos) {
     if (disponiveis.has(p.id)) quantidades.set(p.categoria_id, (quantidades.get(p.categoria_id) ?? 0) + 1);
   }
   return catalogo.categorias.map(c => ({ ...c, quantidade: quantidades.get(c.id) ?? 0 }))
-    .filter(c => c.quantidade > 0)
+    .filter(c => publicadas.has(c.id))
     .sort((a, b) => b.quantidade - a.quantidade || comparador.compare(a.nome, b.nome));
 }
 export const precoAtual = (p: Produto) => p.preco_promocional ?? p.preco;

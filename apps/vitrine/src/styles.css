@@ -121,7 +121,10 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:500;color:var(--vinho);line-hei
 .sizes button{min-width:52px;height:46px;border-radius:12px;border:1px solid var(--linha);background:var(--branco);font-weight:600;position:relative}
 .sizes button.on{border-color:var(--vinho);background:var(--vinho);color:#fff}
 .sizes button.off{color:#bbb;background:var(--linha-2)}
-.sizes button.off::after{content:"";position:absolute;left:8px;right:8px;top:50%;border-top:1px solid #c9bdb6;transform:rotate(-20deg)}
+.sizes button.off::after{display:none}
+.sizes button.off{color:var(--tinta);height:auto;min-height:46px;padding:8px}
+.sizes button.off.on{background:var(--vinho);color:#fff}
+.tamanho-esgotado{display:block;font-size:10px;font-weight:400}
 .sizes button .lt{position:absolute;bottom:-17px;left:0;right:0;font-size:9.5px;color:var(--warn);font-weight:600}
 .veste{font-size:13px;margin-top:22px;padding:10px 12px;background:var(--rosa-2);border-radius:10px;color:var(--vinho)}
 .meas{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--branco);border-radius:12px;overflow:hidden;border:1px solid var(--linha)}
@@ -211,3 +214,26 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .destaque-oficial picture{display:block;width:100%;height:100%}
 .s-hero .destaque-oficial img{display:block;width:100%;height:auto;max-height:540px;object-fit:contain}
 @media(max-width:760px){.s-hero .art.destaque-oficial{display:block;max-height:440px}.s-hero .destaque-oficial img{max-height:440px}}
+
+/* Encomenda e galeria: o overflow fica somente na trilha das fotos. */
+.foto-esgotada>img,.foto-esgotada img,img.foto-esgotada{filter:grayscale(.28);opacity:.72}
+.card .esg{background:none;pointer-events:none}
+.card .esg .pill,.selo-esgotado,.selo-esgotado-info{background:var(--vinho);color:#fff;font-weight:600}
+.gal .main{position:relative}
+.selo-esgotado{position:absolute;bottom:14px;left:14px;pointer-events:none}
+.carrossel{position:relative;width:100%;height:100%;min-width:0}
+.car-trilha{display:flex;width:100%;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y pinch-zoom}
+.car-trilha::-webkit-scrollbar{display:none}
+.car-slide{flex:0 0 100%;min-width:0;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center}
+.car-slide>img,.car-foto img{width:100%;height:100%;object-fit:contain;user-select:none}
+.car-foto{display:block;width:100%;height:100%;padding:0;border:0;background:transparent;cursor:zoom-in}
+.car-seta{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:44px;border-radius:24px;background:rgba(255,255,255,.9);color:var(--vinho);font-size:32px;line-height:1}
+.car-seta.anterior{left:8px}.car-seta.proxima{right:8px}.car-seta:disabled{opacity:.25;cursor:default}
+.car-bolinhas{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.car-bolinhas button{width:9px;height:9px;border-radius:50%;padding:0;background:var(--linha)}
+.car-bolinhas button[aria-pressed=true]{background:var(--vinho)}
+.foto-tela{position:fixed;inset:0;z-index:1000;background:#191515;color:#fff;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.foto-barra{display:flex;align-items:center;justify-content:space-between;min-height:58px;padding:8px 18px}
+.foto-fechar{font-size:32px;width:44px;height:44px;color:#fff}
+.carrossel-tela{flex:1;height:0;min-height:0}
+@media(max-width:760px){.car-seta{width:32px;height:38px;font-size:28px}}
