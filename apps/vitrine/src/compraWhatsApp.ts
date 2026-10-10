@@ -1,5 +1,13 @@
 import type { Produto, Saldo } from './catalogo';
 
+export function mensagemEncomendaWhatsApp(p: Pick<Produto, 'nome'|'codigo'|'slug'>, tamanho: string, pagina: string) {
+  const link = new URL(pagina);
+  if (!['https:', 'http:'].includes(link.protocol)) throw new Error('Não foi possível preparar o link da peça.');
+  link.search = ''; link.username = ''; link.password = '';
+  link.hash = `/loja/produto/${encodeURIComponent(p.slug)}`;
+  return `Oi Rose! Vi que a peça ${p.nome} (${p.codigo}) está esgotada. Gostaria de encomendar ou saber se volta.${tamanho.trim()?` Tamanho: ${tamanho}.`:''} Link: ${link.href}`;
+}
+
 export function mensagemCompraWhatsApp(
   p: Pick<Produto, 'id'|'nome'|'codigo'|'slug'>, saldos: Saldo[], cor: string, tamanho: string, pagina: string,
 ) {

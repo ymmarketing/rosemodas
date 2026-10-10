@@ -4,7 +4,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import { filtrosIniciais, selecionarProdutos, linkWhatsApp, linkInstagram, numeroWhatsApp, buscaDosFiltros, lerFiltros } from '../apps/vitrine/src/catalogo.ts';
-import { mensagemCompraWhatsApp } from '../apps/vitrine/src/compraWhatsApp.ts';
+import { mensagemCompraWhatsApp, mensagemEncomendaWhatsApp } from '../apps/vitrine/src/compraWhatsApp.ts';
 import { recursosDeHomologacao } from '../apps/vitrine/src/ambiente.ts';
 import { createServer } from 'vite';
 import { createElement } from 'react';
@@ -94,3 +94,5 @@ test('catálogo fiel ao mockup tem 12 modelos, cores, medidas e seed idempotente
 });
 
 test('variação sem cor e tamanho compra direto e omite linhas vazias',()=>{const p={id:'sem',nome:'Peça única',codigo:'RM-UNICA',slug:'unica'};const msg=mensagemCompraWhatsApp(p,[{produto_id:'sem',cor:'',tamanho:'',disponivel:1}],'','','https://example.test/');assert.ok(msg.includes('RM-UNICA'));assert.ok(!msg.includes('Cor:'));assert.ok(!msg.includes('Tamanho:'));});
+
+test('encomenda inclui nome, código, tamanho e link direto sem prometer reposição',()=>{const p={nome:'Vestido Azul',codigo:'RM-0019',slug:'peca-rm-0019'};assert.equal(mensagemEncomendaWhatsApp(p,'GG','https://example.test/?categoria=vestidos#/loja'),'Oi Rose! Vi que a peça Vestido Azul (RM-0019) está esgotada. Gostaria de encomendar ou saber se volta. Tamanho: GG. Link: https://example.test/#/loja/produto/peca-rm-0019');assert.ok(!mensagemEncomendaWhatsApp(p,'','https://example.test/').includes('Tamanho:'));assert.throws(()=>mensagemEncomendaWhatsApp(p,'','javascript:alert(1)'));});
