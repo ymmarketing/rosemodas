@@ -14,7 +14,7 @@
     "test:db": "node scripts/test-database.mjs",
     "test:db:supabase": "node scripts/test-database.mjs --supabase",
     "test:environment": "node --test tests/environment.test.mjs",
-    "test:catalogo": "node --test tests/catalogo.test.mjs tests/vitrine.test.mjs tests/curadoria.test.mjs tests/editor.test.mjs tests/auth.test.mjs tests/navegacao.test.mjs tests/vitrine-interacoes.test.mjs",
+    "test:catalogo": "node --test tests/catalogo.test.mjs tests/vitrine.test.mjs tests/curadoria.test.mjs tests/editor.test.mjs tests/auth.test.mjs tests/navegacao.test.mjs tests/vitrine-interacoes.test.mjs tests/metricas.test.mjs",
     "test:public-build": "node scripts/check-public-build.mjs",
     "test": "npm run test:environment && npm run test:catalogo && npm run test:db",
     "db:start": "supabase start",
@@ -26,7 +26,8 @@
     "test:carga:api": "node scripts/test-carga-api.mjs",
     "test:primeiro-acesso": "node --test tests/primeiro-acesso.test.mjs",
     "test:primeiro-acesso:api": "node scripts/test-primeiro-acesso-api.mjs",
-    "test:frete": "node --test tests/frete-edge.test.mjs tests/frete-vitrine.test.mjs"
+    "test:frete": "node --test tests/frete-edge.test.mjs tests/frete-vitrine.test.mjs",
+    "test:metricas": "node --test tests/metricas.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
@@ -43,6 +44,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
+    "@vercel/analytics": "2.0.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   }
