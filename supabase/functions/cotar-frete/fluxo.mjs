@@ -6,13 +6,13 @@ export function vencimentoToken(token){
 }
 export async function hash(texto){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(texto)))).map(n=>n.toString(16).padStart(2,'0')).join('');}
 export function baseValida(base){const u=new URL(base);if(u.protocol!=='https:'||!['melhorenvio.com.br','www.melhorenvio.com.br','sandbox.melhorenvio.com.br'].includes(u.hostname)||u.username||u.password||u.search||u.hash||u.port||!['','/','/api/v2','/api/v2/'].includes(u.pathname))throw new Error('CONFIGURACAO');return `${u.origin}/api/v2`;}
-export function normalizarServicos(resposta,dias){
+export function normalizarServicos(resposta,dias,adicional=0){
  if(!Array.isArray(resposta))return [];
  return resposta.flatMap(s=>{
   const id=Number(s?.id),nome=id===1?'PAC':id===2?'SEDEX':null;
   const valor=Number(s.custom_price??s.price),prazo=Number(s.custom_delivery_range?.max??s.custom_delivery_time??s.delivery_range?.max??s.delivery_time);
   if(!nome||s.error||s.company?.name!=='Correios'||!Number.isFinite(valor)||valor<=0||!Number.isInteger(prazo)||prazo<0||s.custom_price===''||s.price===null)return [];
-  return [{id,servico:nome,valor:Math.round(valor*100)/100,prazo_dias: prazo+dias}];
+  return [{id,servico:nome,valor:(Math.round(valor*100)+Math.round(adicional*100))/100,prazo_dias: prazo+dias}];
  }).sort((a,b)=>a.valor-b.valor||a.id-b.id);
 }
 export function criarHandler({rpc,autorizarPublico,autorizarAdmin,token='',base='https://melhorenvio.com.br/api/v2',salt,fetcher=fetch,timeoutMs=8000,agora=()=>Date.now()}){
@@ -47,8 +47,9 @@ export function criarHandler({rpc,autorizarPublico,autorizarAdmin,token='',base=
    if(!p)return reply(404,{ok:false,erro:erroPublico});
    if(!token)throw new Error('TOKEN_AUSENTE');
    const exp=vencimentoToken(token);if(exp&&Date.parse(exp)<=agora())throw new Error('TOKEN_INVALIDO');
-   const url=baseValida(base),dias=Number(p.dias_postagem);
+   const url=baseValida(base),dias=Number(p.dias_postagem),adicional=Number(p.valor_adicional??0);
    if(!/^\d{8}$/.test(p.cep_origem)||!Number.isInteger(dias)||dias<0||dias>30||!['preco','peso_g','largura_cm','altura_cm','comprimento_cm'].every(k=>Number.isFinite(Number(p[k]))&&Number(p[k])>0))throw new Error('CONFIGURACAO');
+   if(!Number.isFinite(adicional)||adicional<0||adicional>10000||Math.abs(Math.round(adicional*100)-adicional*100)>0.000001)throw new Error('CONFIGURACAO');
    const key=await hash(JSON.stringify([body.cep,p,url,await hash(token)]));
    const cache=await rpc('cache_ler',key);if(cache&&Date.parse(cache.expira_em)>agora())return reply(200,cache);
    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);
@@ -59,7 +60,7 @@ export function criarHandler({rpc,autorizarPublico,autorizarAdmin,token='',base=
     if(!r.ok)throw new Error('API_ERRO');
     result=await r.json();
    }catch(e){if(controller.signal.aborted||e?.name==='AbortError')throw new Error('TIMEOUT');throw e;}finally{clearTimeout(timer);}
-   const opcoes=normalizarServicos(result,dias);if(!opcoes.length)throw new Error('SEM_RESULTADO');
+   const opcoes=normalizarServicos(result,dias,adicional);if(!opcoes.length)throw new Error('SEM_RESULTADO');
    const cotacao={ok:true,cep:body.cep,codigo:p.codigo,opcoes,expira_em:new Date(agora()+3600000).toISOString()};
    await rpc('cache_gravar',key,cotacao);
    return reply(200,cotacao);
