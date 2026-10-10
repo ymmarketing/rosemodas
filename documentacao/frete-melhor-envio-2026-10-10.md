@@ -45,3 +45,9 @@ O frontend mantém apenas o último CEP no aparelho. Alterar CEP/variação inva
 `tests/database/frete.sql`: autorização admin versus cliente/anon, RPC servidor restrita a service_role, embalagem própria e fallback, peça esgotada aceita, teste oculto, cache expirado e 21ª requisição bloqueada. Execução somente em PGlite/Supabase local do CI, nunca como testes de escrita no banco hospedado.
 
 Typecheck, build e varredura dos arquivos públicos verificam credenciais privadas, JWT service_role, escopo shipping-calculate e ausência de chamada direta ao Melhor Envio no navegador. A captura de rede em homologação complementa essa verificação. Testes reais previstos: BH 30140-071, São Paulo 01310-100 e Manaus 69005-010 com cada categoria, 375 px e desktop. Valores e prints serão entregues no relatório de homologação.
+
+## Valor adicional por envio — publicação seguinte ao PR #5
+
+Campo editável em Configurações de frete, com vírgula e duas casas decimais. Configuração `frete_valor_adicional` inicia em R$ 0,00. A função busca esse valor no banco e soma em centavos ao valor de PAC/SEDEX antes de armazenar a cotação e retornar ao navegador. Prazo, peso, dimensões e seguro permanecem iguais. O adicional faz parte da chave de cache: uma mudança de configuração não reaproveita uma cotação antiga. A mensagem de WhatsApp recebe o preço final exibido.
+
+Testes com R$ 3,50 rodam somente em dados simulados e banco local descartável; o projeto hospedado mantém R$ 0,00. Testes também cobrem zero, valores inválidos, edição com vírgula, autorização da admin, compatibilidade com o painel anterior e invalidação do cache.

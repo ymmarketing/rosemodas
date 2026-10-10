@@ -7,6 +7,15 @@ set local role authenticated;
 select public.configurar_frete('salvar','{"cep_origem":"30640140","dias_postagem":1,"sem_categoria":{"peso_g":500,"comprimento_cm":30,"largura_cm":25,"altura_cm":5},"categorias":[]}');
 do $$begin
  perform pg_temp.assert_frete(public.configurar_frete('ler')->>'cep_origem'='30640140','origem editável');
+ perform pg_temp.assert_frete((public.configurar_frete('ler')->>'valor_adicional')::numeric=0,'adicional inicial zero');
+ perform public.configurar_frete('salvar','{"cep_origem":"30640140","dias_postagem":1,"valor_adicional":3.50,"sem_categoria":{"peso_g":500,"comprimento_cm":30,"largura_cm":25,"altura_cm":5},"categorias":[]}');
+ perform pg_temp.assert_frete((public.configurar_frete('ler')->>'valor_adicional')::numeric=3.5,'admin salva adicional em reais');
+ begin perform public.configurar_frete('salvar','{"cep_origem":"30640140","dias_postagem":1,"valor_adicional":-1,"sem_categoria":{"peso_g":500,"comprimento_cm":30,"largura_cm":25,"altura_cm":5},"categorias":[]}');raise exception 'Aceitou adicional negativo';exception when invalid_parameter_value then null;end;
+ begin perform public.configurar_frete('salvar','{"cep_origem":"30640140","dias_postagem":1,"valor_adicional":1.001,"sem_categoria":{"peso_g":500,"comprimento_cm":30,"largura_cm":25,"altura_cm":5},"categorias":[]}');raise exception 'Aceitou fracao de centavo';exception when invalid_parameter_value then null;end;
+ perform public.configurar_frete('salvar','{"cep_origem":"30640140","dias_postagem":1,"sem_categoria":{"peso_g":500,"comprimento_cm":30,"largura_cm":25,"altura_cm":5},"categorias":[]}');
+ perform pg_temp.assert_frete((public.configurar_frete('ler')->>'valor_adicional')::numeric=3.5,'cliente antigo preserva adicional');
+ perform public.configurar_frete('salvar','{"cep_origem":"30640140","dias_postagem":1,"valor_adicional":0,"sem_categoria":{"peso_g":500,"comprimento_cm":30,"largura_cm":25,"altura_cm":5},"categorias":[]}');
+
  begin perform public.configurar_frete('salvar','{"cep_origem":"123","dias_postagem":1}');raise exception 'Aceitou configuração inválida';exception when invalid_parameter_value then null;end;
  begin perform public.frete_servidor('limite',repeat('a',64));raise exception 'Cliente entrou na RPC servidor';exception when insufficient_privilege then null;end;
 end$$;
@@ -28,6 +37,7 @@ insert into public.midias(produto_id,tipo,caminho_storage,alt_texto,principal) v
 set local role service_role;
 do $$declare p jsonb;begin
  p:=public.frete_servidor('dados','RM-FRETE-CI','{"variacao":"57000000-0000-4000-8000-000000000001"}');
+ perform pg_temp.assert_frete((p->>'valor_adicional')::numeric=0,'adicional de banco disponibilizado ao servidor');
  perform pg_temp.assert_frete((p->>'peso_g')::numeric=750 and (p->>'altura_cm')::numeric=5 and (p->>'preco')::numeric=199.9,'override, padrão e preço de banco em esgotada');
  perform pg_temp.assert_frete(public.frete_servidor('dados','RM-FRETE-CI','{"variacao":"57000000-0000-4000-8000-000000000099"}') is null,'variação de outra peça rejeitada');
 end$$;
