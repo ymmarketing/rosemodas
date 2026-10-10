@@ -8,6 +8,7 @@ import type { useNavegacaoLoja } from './navegacaoLoja';
 import {CalculadoraFrete} from './CalculadoraFrete';
 import {trechoFreteWhatsApp} from './frete';
 import type {FreteEscolhido} from './frete';
+import {evento} from './metricas';
 export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, relacionados, homologacao, navegacao }: {
   produto: Produto; catalogo: Catalogo; aviso: (s: string) => void; whatsapp: (s: string) => void;
   relacionados: React.ReactNode; homologacao: boolean; navegacao?: ReturnType<typeof useNavegacaoLoja>;
@@ -37,7 +38,11 @@ export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, relaciona
         if(tamanhos.some(t=>t.trim())&&!tamanho.trim())throw new Error('Escolha o tamanho primeiro.');
         if(cores.some(c=>c.trim())&&!cor.trim())throw new Error('Escolha uma cor primeiro.');
         whatsapp(mensagemEncomendaWhatsApp(p,tamanho,window.location.href)+trechoFreteWhatsApp(frete));
-      } else whatsapp(mensagemCompraWhatsApp(p,saldos,cor,tamanho,window.location.href)+trechoFreteWhatsApp(frete));
+        evento('whatsapp_encomendar',{peca:p.codigo,categoria:categoria?.slug??null,com_frete:!!frete});
+      } else {
+        whatsapp(mensagemCompraWhatsApp(p,saldos,cor,tamanho,window.location.href)+trechoFreteWhatsApp(frete));
+        evento('whatsapp_comprar',{peca:p.codigo,categoria:categoria?.slug??null,com_frete:!!frete});
+      }
     } catch (e) { aviso(e instanceof Error ? e.message : 'Não foi possível preparar a mensagem pelo WhatsApp.'); }
   }
   return <div className="s-wrap">
@@ -54,9 +59,9 @@ export function PaginaProduto({ produto: p, catalogo, aviso, whatsapp, relaciona
           <div className="sizes">{tamanhos.filter(t=>t.trim()).map(t => t==='Tamanho único'&&tamanhos.filter(t=>t.trim()).length===1?<span key={t} className="small">Tamanho único</span>:<button key={t} className={`${tamanho===t?'on':''} ${saldo(t)?'':'off'}`} aria-label={`Tamanho ${t}${saldo(t)?'':' esgotado'}`} aria-pressed={tamanho===t} onClick={() => setTamanho(t)}>{t}{!saldo(t)&&<span className="tamanho-esgotado">Esgotado</span>}{saldo(t)===1 && <span className="lt">última</span>}</button>)}</div>
           {p.modelo_veste && <div className="veste">A Rose veste <b>{p.modelo_veste}</b></div>}</div>}
         <div className="buy"><button className="btn btn-p btn-block" onClick={comprar}>{encomendar?'Encomendar pelo WhatsApp':'Comprar pelo WhatsApp'}</button>
-          <button className="btn btn-g btn-block" onClick={() => whatsapp(`Oi Rose! Quero tirar uma dúvida sobre o ${p.nome} (${p.codigo})${cor.trim()?`, cor ${cor}`:''}${tamanho.trim()?`, tamanho ${tamanho}`:''}.`)}><Icone nome="wa" /> Tirar dúvida no WhatsApp</button></div>
+          <button className="btn btn-g btn-block" onClick={() => {evento('whatsapp_duvida',{peca:p.codigo});whatsapp(`Oi Rose! Quero tirar uma dúvida sobre o ${p.nome} (${p.codigo})${cor.trim()?`, cor ${cor}`:''}${tamanho.trim()?`, tamanho ${tamanho}`:''}.`);}}><Icone nome="wa" /> Tirar dúvida no WhatsApp</button></div>
         {medidas.length>0&&<div className="blk" id="medidas"><h5>Medidas da peça{tamMedidas&&` · ${tamMedidas}`}</h5><table className="meas"><tbody>{medidas.map(m=><tr key={m.medida}><td>{m.rotulo}</td><td>{m.valor_cm} cm</td></tr>)}</tbody></table></div>}
-        <CalculadoraFrete codigo={p.codigo} variacao={combinacao?.variacao_id??null} escolheu={setFrete} consultar={()=>whatsapp(`Oi Rose! Quero consultar frete e prazo para ${p.nome} (${p.codigo}).`)}/>
+        <CalculadoraFrete codigo={p.codigo} variacao={combinacao?.variacao_id??null} escolheu={setFrete} consultar={()=>{evento('whatsapp_frete',{peca:p.codigo});whatsapp(`Oi Rose! Quero consultar frete e prazo para ${p.nome} (${p.codigo}).`);}}/>
         {p.descricao&&<div className="blk"><h5>Sobre a peça</h5><p className="small" style={{color:'var(--tinta)'}}>{p.descricao}</p></div>}
       </div></div>
     <h2 style={{fontSize:24,margin:'40px 0 14px'}}>Combina com</h2><div className="s-grid">{relacionados}</div>

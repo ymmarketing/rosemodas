@@ -3,6 +3,7 @@ import type {FormEvent} from 'react';
 import {cotarFrete,cepLimpo,lembrarCep,mascaraCep} from './frete';
 import type {CotacaoFrete,FreteEscolhido} from './frete';
 import {moeda} from './Visual';
+import {evento,ufDoCep} from './metricas';
 export function CalculadoraFrete({codigo,variacao,escolheu,consultar,cotar=cotarFrete}:{codigo:string;variacao:string|null;escolheu:(f:FreteEscolhido|null)=>void;consultar:()=>void;cotar?:typeof cotarFrete}){
  const [cep,setCep]=useState(lembrarCep),[ocupado,setOcupado]=useState(false),[erro,setErro]=useState(''),[cotacao,setCotacao]=useState<CotacaoFrete|null>(null),[servico,setServico]=useState<number|null>(null);
  const pedido=useRef(0),controller=useRef<AbortController|null>(null),callback=useRef(escolheu);callback.current=escolheu;
@@ -13,7 +14,7 @@ export function CalculadoraFrete({codigo,variacao,escolheu,consultar,cotar=cotar
   e.preventDefault();limpar();if(cepLimpo(cep).length!==8){setErro('Confira o CEP');return;}
   const id=++pedido.current;controller.current=new AbortController();setOcupado(true);
   const timeout=setTimeout(()=>controller.current?.abort(),12000);
-  try{const resultado=await cotar(cep,codigo,variacao,undefined,controller.current.signal);if(pedido.current===id)setCotacao(resultado);}
+  try{const resultado=await cotar(cep,codigo,variacao,undefined,controller.current.signal);if(pedido.current===id){setCotacao(resultado);evento('frete_calculado',{peca:codigo,uf:ufDoCep(cep)||null,opcoes:resultado.opcoes.length});}}
   catch(e){if(pedido.current===id)setErro(e instanceof Error?e.message:'Não conseguimos calcular agora. Consulte o frete pelo WhatsApp');}
   finally{clearTimeout(timeout);if(pedido.current===id)setOcupado(false);}
  }
