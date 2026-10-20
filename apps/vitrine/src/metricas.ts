@@ -6,7 +6,7 @@ import { inject, pageview, track } from '@vercel/analytics';
 
 export type NomeEvento =
   | 'whatsapp_comprar' | 'whatsapp_encomendar' | 'whatsapp_duvida' | 'whatsapp_frete' | 'whatsapp_geral'
-  | 'frete_calculado' | 'instagram_click' | 'filtro_categoria';
+  | 'frete_calculado' | 'instagram_click' | 'filtro_categoria' | 'credito_ym';
 
 type Valor = string | number | boolean | null;
 

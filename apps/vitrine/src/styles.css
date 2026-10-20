@@ -94,6 +94,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:500;color:var(--vinho);line-hei
 .s-foot h4{font-size:16px;margin-bottom:10px}
 .s-foot a{display:block;font-size:13.5px;padding:3px 0;color:var(--tinta)}
 .s-foot .bot{max-width:1180px;margin:0 auto;padding:12px 16px 22px;font-size:11.5px;color:var(--taupe);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid rgba(156,74,92,.15)}
+.s-foot .bot .credito-ym a{display:inline;padding:0;font-size:inherit;color:var(--vinho);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .wa-float{position:fixed;right:16px;bottom:18px;z-index:45;width:54px;height:54px;border-radius:50%;background:#3E8E5C;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .wa-float svg{width:28px;height:28px;fill:#fff}
 /* produto */
