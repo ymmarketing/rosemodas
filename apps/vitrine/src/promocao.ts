@@ -10,13 +10,12 @@ export const PROMOCAO = {
   fimTexto: '30/11',
 } as const;
 
-// Endereços fixos de produção na Vercel. Qualquer outro *.vercel.app é prévia
-// e mostra a promoção antes da data, só para conferência.
-const PRODUCAO_VERCEL = new Set(['rosemodas.vercel.app', 'rosemodas-ym-marketing-negocios.vercel.app']);
-
+// Só a prévia de um branch (rosemodas-git-<branch>-…vercel.app, exceto main) mostra a
+// promoção antes da data, para conferência. Domínio oficial, *-psi.vercel.app, main e
+// links de deploy de produção seguem só a data.
 export function ehPrevia(host?: string) {
   if (host === undefined) { try { host = window.location.hostname ?? ''; } catch { host = ''; } }
-  return host.endsWith('.vercel.app') && !PRODUCAO_VERCEL.has(host);
+  return host.endsWith('.vercel.app') && host.startsWith('rosemodas-git-') && !host.startsWith('rosemodas-git-main-');
 }
 
 export function promocaoAtiva(agora = Date.now(), host?: string) {

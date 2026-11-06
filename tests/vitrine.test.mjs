@@ -108,6 +108,7 @@ test('promoção 11/11: 40% sobre o preço cheio só no período, mantendo ofert
   assert.equal(promocaoAtiva(Date.parse('2026-12-01T00:00:00-03:00'),dom),false);
   assert.equal(promocaoAtiva(Date.parse('2026-11-06T12:00:00-03:00'),'rosemodas.vercel.app'),false);
   assert.equal(promocaoAtiva(Date.parse('2026-11-06T12:00:00-03:00'),'rosemodas-git-x-ym.vercel.app'),true);
+  for(const h of ['rosemodas-psi.vercel.app','rosemodas-git-main-ym-marketing-negocios.vercel.app','rosemodas-pzd8ol2qa-ym-marketing-negocios.vercel.app','www.rosemenezesmodas.com.br'])assert.equal(promocaoAtiva(Date.parse('2026-11-06T12:00:00-03:00'),h),false,h);
   assert.equal(PROMOCAO.percentual,40);
   const [a,b,c]=aplicarPromocao([{preco:149.9,preco_promocional:null},{preco:100,preco_promocional:50},{preco:100,preco_promocional:80}],true);
   assert.equal(a.preco_promocional,89.94);assert.equal(b.preco_promocional,50);assert.equal(c.preco_promocional,60);
