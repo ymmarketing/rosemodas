@@ -240,39 +240,61 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 @media(max-width:760px){.car-seta{width:32px;height:38px;font-size:28px}}
 .calculadora-frete form>label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}.frete-entrada{display:flex;gap:8px;align-items:stretch}.frete-entrada input{min-width:0;flex:1;width:140px}.frete-entrada button{flex-shrink:0}.frete-opcoes{border:0;padding:0;margin:16px 0}.frete-opcoes legend{font-size:12px;margin-bottom:8px}.frete-opcoes label{display:flex;align-items:center;gap:10px;padding:12px 10px;border:1px solid var(--borda,#ddd);border-radius:6px;margin-bottom:8px;font-size:13px;cursor:pointer}.frete-opcoes label.selecionado{border-color:var(--vinho);background:var(--creme,#faf5f1)}.frete-opcoes input{accent-color:var(--vinho);flex-shrink:0}.frete-erro{font-size:13px;line-height:1.5;margin:12px 0;color:var(--vinho)}.frete-limpar{background:none;border:0;padding:4px 0;text-decoration:underline;color:var(--vinho);font:inherit;font-size:12px;cursor:pointer}
 
-/* Promoção 11/11 e carrossel das peças mais procuradas */
-.s-top-promo{background:var(--vinho-2);color:#fff;font-weight:600;letter-spacing:.04em}
-.s-destaque{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin:0 -16px 8px}
-.s-destaque.com-promo{grid-template-columns:minmax(0,1fr)}
-@media(min-width:860px){.s-destaque{margin:24px 0 8px;border-radius:24px;overflow:hidden}.s-destaque.com-promo{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}}
-.carrossel{position:relative;aspect-ratio:4/5;max-height:620px;width:100%;background:var(--rosa-2);overflow:hidden;touch-action:pan-y}
-.carrossel-vazio{aspect-ratio:4/5}
-@media(min-width:860px){.carrossel{aspect-ratio:auto;height:600px;max-height:none}}
-.carrossel .slide{position:absolute;inset:0;display:block;opacity:0;visibility:hidden;transition:opacity .7s ease,visibility .7s;color:inherit;text-decoration:none}
+/* Especial 11.11 e carrossel das peças mais procuradas */
+:root{--varejo:'Archivo','Montserrat',system-ui,sans-serif;--promo:#7A1F35;--promo-esc:#3A0E19}
+.s-top-promo{background:var(--promo-esc);color:#fff;font-family:var(--varejo);font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:10px 12px}
+.s-top-promo b{color:#F6C9D2;font-weight:900}
+.s-destaque{margin:0 -16px 8px}
+@media(min-width:860px){.s-destaque{margin:20px 0 8px;border-radius:20px;overflow:hidden}}
+.carrossel{position:relative;width:100%;aspect-ratio:4/5;max-height:760px;background:var(--promo-esc);overflow:hidden;touch-action:pan-y}
+@media(min-width:860px){.carrossel{aspect-ratio:auto;height:620px}}
+.carrossel .slide{position:absolute;inset:0;display:block;opacity:0;visibility:hidden;transition:opacity .8s ease,visibility .8s;color:#fff;text-decoration:none}
 .carrossel .slide.on{opacity:1;visibility:visible}
 .slide-foto{position:absolute;inset:0}
-.slide-foto img,.slide-foto svg{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
-.slide-info{position:absolute;left:14px;right:14px;bottom:48px;background:rgba(255,255,255,.96);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:var(--sh)}
-.slide-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
-.slide-selo{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--vinho);font-weight:600}
-.slide-nome{font-family:var(--serif);font-size:17px;color:var(--tinta);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slide-preco{font-size:13px;color:var(--taupe)}.slide-preco s{margin-right:6px}.slide-preco b{color:var(--vinho);font-family:var(--serif);font-size:18px;font-weight:500}
-.slide-btn{flex:none;background:var(--vinho);color:#fff;font-size:12px;font-weight:600;padding:11px 14px;border-radius:999px}
-.car-seta{position:absolute;top:42%;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.88);color:var(--vinho-2);display:flex;align-items:center;justify-content:center;transform:translateY(-50%)}
+.slide-foto img,.slide-foto svg{width:100%;height:100%;object-fit:cover;object-position:center 20%;display:block}
+.slide.on .slide-foto img{animation:zoom 9s ease-out both}
+@keyframes zoom{from{transform:scale(1.06)}to{transform:scale(1)}}
+.slide-sombra{position:absolute;inset:0;background:linear-gradient(to top,rgba(30,8,14,.94) 0%,rgba(30,8,14,.72) 30%,rgba(30,8,14,.15) 58%,rgba(30,8,14,0) 72%)}
+.slide-over{position:absolute;left:0;right:0;bottom:0;padding:0 20px 46px;display:flex;flex-direction:column;gap:12px}
+.oferta{display:flex;flex-direction:column;gap:2px}
+.oferta-tag{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;font-family:var(--varejo);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;border:1.5px solid rgba(255,255,255,.85);border-radius:999px;padding:6px 12px}
+.oferta-num{display:flex;align-items:flex-start;font-family:var(--varejo);font-weight:900;font-stretch:88%;line-height:.82;letter-spacing:-.045em;margin-top:6px}
+.oferta-num b{font-size:clamp(112px,34vw,200px);font-weight:900}
+.oferta-num span{display:flex;flex-direction:column;margin:.14em 0 0 .06em;line-height:.86}
+.oferta-num span i{font-style:normal;font-size:clamp(46px,14vw,82px)}
+.oferta-num span small{font-size:clamp(34px,10.5vw,60px);font-weight:600;font-stretch:100%;letter-spacing:-.02em}
+.oferta-sub{font-family:var(--varejo);font-weight:600;font-size:clamp(15px,4.2vw,19px);letter-spacing:.01em;opacity:.95}
+.peca{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.28);padding-top:12px}
+.peca-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.peca-selo{font-family:var(--varejo);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F6C9D2}
+.peca-nome{font-family:var(--varejo);font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.peca-preco{display:flex;align-items:baseline;gap:8px;font-family:var(--varejo)}
+.peca-preco s{font-size:13px;opacity:.7}
+.peca-preco b{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.peca-btn{flex:none;background:#fff;color:var(--promo-esc);font-family:var(--varejo);font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase;padding:13px 16px;border-radius:999px}
+.slide-sem-promo .slide-sombra{background:linear-gradient(to top,rgba(30,8,14,.82) 0%,rgba(30,8,14,0) 45%)}
+@media(min-width:860px){
+ .slide{display:grid!important;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+ .slide-foto{position:relative;grid-column:2;grid-row:1}
+ .slide-sombra{display:none}
+ .slide-over{position:relative;grid-column:1;grid-row:1;background:var(--promo);padding:48px 52px;justify-content:center;gap:22px}
+ .oferta-num b{font-size:190px}.oferta-num span i{font-size:78px}.oferta-num span small{font-size:56px}
+}
+.car-seta{position:absolute;top:22%;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);color:var(--promo-esc);display:flex;align-items:center;justify-content:center;transform:translateY(-50%)}
 .car-seta svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
-.car-seta.ant{left:10px}.car-seta.prox{right:10px}
+.car-seta.ant{left:12px}.car-seta.prox{right:12px}
 @media(hover:none){.car-seta{display:none}}
-.car-pontos{position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center}
-.car-pontos button{width:26px;height:36px;display:flex;align-items:center;justify-content:center}
-.car-pontos span{display:block;width:7px;height:7px;border-radius:999px;background:rgba(126,53,70,.35);transition:all .3s}
-.car-pontos span.on{width:20px;background:var(--vinho-2)}
-.promo-banner{background:var(--vinho);color:#fff;padding:28px 22px 30px;display:flex;flex-direction:column;justify-content:center;gap:10px}
-@media(min-width:860px){.promo-banner{padding:48px 52px}}
-.promo-eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
-.promo-num{display:flex;align-items:baseline;gap:10px;white-space:nowrap;font-family:var(--serif)}
-.promo-num b{font-size:clamp(68px,18vw,108px);line-height:.9;font-weight:500}
-.promo-num i{font-size:clamp(28px,7vw,44px)}
-.promo-sub{margin:0;font-family:var(--serif);font-size:clamp(19px,4.6vw,24px);color:#fff}
-.promo-txt{margin:0;font-size:14px;line-height:1.55;opacity:.92;max-width:420px}
-.promo-cta{margin-top:8px;align-self:flex-start;background:#fff;color:var(--vinho-2)!important;padding:14px 22px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none}
-@media(max-width:859px){.promo-cta{align-self:stretch;text-align:center}}
+@media(min-width:860px){.car-seta{top:50%}.car-seta.ant{left:calc(51.2% + 12px)}}
+.car-pontos{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center}
+@media(min-width:860px){.car-pontos{left:auto;right:0;width:48.8%}}
+.car-pontos button{width:24px;height:36px;display:flex;align-items:center;justify-content:center}
+.car-pontos span{display:block;width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,.45);transition:all .3s}
+.car-pontos span.on{width:22px;background:#fff}
+/* Vitrine em clima de oferta */
+.card .pr{font-family:var(--varejo);font-weight:800;font-size:18px;color:var(--promo);letter-spacing:-.01em}
+.card .pr s{font-family:var(--varejo);font-weight:500}
+.selo-off{position:absolute;top:0;left:0;z-index:2;background:var(--promo);color:#fff;font-family:var(--varejo);font-weight:900;font-stretch:90%;font-size:20px;line-height:1;padding:9px 11px 8px;border-radius:0 0 12px 0;letter-spacing:-.02em}
+.selo-off small{display:block;font-size:10px;font-weight:700;letter-spacing:.12em;font-stretch:100%;margin-top:2px}
+.colecao-promo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:22px 0 4px}
+.colecao-promo h2{font-family:var(--varejo);font-weight:900;font-stretch:90%;color:var(--promo-esc);font-size:clamp(26px,7vw,36px);letter-spacing:-.02em;text-transform:uppercase}
+.colecao-promo span{font-family:var(--varejo);font-weight:700;color:var(--promo);font-size:14px}

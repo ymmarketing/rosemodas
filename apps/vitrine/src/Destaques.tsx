@@ -18,7 +18,7 @@ export function pecasDoCarrossel(produtos: Produto[], limite = 6) {
   return escolhidas.slice(0, limite);
 }
 
-export function Carrossel({ produtos, catalogo }: { produtos: Produto[]; catalogo: Catalogo }) {
+export function Carrossel({ produtos, catalogo, promo }: { produtos: Produto[]; catalogo: Catalogo; promo: boolean }) {
   const [atual, setAtual] = useState(0);
   const pausado = useRef(false), toque = useRef<number | null>(null);
   const total = produtos.length;
@@ -31,7 +31,7 @@ export function Carrossel({ produtos, catalogo }: { produtos: Produto[]; catalog
   }, [total]);
 
   if (!total) return null;
-  return <div className="carrossel" aria-roledescription="carrossel" aria-label="Peças mais procuradas"
+  return <div className="carrossel" aria-roledescription="carrossel" aria-label={promo ? `Especial 11.11: ${PROMOCAO.percentual}% off` : 'Peças mais procuradas'}
     onMouseEnter={() => { pausado.current = true; }} onMouseLeave={() => { pausado.current = false; }}
     onTouchStart={e => { pausado.current = true; toque.current = e.touches[0].clientX; }}
     onTouchEnd={e => {
@@ -42,17 +42,25 @@ export function Carrossel({ produtos, catalogo }: { produtos: Produto[]; catalog
     }}>
     {produtos.map((p, i) => {
       const esgotada = !tamanhosDoProduto(catalogo.saldos, p.id).some(t => t.disponivel > 0);
-      return <a key={p.id} href={`#/loja/produto/${p.slug}`} className={`slide ${i === atual ? 'on' : ''}`}
+      return <a key={p.id} href={`#/loja/produto/${p.slug}`} className={`slide ${i === atual ? 'on' : ''} ${promo ? '' : 'slide-sem-promo'}`}
         aria-hidden={i !== atual} tabIndex={i === atual ? 0 : -1}
         aria-label={`Ver ${p.nome}`} onClick={() => evento('carrossel_click', { codigo: p.codigo, posicao: i + 1 })}>
         <div className="slide-foto"><Arte produto={p} hero={i === 0} /></div>
-        <div className="slide-info">
-          <div className="slide-txt">
-            <span className="slide-selo">{esgotada ? 'Esgotada · encomende' : i === 0 ? 'A mais procurada' : 'Mais procurada'}</span>
-            <span className="slide-nome">{p.nome}</span>
-            <span className="slide-preco">{p.preco_promocional !== null && <s>{moeda(p.preco)}</s>}<b>{moeda(precoAtual(p))}</b></span>
+        <div className="slide-sombra" />
+        <div className="slide-over">
+          {promo && <div className="oferta" aria-hidden="true">
+            <span className="oferta-tag">Especial 11.11</span>
+            <div className="oferta-num"><b>{PROMOCAO.percentual}</b><span><i>%</i><small>OFF</small></span></div>
+            <span className="oferta-sub">em todo o site · até {PROMOCAO.fimTexto}</span>
+          </div>}
+          <div className="peca">
+            <div className="peca-txt">
+              <span className="peca-selo">{esgotada ? 'Esgotada · encomende' : i === 0 ? 'A mais procurada' : 'Mais procurada'}</span>
+              <span className="peca-nome">{p.nome}</span>
+              <span className="peca-preco">{p.preco_promocional !== null && <s>{moeda(p.preco)}</s>}<b>{moeda(precoAtual(p))}</b></span>
+            </div>
+            <span className="peca-btn">{promo ? 'Comprar' : 'Ver peça'}</span>
           </div>
-          <span className="slide-btn">Ver peça</span>
         </div>
       </a>;
     })}
@@ -64,12 +72,7 @@ export function Carrossel({ produtos, catalogo }: { produtos: Produto[]; catalog
   </div>;
 }
 
-export function BannerPromocao() {
-  return <div className="promo-banner">
-    <span className="promo-eyebrow">{PROMOCAO.nome} · até {PROMOCAO.fimTexto}</span>
-    <div className="promo-num"><b>{PROMOCAO.percentual}%</b><i>off</i></div>
-    <p className="promo-sub">em qualquer peça do site</p>
-    <p className="promo-txt">Do P ao Plus Size. Peças selecionadas e únicas: o desconto já aparece no preço.</p>
-    <a className="promo-cta" href="#colecao" onClick={e => { e.preventDefault(); document.getElementById('colecao')?.scrollIntoView({ behavior: 'smooth' }); }}>Ver todas com {PROMOCAO.percentual}% off</a>
-  </div>;
+/** Selo grande de desconto no canto da foto de cada peça. */
+export function SeloOff() {
+  return <span className="selo-off" aria-label={`${PROMOCAO.percentual}% off`}>−{PROMOCAO.percentual}%<small>OFF</small></span>;
 }
