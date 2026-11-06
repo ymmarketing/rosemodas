@@ -1,11 +1,11 @@
 import type { Produto } from './catalogo';
 
 // Promoção 11/11: 40% de desconto em todas as peças da vitrine.
-// Liga sozinha em 11/11 às 00h e desliga sozinha ao fim de 30/11 (horário de Brasília).
+// Antecipada a pedido: vale desde 06/11 às 17h e desliga sozinha ao fim de 30/11 (horário de Brasília).
 export const PROMOCAO = {
   nome: 'Promoção 11/11',
   percentual: 40,
-  inicio: Date.parse('2026-11-11T00:00:00-03:00'),
+  inicio: Date.parse('2026-11-06T17:00:00-03:00'),
   fim: Date.parse('2026-12-01T00:00:00-03:00'),
   fimTexto: '30/11',
 } as const;

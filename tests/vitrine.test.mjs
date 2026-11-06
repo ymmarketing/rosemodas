@@ -102,8 +102,8 @@ test('promoção 11/11: 40% sobre o preço cheio só no período, mantendo ofert
  try {
   const {aplicarPromocao,promocaoAtiva,PROMOCAO}=await server.ssrLoadModule('/src/promocao.ts');
   const dom='rosemenezesmodas.com.br';
-  assert.equal(promocaoAtiva(Date.parse('2026-11-10T23:59:00-03:00'),dom),false);
-  assert.equal(promocaoAtiva(Date.parse('2026-11-11T00:00:00-03:00'),dom),true);
+  assert.equal(promocaoAtiva(Date.parse('2026-11-06T16:59:00-03:00'),dom),false);
+  assert.equal(promocaoAtiva(Date.parse('2026-11-06T17:00:00-03:00'),dom),true);
   assert.equal(promocaoAtiva(Date.parse('2026-11-30T23:59:00-03:00'),dom),true);
   assert.equal(promocaoAtiva(Date.parse('2026-12-01T00:00:00-03:00'),dom),false);
   assert.equal(promocaoAtiva(Date.parse('2026-11-06T12:00:00-03:00'),'rosemodas.vercel.app'),false);
