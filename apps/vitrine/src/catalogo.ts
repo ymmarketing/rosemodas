@@ -1,5 +1,6 @@
 import { cadastroLiberadoNoPrazo } from './auth/corte.ts';
 import { criarClientePublico } from './supabase.ts';
+import { aplicarPromocao, promocaoAtiva } from './promocao.ts';
 
 export type Categoria = { id: string; nome: string; slug: string; ordem: number };
 export type Colecao = { id: string; nome: string; slug: string; atual: boolean };
@@ -116,7 +117,7 @@ export async function carregarCatalogo(signal: AbortSignal): Promise<Catalogo> {
   const caminhoLogo = texto('logo_caminho', '');
   return { categorias: categorias.sort((a, b) => a.ordem - b.ordem || comparador.compare(a.nome, b.nome)),
     colecoes: colecoes.sort((a, b) => Number(b.atual) - Number(a.atual) || comparador.compare(a.nome, b.nome)),
-    produtos, saldos, medidas, hero, nomeLoja: texto('nome_loja', 'Rose Menezes'),
+    produtos: aplicarPromocao(produtos, promocaoAtiva()), saldos, medidas, hero, nomeLoja: texto('nome_loja', 'Rose Menezes'),
     descricaoLoja: texto('descricao_loja', 'Moda feminina escolhida com carinho para vestir o seu dia.'),
     cadastroClienteDisponivel, logoUrl: caminhoLogo ? urlDaMidia(caminhoLogo) : null,
     whatsappNumero: numeroWhatsApp(texto('whatsapp_numero', '')),

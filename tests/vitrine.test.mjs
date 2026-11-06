@@ -30,7 +30,7 @@ test('telas renderizadas permitem cotação informativa e ocultam sacola, fases 
    assert.equal(produto.includes('Calcular frete'),true);
    assert.equal(produto.includes('5% off no Pix'),false);
    for(const texto of ['ou 3x de','Avise-me quando chegar','Aprovado pela Rose'])assert.ok(!produto.includes(texto));
-   assert.ok(loja.includes('Live quinta, 20h'));assert.ok(loja.includes('do P ao Plus Size'));assert.ok(!loja.includes('Todos os tamanhos'));
+   assert.ok(!loja.includes('Live quinta'));assert.ok(loja.includes('do P ao Plus Size'));assert.ok(!loja.includes('Todos os tamanhos'));
    const sem={...p,variacoes:[{sku:'SEM',cor:'',tamanho:''}]};const semCat={...catalogo,saldos:[{produto_id:p.id,cor:'',tamanho:'',disponivel:1}]};
    const minimo=renderToStaticMarkup(createElement(PaginaProduto,{produto:sem,catalogo:semCat,aviso:()=>{},whatsapp:()=>{},relacionados:null,homologacao}));for(const txt of ['<h5>Cor','<h5>Tamanho','Medidas ainda','4,9','12 avaliações'])assert.ok(!minimo.includes(txt));assert.ok(minimo.includes('Frete e prazo: consulte pelo WhatsApp'));
    globalThis.window.location.hash='#/loja/sacola';
@@ -96,3 +96,21 @@ test('catálogo fiel ao mockup tem 12 modelos, cores, medidas e seed idempotente
 test('variação sem cor e tamanho compra direto e omite linhas vazias',()=>{const p={id:'sem',nome:'Peça única',codigo:'RM-UNICA',slug:'unica'};const msg=mensagemCompraWhatsApp(p,[{produto_id:'sem',cor:'',tamanho:'',disponivel:1}],'','','https://example.test/');assert.ok(msg.includes('RM-UNICA'));assert.ok(!msg.includes('Cor:'));assert.ok(!msg.includes('Tamanho:'));});
 
 test('encomenda inclui nome, código, tamanho e link direto sem prometer reposição',()=>{const p={nome:'Vestido Azul',codigo:'RM-0019',slug:'peca-rm-0019'};assert.equal(mensagemEncomendaWhatsApp(p,'GG','https://example.test/?categoria=vestidos#/loja'),'Oi Rose! Vi que a peça Vestido Azul (RM-0019) está esgotada. Gostaria de encomendar ou saber se volta. Tamanho: GG. Link: https://example.test/#/loja/produto/peca-rm-0019');assert.ok(!mensagemEncomendaWhatsApp(p,'','https://example.test/').includes('Tamanho:'));assert.throws(()=>mensagemEncomendaWhatsApp(p,'','javascript:alert(1)'));});
+
+test('promoção 11/11: 40% sobre o preço cheio só no período, mantendo oferta menor e prévia fora da produção',async()=>{
+ const server=await createServer({configFile:'apps/vitrine/vite.config.ts',mode:'homologation',server:{middlewareMode:true},appType:'custom'});
+ try {
+  const {aplicarPromocao,promocaoAtiva,PROMOCAO}=await server.ssrLoadModule('/src/promocao.ts');
+  const dom='rosemenezesmodas.com.br';
+  assert.equal(promocaoAtiva(Date.parse('2026-11-10T23:59:00-03:00'),dom),false);
+  assert.equal(promocaoAtiva(Date.parse('2026-11-11T00:00:00-03:00'),dom),true);
+  assert.equal(promocaoAtiva(Date.parse('2026-11-30T23:59:00-03:00'),dom),true);
+  assert.equal(promocaoAtiva(Date.parse('2026-12-01T00:00:00-03:00'),dom),false);
+  assert.equal(promocaoAtiva(Date.parse('2026-11-06T12:00:00-03:00'),'rosemodas.vercel.app'),false);
+  assert.equal(promocaoAtiva(Date.parse('2026-11-06T12:00:00-03:00'),'rosemodas-git-x-ym.vercel.app'),true);
+  assert.equal(PROMOCAO.percentual,40);
+  const [a,b,c]=aplicarPromocao([{preco:149.9,preco_promocional:null},{preco:100,preco_promocional:50},{preco:100,preco_promocional:80}],true);
+  assert.equal(a.preco_promocional,89.94);assert.equal(b.preco_promocional,50);assert.equal(c.preco_promocional,60);
+  assert.deepEqual(aplicarPromocao([{preco:100,preco_promocional:null}],false),[{preco:100,preco_promocional:null}]);
+ } finally { await server.close(); }
+});
